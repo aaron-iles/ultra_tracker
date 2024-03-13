@@ -119,3 +119,64 @@ class CaltopoMap:
         result = requests.post(url, headers=headers, data=urlencode(payload), verify=True)
         print(f"marker move result {result.text}")
         return result
+
+
+class CaltopoMarker:
+    def __init__(self, name: str, caltopo_map: CaltopoMap):
+        self.marker_id = None
+        self.name = name
+        self.title = None
+        self.description = None
+        self.folder = None
+        self.size = "1.5"
+        self.symbol = None
+        self.color = None
+        self.rotation = 0
+        self.coordinates = [0,0]
+        self.get_marker(name, caltopo_map)
+
+    @property
+    def as_json(self) -> dict:
+        """
+        """
+        return {
+                "type": "Feature",
+                "id": self.marker_id,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": self.coordinates,
+                },
+                "properties": {
+                    "title": self.title,
+                    "description": self.description,
+                    "folderId": self.folder,
+                    "marker-size": self.size,
+                    "marker-symbol": self.symbol,
+                    "marker-color": self.color,
+                    "marker-rotation": self.rotation,
+                    "class": "Marker",
+                },
+            }
+
+    def update(self) -> requests.Response:
+        """
+        Moves the tracker marker to the provided location, updates its description, and rotates it.
+
+        :param list location: The (x, y) coordinates to which the marker should be moved.
+        :param float marker_course: The heading (0 - 359) in which the marker should be rotated.
+        :param str description: The description to set on the marker.
+        :return requests.Reponse: A response object of the issued POST.
+        """
+        url = f"https://caltopo.com/api/v1/map/{self.caltopo_map.map_id}/Marker/{self.marker_id}"
+        headers = {
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "Cookie": self.caltopo_map.cookie,
+        }
+        result = requests.post(url, headers=headers, data=urlencode(self.as_json), verify=True)
+        print(f"marker move result {result.text}")
+        return result
+
+

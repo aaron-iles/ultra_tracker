@@ -1,5 +1,22 @@
 start_time: '2024-02-19T08:00:00' 
 api_token: XXXXXXXX
-data_store: /proj/ultra-tracker/data_store.json
+# TODO just store data in a data dir
 caltopo_map_id: XXXXX
 caltopo_cookies: XXXXXXXXXXXXXX
+aid_stations:
+  - name: 1 Air Down Lot
+    mile_mark: 23.3
+  - name: 2 Kimball's Kitchen
+    mile_mark: 34.6
+  - name: 3 Kitty Hawk
+    mile_mark: 46.7
+  - name: 4 Coquina Beach
+    mile_mark: 65
+  - name: 5 Pea Island
+    mile_mark: 74
+  - name: 6 Rodanthe
+    mile_mark: 82.8
+  - name: 7 Ramp 30
+    mile_mark: 93.6
+  - name: 8 Lighthouse
+    mile_mark: 107.3
