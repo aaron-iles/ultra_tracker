@@ -163,4 +163,10 @@ class Race:
         self._check_if_finished()
 
 
-class AidStation
+class AidStation(CaltopoMarker):
+    def __init__(self, name: str, mile_mark: float, marker_id: str, caltopo_map):
+        super().__init__(name, caltopo_map)
+        self.name = name
+        self.mile_mark = mile_mark
+        self.marker_id = marker_id
+
