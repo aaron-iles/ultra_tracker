@@ -14,6 +14,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 from caltopo import CaltopoMap
+from race import Race
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,8 +34,8 @@ def parse_args() -> argparse.Namespace:
 
 
 class GarminTrackHandler(BaseHTTPRequestHandler):
-    def __init__(self, api_token, race, *args, **kwargs):
-        self.api_token = api_token
+    def __init__(self, garmin_api_token, race, *args, **kwargs):
+        self.garmin_api_token = garmin_api_token
         self.race = race
         self.post_log = "./.post_log.txt"
         super().__init__(*args, **kwargs)
@@ -58,7 +59,7 @@ class GarminTrackHandler(BaseHTTPRequestHandler):
         self.wfile.write(rendered_html.encode("utf-8"))
 
     def do_POST(self):
-        if self.headers.get("x-outbound-auth-token") != self.api_token:
+        if self.headers.get("x-outbound-auth-token") != self.garmin_api_token:
             self.send_response(401)
             self.send_header("Content-type", "text/html")
             self.end_headers()
@@ -96,48 +97,12 @@ def get_config_data(file_path):
 # TODO handle time zones
 
 
-
-
-
-def format_duration(duration):
-    total_hours = duration.total_seconds() / 3600
-    hours, remainder = divmod(total_hours, 1)
-    minutes, remainder = divmod(remainder * 60, 1)
-    seconds, _ = divmod(remainder * 60, 1)
-    return f"{int(hours)}:{int(minutes):02}'{int(seconds):02}\""
-
-
-def convert_decimal_pace_to_pretty_format(decimal_pace):
-    total_seconds = int(decimal_pace * 60)  # Convert pace to total seconds
-    minutes, remainder = divmod(total_seconds, 60)
-    seconds, _ = divmod(remainder, 1)
-    pretty_format = f"{minutes}'{seconds:02d}\""
-    return pretty_format
-
-
-def calculate_most_probable_mile_mark(mile_marks, elapsed_time, average_pace):
-    # Constants
-    if not average_pace:
-        average_speed = 1 / 10
-    else:
-        average_speed = 1 / average_pace  # Speed in miles per minute
-    # Calculate expected distance based on elapsed time and average speed
-    expected_distance = elapsed_time * average_speed
-    # Calculate standard deviation based on average pace
-    standard_deviation = average_pace / 3  # Adjust for variability in pace
-    # Calculate probabilities for each mile mark
-    probabilities = norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
-    # Find the mile mark with the highest probability
-    most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
-    return most_probable_mile_mark
-
-
 def main():
     # Read in the config file.
     args = parse_args()
     config_data = get_config_data(args.config)
     # Fail fast if these aren't defined.
-    api_token = config_data["api_token"]
+    garmin_api_token = config_data["garmin_api_token"]
     start_time = datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
     data_store = config_data.get("data_store", "data_store.json")
     caltopo_map_id = config_data["caltopo_map_id"]
@@ -149,10 +114,10 @@ def main():
         caltopo_cookies,
     )
 
-    server_address = ("", 80)
+    server_address = ("", 8080)  # TODO
 
     # We "partially apply" the first three arguments to the ExampleHandler
-    handler = partial(GarminTrackHandler, api_token, race)
+    handler = partial(GarminTrackHandler, garmin_api_token, race)
     # .. then pass it to HTTPHandler as normal:
     server = HTTPServer(server_address, handler)
     try:

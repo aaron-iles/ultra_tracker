@@ -1,7 +1,7 @@
 start_time: '2024-02-19T08:00:00' 
-api_token: XXXXXXXX
-# TODO just store data in a data dir
+garmin_api_token: XXXXXXXX
 caltopo_map_id: XXXXX
+# TODO all you need is the JSESSIONID
 caltopo_cookies: XXXXXXXXXXXXXX
 aid_stations:
   - name: 1 Air Down Lot

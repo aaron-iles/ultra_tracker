@@ -13,7 +13,41 @@ import requests
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from caltopo import CaltopoMap
+from caltopo import CaltopoMap, CaltopoMarker, CaltopoShape
+
+
+def format_duration(duration):
+    total_hours = duration.total_seconds() / 3600
+    hours, remainder = divmod(total_hours, 1)
+    minutes, remainder = divmod(remainder * 60, 1)
+    seconds, _ = divmod(remainder * 60, 1)
+    return f"{int(hours)}:{int(minutes):02}'{int(seconds):02}\""
+
+
+def convert_decimal_pace_to_pretty_format(decimal_pace):
+    total_seconds = int(decimal_pace * 60)  # Convert pace to total seconds
+    minutes, remainder = divmod(total_seconds, 60)
+    seconds, _ = divmod(remainder, 1)
+    pretty_format = f"{minutes}'{seconds:02d}\""
+    return pretty_format
+
+
+def calculate_most_probable_mile_mark(mile_marks, elapsed_time, average_pace):
+    # Constants
+    if not average_pace:
+        average_speed = 1 / 10
+    else:
+        average_speed = 1 / average_pace  # Speed in miles per minute
+    # Calculate expected distance based on elapsed time and average speed
+    expected_distance = elapsed_time * average_speed
+    # Calculate standard deviation based on average pace
+    standard_deviation = average_pace / 3  # Adjust for variability in pace
+    # Calculate probabilities for each mile mark
+    probabilities = norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
+    # Find the mile mark with the highest probability
+    most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
+    return most_probable_mile_mark
+
 
 class Race:
     def __init__(
@@ -168,5 +202,8 @@ class AidStation(CaltopoMarker):
         super().__init__(name, caltopo_map)
         self.name = name
         self.mile_mark = mile_mark
-        self.marker_id = marker_id
 
+
+class Route(CaltopoShape):
+    def __init__(self):
+        super().__init__(name, caltopo_map)
