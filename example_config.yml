@@ -1,8 +1,10 @@
 start_time: '2024-02-19T08:00:00' 
 garmin_api_token: XXXXXXXX
 caltopo_map_id: XXXXX
-# TODO all you need is the JSESSIONID
-caltopo_cookies: XXXXXXXXXXXXXX
+caltopo_session_id: XXXXXXXXXXXXXX
+tracker_marker_name: Aaron # TODO
+route_name: Route
+# TODO validate these
 aid_stations:
   - name: 1 Air Down Lot
     mile_mark: 23.3

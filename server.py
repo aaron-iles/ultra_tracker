@@ -3,18 +3,15 @@
 
 from functools import partial
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from scipy.stats import norm
 import argparse
 import datetime
 import json
-import numpy as np
-import os
-import requests
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from caltopo import CaltopoMap
-from race import Race
+from models.caltopo import CaltopoMap
+from models.race import Race
+from models.course import Course
 
 
 def parse_args() -> argparse.Namespace:
@@ -106,12 +103,20 @@ def main():
     start_time = datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
     data_store = config_data.get("data_store", "data_store.json")
     caltopo_map_id = config_data["caltopo_map_id"]
-    caltopo_cookies = config_data["caltopo_cookies"]
+    caltopo_session_id = config_data["caltopo_session_id"]
+    aid_station_list = config_data["aid_stations"]
+    route_name = config_data["route_name"]
+    tracker_marker_name = config_data["tracker_marker_name"]
+    caltopo_map = CaltopoMap(caltopo_map_id, caltopo_session_id)
+    course = Course(caltopo_map, aid_station_list, route_name)
+    runner = Runner(caltopo_map, tracker_marker_name)
+    import ipdb
+
+    ipdb.set_trace()
     race = Race(
         start_time,
         data_store,
-        caltopo_map_id,
-        caltopo_cookies,
+        course,
     )
 
     server_address = ("", 8080)  # TODO
