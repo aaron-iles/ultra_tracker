@@ -110,13 +110,13 @@ def main():
     caltopo_map = CaltopoMap(caltopo_map_id, caltopo_session_id)
     course = Course(caltopo_map, aid_station_list, route_name)
     runner = Runner(caltopo_map, tracker_marker_name)
-    import ipdb
 
     ipdb.set_trace()
     race = Race(
         start_time,
         data_store,
         course,
+        runner,
     )
 
     server_address = ("", 8080)  # TODO
