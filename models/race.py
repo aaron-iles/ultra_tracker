@@ -108,14 +108,14 @@ class Race:
             "avg_pace": convert_decimal_pace_to_pretty_format(self.pace),
             "mile_mark": round(self.last_mile_mark, 2),
             "elapsed_time": format_duration(self.elapsed_time),
-            "last_update": self.last_timestamp.strftime("%m-%d %H:%M"),
+            "last_update": self.runner.last_timestamp.strftime("%m-%d %H:%M"),
             "pings": self.pings,
             "est_finish_date": self.estimated_finish_date.strftime("%m-%d %H:%M"),
             "est_finish_time": format_duration(self.estimated_finish_time),
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
         }
 
-    @property
+    @property # TODO
     def marker_description(self):
         return (
             f"last update: {self.last_timestamp.strftime('%m-%d %H:%M')}\n"
@@ -217,7 +217,7 @@ class Runner:
     @property
     def marker_description(self):
         return (
-            f"last update: {self.last_timestamp.strftime('%m-%d %H:%M')}\n"
+            f"last update: {self.last_ping.timestamp.strftime('%m-%d %H:%M')}\n"
             f"mile mark: {round(self.last_mile_mark, 2)}\n"
             f"elapsed time: {format_duration(self.elapsed_time)}\n"
             f"avg pace: {convert_decimal_pace_to_pretty_format(self.pace)}\n"
@@ -228,9 +228,9 @@ class Runner:
 
     def update(ping: Ping):
         self.last_ping = ping
-        self.last_timestamp = ping.timestamp # TODO necessary?
-        self.heading = ping.heading # TODO necessary?
-        self.last_location = ping.latlon # TODO necessary?
+        #self.last_timestamp = ping.timestamp # TODO necessary?
+        #self.heading = ping.heading # TODO necessary?
+        #self.last_location = ping.latlon # TODO necessary?
         self.elapsed_time = self.ping.timestamp - self.start_time # TODO dont have start time
         self.last_mile_mark = self._calculate_last_mile_mark() # TODO runner doesnt know course information
         self._check_if_started()
