@@ -72,7 +72,7 @@ class GarminTrackHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.race.update(json.loads(post_data))
+        self.race.ingest_ping(json.loads(post_data))
         print(
             f"mile mark {self.race.last_mile_mark} pace: {self.race.pace} elapsed_time: {self.race.elapsed_time}"
         )
@@ -111,7 +111,6 @@ def main():
     course = Course(caltopo_map, aid_station_list, route_name)
     runner = Runner(caltopo_map, tracker_marker_name)
 
-    ipdb.set_trace()
     race = Race(
         start_time,
         data_store,

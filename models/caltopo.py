@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
 
-from scipy.spatial import KDTree
 from urllib.parse import urlencode
 import requests
-
-from geo_utils import interpolate_between_points, transform_path
 
 
 class CaltopoMap:
@@ -36,7 +33,7 @@ class CaltopoMap:
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "Cookie": f"JSESSIONID={self.session_id}",
         }
-        response = requests.get(url, headers=headers, verify=True)
+        response = requests.get(url, headers=headers, verify=True, timeout=60)
         return response.json()
 
     def get_map_features(self) -> None:
@@ -54,11 +51,11 @@ class CaltopoMap:
         for feature in features:
             feature_class = feature.get("properties", {}).get("class")
             if feature_class == "Folder":
-                self.folders.add(CaltopoFolder(feature))
+                self.folders.add(CaltopoFolder(feature, self.map_id, self.session_id))
             elif feature_class == "Shape":
-                self.shapes.add(CaltopoShape(feature))
+                self.shapes.add(CaltopoShape(feature, self.map_id, self.session_id))
             elif feature_class == "Marker":
-                self.markers.add(CaltopoMarker(feature))
+                self.markers.add(CaltopoMarker(feature, self.map_id, self.session_id))
             else:
                 print(f"Unknown feature found: {feature}")
 
@@ -66,13 +63,15 @@ class CaltopoMap:
 class CaltopoFeature:
     feature_class = "Feature"
 
-    def __init__(self, feature_dict: dict):
+    def __init__(self, feature_dict: dict, map_id: str, session_id: str):
         self._feature_dict = feature_dict
+        self.map_id = map_id
+        self.session_id = session_id
+        self.properties = feature_dict.get("properties", {})
         self.description = self.properties.get("description", "")
         self.folder_id = self.properties.get("folderId")
         self.geometry = feature_dict.get("geometry", {})
         self.id = feature_dict.get("id", "")
-        self.properties = feature_dict.get("properties", {})
         self.title = self.properties.get("title", "")
 
     def __hash__(self):
@@ -91,11 +90,11 @@ class CaltopoFeature:
 class CaltopoMarker(CaltopoFeature):
     feature_class = "Marker"
 
-    def __init__(self, feature_dict: dict):
-        super().__init__(feature_dict)
+    def __init__(self, feature_dict: dict, map_id: str, session_id: str):
+        super().__init__(feature_dict, map_id, session_id)
         self.color = self.properties.get("marker-color", "FF0000")
-        # Switch x and y to more traditional (latitude, longitude) order.
-        self.coordinates = self.geometry.get("coordinates", [0, 0])[:2][::-1]
+        # This comes in as longitude, latitude.
+        self.coordinates = self.geometry.get("coordinates", [0, 0])[:2]
         self.description = None
         self.folder = None
         self.rotation = self.properties.get("marker-rotation", 0)
@@ -133,16 +132,16 @@ class CaltopoMarker(CaltopoFeature):
         :param str description: The description to set on the marker.
         :return requests.Reponse: A response object of the issued POST.
         """
-        url = f"https://caltopo.com/api/v1/map/{self.caltopo_map.map_id}/Marker/{self.marker_id}"
+        url = f"https://caltopo.com/api/v1/map/{self.map_id}/Marker/{self.id}"
         headers = {
             "Accept": "*/*",
             "Accept-Language": "en-US,en;q=0.9",
             "Connection": "keep-alive",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Cookie": f"JSESSIONID={self.caltopo_map.session_id}",
+            "Cookie": f"JSESSIONID={self.session_id}",
         }
         result = requests.post(
-            url, headers=headers, data=urlencode({"json": self.as_json}), verify=True
+            url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120
         )
         print(f"marker update result {result.text}")
         return result
@@ -151,8 +150,8 @@ class CaltopoMarker(CaltopoFeature):
 class CaltopoShape(CaltopoFeature):
     feature_class = "Shape"
 
-    def __init__(self, feature_dict: dict):
-        super().__init__(feature_dict)
+    def __init__(self, feature_dict: dict, map_id: str, session_id: str):
+        super().__init__(feature_dict, map_id, session_id)
         self.pattern = self.properties.get("pattern", "stroke")
         self.stroke_width = self.properties.get("stroke-width", "solid")
         self.fill = self.properties.get("fill", "#FF0000")
@@ -164,5 +163,5 @@ class CaltopoShape(CaltopoFeature):
 class CaltopoFolder(CaltopoFeature):
     feature_class = "Folder"
 
-    def __init__(self, feature_dict: dict):
-        super().__init__(feature_dict)
+    def __init__(self, feature_dict: dict, map_id: str, session_id: str):
+        super().__init__(feature_dict, map_id, session_id)

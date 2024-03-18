@@ -10,7 +10,19 @@ class Ping:
 
     :param dict ping_data: The raw tracker payload.
     """
-    __slots__ = {"_event", "altitude", "heading", "imei", "latitude", "longitude", "message_code", "speed", "timestamp"}
+
+    __slots__ = {
+        "_event",
+        "altitude",
+        "heading",
+        "imei",
+        "latitude",
+        "longitude",
+        "message_code",
+        "speed",
+        "timestamp",
+    }
+
     def __init__(self, ping_data: dict):
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = self._event.get("point", {}).get("altitude", 0.0)
@@ -28,8 +40,7 @@ class Ping:
 
     @property
     def lonlat(self) -> tuple:
-        return (self.self.longitude, self.latitude)
-
+        return (self.longitude, self.latitude)
 
     def extract_timestamp(self):
         """
@@ -42,9 +53,3 @@ class Ping:
             return datetime.datetime.fromtimestamp(ts)
         except ValueError:
             return datetime.datetime.fromtimestamp(ts // 1000)
-
-
-
-
-
-
