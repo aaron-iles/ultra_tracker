@@ -5,7 +5,7 @@ from scipy.spatial import KDTree
 from geopy.distance import geodesic
 import numpy as np
 
-from caltopo import CaltopoMarker, CaltopoShape
+from .caltopo import CaltopoMarker, CaltopoShape
 
 
 def interpolate_between_points(points: np.array, interval_distance):

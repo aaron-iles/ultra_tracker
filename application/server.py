@@ -10,9 +10,9 @@ import yaml
 import sys
 from jinja2 import Environment, FileSystemLoader
 
-from caltopo import CaltopoMap
-from race import Race, Runner
-from course import Course
+from .models.caltopo import CaltopoMap
+from .models.race import Race, Runner
+from .models.course import Course
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,7 +48,7 @@ class GarminTrackHandler(BaseHTTPRequestHandler):
 
         # Load the Jinja environment and specify the template directory
         env = Environment(loader=FileSystemLoader("."))  # TODO
-        template = env.get_template("race_stats.html")
+        template = env.get_template("templates/race_stats.html")
 
         # Render the template with the provided data
         rendered_html = template.render(**self.race.html_stats)

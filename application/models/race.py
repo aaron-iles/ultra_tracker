@@ -7,7 +7,7 @@ import json
 import numpy as np
 import os
 
-from tracker import Ping
+from .tracker import Ping
 
 
 def format_duration(duration: datetime.timedelta) -> str:
