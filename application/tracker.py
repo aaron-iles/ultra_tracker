@@ -35,12 +35,12 @@ class Ping:
         self.timestamp = self.extract_timestamp()
 
     @property
-    def latlon(self) -> tuple:
-        return (self.latitude, self.longitude)
+    def latlon(self) -> list:
+        return [self.latitude, self.longitude]
 
     @property
-    def lonlat(self) -> tuple:
-        return (self.longitude, self.latitude)
+    def lonlat(self) -> list:
+        return [self.longitude, self.latitude]
 
     def extract_timestamp(self):
         """

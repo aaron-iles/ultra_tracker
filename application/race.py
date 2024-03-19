@@ -159,7 +159,7 @@ class Race:
 
 
 class Runner:
-    def __init__(self, marker_name: str, caltopo_map):
+    def __init__(self, caltopo_map, marker_name: str):
         self.elapsed_time = datetime.timedelta(0)
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
         self.estimated_finish_time = datetime.timedelta(0)
@@ -244,7 +244,7 @@ class Runner:
         # Now update the marker attributes.
         self.marker.description = self.marker_description
         self.marker.coordinates = ping.lonlat
-        self.marker.rotation = ping.heading
+        self.marker.rotation = round(ping.heading)
         # Issue the POST to update the marker.
         self.marker.update()
         self.check_if_finished(route)

@@ -7,11 +7,12 @@ import argparse
 import datetime
 import json
 import yaml
+import sys
 from jinja2 import Environment, FileSystemLoader
 
-from models.caltopo import CaltopoMap
-from models.race import Race
-from models.course import Course
+from caltopo import CaltopoMap
+from race import Race, Runner
+from course import Course
 
 
 def parse_args() -> argparse.Namespace:
@@ -74,7 +75,7 @@ class GarminTrackHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.race.ingest_ping(json.loads(post_data))
         print(
-            f"mile mark {self.race.last_mile_mark} pace: {self.race.pace} elapsed_time: {self.race.elapsed_time}"
+            f"mile mark {self.race.runner.mile_mark} pace: {self.race.runner.pace} elapsed_time: {self.race.runner.elapsed_time}"
         )
 
 
@@ -101,15 +102,18 @@ def main():
     # Fail fast if these aren't defined.
     garmin_api_token = config_data["garmin_api_token"]
     start_time = datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
-    data_store = config_data.get("data_store", "data_store.json")
+    data_store = config_data.get("data_store", ".data_store.json")
     caltopo_map_id = config_data["caltopo_map_id"]
     caltopo_session_id = config_data["caltopo_session_id"]
     aid_station_list = config_data["aid_stations"]
     route_name = config_data["route_name"]
     tracker_marker_name = config_data["tracker_marker_name"]
     caltopo_map = CaltopoMap(caltopo_map_id, caltopo_session_id)
+    print("created map object...")
     course = Course(caltopo_map, aid_station_list, route_name)
+    print("created course object...")
     runner = Runner(caltopo_map, tracker_marker_name)
+    print("created runner object...")
 
     race = Race(
         start_time,
@@ -117,6 +121,7 @@ def main():
         course,
         runner,
     )
+    print("created race object...")
 
     server_address = ("", 8080)  # TODO
 
@@ -127,7 +132,7 @@ def main():
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        exit(0)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

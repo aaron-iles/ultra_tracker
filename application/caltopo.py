@@ -96,7 +96,6 @@ class CaltopoMarker(CaltopoFeature):
         # This comes in as longitude, latitude.
         self.coordinates = self.geometry.get("coordinates", [0, 0])[:2]
         self.description = None
-        self.folder = None
         self.rotation = self.properties.get("marker-rotation", 0)
         self.size = self.properties.get("marker-size", "1")
         self.symbol = self.properties.get("marker-symbol")
@@ -114,7 +113,7 @@ class CaltopoMarker(CaltopoFeature):
             "properties": {
                 "title": self.title,
                 "description": self.description,
-                "folderId": self.folder,
+                "folderId": self.folder_id,
                 "marker-size": self.size,
                 "marker-symbol": self.symbol,
                 "marker-color": self.color,
