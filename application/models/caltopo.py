@@ -2,6 +2,7 @@
 
 
 from urllib.parse import urlencode
+
 import requests
 
 
@@ -142,7 +143,6 @@ class CaltopoMarker(CaltopoFeature):
         result = requests.post(
             url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120
         )
-        print(f"marker update result {result.text}")
         return result
 
 

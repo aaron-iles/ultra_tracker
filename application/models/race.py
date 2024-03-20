@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 
-from scipy.stats import norm
 import datetime
 import json
-import numpy as np
 import os
 
+import numpy as np
+from scipy.stats import norm
+
+from .caltopo import CaltopoMarker
 from .tracker import Ping
 
 
@@ -159,6 +161,12 @@ class Race:
 
 
 class Runner:
+    """
+    This represents a single runner of the race. 
+
+    :param CaltopoMap caltopo_map: The Caltopo map object that is associated with the course.
+    :param str marker_name: The name of the marker representing the runner.
+    """
     def __init__(self, caltopo_map, marker_name: str):
         self.elapsed_time = datetime.timedelta(0)
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
@@ -171,7 +179,14 @@ class Runner:
         self.pace = 10
         self.pings = 0
 
-    def extract_marker(self, marker_name: str, caltopo_map):
+    def extract_marker(self, marker_name: str, caltopo_map) -> CaltopoMarker:
+        """
+        Given a marker name, extracts the marker from the map object to associate with the runner.
+
+        :param str marker_name: The marker name or title.
+        :param CaltopoMap caltopo_map: The map object containing the markers.
+        :return CaltopoMarker: The marker representing the runner.
+        """
         for marker in caltopo_map.markers:
             if marker.title == marker_name:
                 return marker
@@ -180,11 +195,16 @@ class Runner:
         )
 
     def calculate_pace(self) -> float:
+        """
+        Calculates the average pace of the runner.
+
+        :return float: The pace in minutes per mile.
+        """
         return (
             (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
         )
 
-    def check_if_started(self, start_time):
+    def check_if_started(self, start_time) -> None:
         if start_time > datetime.datetime.now():
             self.started = False
         self.started = self.mile_mark > 0.11

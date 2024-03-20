@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 
-from scipy.spatial import KDTree
-from geopy.distance import geodesic
 import numpy as np
+from geopy.distance import geodesic
+from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMarker, CaltopoShape
 
