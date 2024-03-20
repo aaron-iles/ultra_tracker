@@ -9,6 +9,7 @@ import numpy as np
 from scipy.stats import norm
 
 from .caltopo import CaltopoMarker
+from .course import Route
 from .tracker import Ping
 
 
@@ -155,18 +156,28 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
+        # Don't do anything if the race hasn't started yet.
+        if ping.timestamp < self.start_time:
+            print(f"incoming timestamp {ping.timestamp} before race start time {self.start_time}")
+            return
+        # Don't do anything if the runner has already finished.
+        if self.runner.finished:
+            print("runner already finished; ignoring ping")
+            return
         self.runner.pings += 1
         self.runner.check_in(ping, self.start_time, self.course.route)
+        self.course.update_aid_stations(self.runner)
         self.save()
 
 
 class Runner:
     """
-    This represents a single runner of the race. 
+    This represents a single runner of the race.
 
     :param CaltopoMap caltopo_map: The Caltopo map object that is associated with the course.
     :param str marker_name: The name of the marker representing the runner.
     """
+
     def __init__(self, caltopo_map, marker_name: str):
         self.elapsed_time = datetime.timedelta(0)
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
@@ -204,9 +215,7 @@ class Runner:
             (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
         )
 
-    def check_if_started(self, start_time) -> None:
-        if start_time > datetime.datetime.now():
-            self.started = False
+    def check_if_started(self) -> None:
         self.started = self.mile_mark > 0.11
 
     def check_if_finished(self, route):
@@ -239,22 +248,19 @@ class Runner:
             self.pace,
         )
 
-    def check_in(self, ping: Ping, start_time, route):
+    def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
+        """ """
         self.pings += 1
         last_timestamp = self.last_ping.timestamp
         # Don't update if latest point is older than current point
         if last_timestamp > ping.timestamp:
             print(f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}")
             return
-        # Don't do anything if the race hasn't started yet.
-        if ping.timestamp < start_time:
-            print(f"incoming timestamp {ping.timestamp} before race start time {start_time}")
-            return
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
         self.elapsed_time = ping.timestamp - start_time
         self.mile_mark = self.calculate_mile_mark(route)
-        self.check_if_started(start_time)
+        self.check_if_started()
         if not self.in_progress:
             print(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
