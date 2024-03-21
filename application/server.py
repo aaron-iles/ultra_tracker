@@ -12,7 +12,6 @@ from models.caltopo import CaltopoMap
 from models.course import Course
 from models.race import Race, Runner
 
-
 app = Flask(__name__)
 
 

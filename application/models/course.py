@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 
+import datetime
+
 import numpy as np
 from geopy.distance import geodesic
 from scipy.spatial import KDTree
-import datetime
 
 from .caltopo import CaltopoMarker, CaltopoShape
 
@@ -128,7 +129,6 @@ class Course:
             aid_station.refresh(runner)
 
 
-
 class AidStation(CaltopoMarker):
     def __init__(self, feature_dict: dict, map_id: str, session_id: str, mile_mark: float):
         super().__init__(feature_dict, map_id, session_id)
@@ -144,8 +144,7 @@ class AidStation(CaltopoMarker):
         )
 
     def refresh(self, runner) -> None:
-        """
-        """
+        """ """
         if self.passed:
             return
         miles_to_me = self.mile_mark - runner.mile_mark

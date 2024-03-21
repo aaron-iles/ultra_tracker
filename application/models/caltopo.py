@@ -5,6 +5,8 @@ from urllib.parse import urlencode
 
 import requests
 
+from .worker import post_queue
+
 
 class CaltopoMap:
     """
@@ -140,10 +142,18 @@ class CaltopoMarker(CaltopoFeature):
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "Cookie": f"JSESSIONID={self.session_id}",
         }
-        result = requests.post(
-            url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120
+        post_queue.put(
+            (
+                {
+                    "url": url,
+                    "headers": headers,
+                    "data": urlencode({"json": self.as_json}),
+                    "verify": True,
+                    "timeout": 120,
+                }
+            )
         )
-        return result
+        return
 
 
 class CaltopoShape(CaltopoFeature):
