@@ -139,8 +139,8 @@ class AidStation(CaltopoMarker):
     @property
     def aid_station_description(self):
         return (
-            f"mile mark: {round(self.mile_mark, 2)}\n"
-            f"ETA: {self.estimated_arrival_time.strftime('%m-%d %H:%M')}\n"
+            f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
+            f"𝗘𝗧𝗔: {self.estimated_arrival_time.strftime('%m-%d %H:%M')}\n"
         )
 
     def refresh(self, runner) -> None:

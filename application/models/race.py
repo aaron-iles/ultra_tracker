@@ -230,13 +230,13 @@ class Runner:
     @property
     def marker_description(self):
         return (
-            f"last update: {self.last_ping.timestamp.strftime('%m-%d %H:%M')}\n"
-            f"mile mark: {round(self.mile_mark, 2)}\n"
-            f"elapsed time: {format_duration(self.elapsed_time)}\n"
-            f"avg pace: {convert_decimal_pace_to_pretty_format(self.pace)}\n"
-            f"pings: {self.pings}\n"
-            f"EFD: {self.estimated_finish_date.strftime('%m-%d %H:%M')}\n"
-            f"EFT: {format_duration(self.estimated_finish_time)}"
+            f"𝗹𝗮𝘀𝘁 𝘂𝗽𝗱𝗮𝘁𝗲: {self.last_ping.timestamp.strftime('%m-%d %H:%M')}\n"
+            f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
+            f"𝗲𝗹𝗮𝗽𝘀𝗲𝗱 𝘁𝗶𝗺𝗲: {format_duration(self.elapsed_time)}\n"
+            f"𝗮𝘃𝗴 𝗽𝗮𝗰𝗲: {convert_decimal_pace_to_pretty_format(self.pace)}\n"
+            f"𝗽𝗶𝗻𝗴𝘀: {self.pings}\n"
+            f"𝗘𝗙𝗗: {self.estimated_finish_date.strftime('%m-%d %H:%M')}\n"
+            f"𝗘𝗙𝗧: {format_duration(self.estimated_finish_time)}"
         )
 
     def calculate_mile_mark(self, route) -> float:
