@@ -216,19 +216,41 @@ class Runner:
         )
 
     def check_if_started(self) -> None:
+        """
+        Checks if the runner has started the race yet or not. This can only be triggered if the
+        race is ongoing and the runner has progressed more than 100 yards down the course.
+
+        :return None:
+        """
         self.started = self.mile_mark > 0.11
 
-    def check_if_finished(self, route):
+    def check_if_finished(self, route) -> None:
+        """
+        Checks if the runner has finished the race. This will trigger if the runner is within 100
+        yards of the finish line.
+
+        :return None:
+        """
         if not self.started:
             self.finished = False
         self.finished = abs(route.length - self.mile_mark) < 0.11
 
     @property
-    def in_progress(self):
+    def in_progress(self) -> bool:
+        """
+        Returns a bool to indicate if the runner is still on the course
+
+        :return bool: True if the runner is still on the course and False otherwise.
+        """
         return self.started and not self.finished
 
     @property
-    def marker_description(self):
+    def marker_description(self) -> str:
+        """
+        A nicely formatted string for the runner's map marker.
+
+        :return str: The runner's map marker description.
+        """
         return (
             f"𝗹𝗮𝘀𝘁 𝘂𝗽𝗱𝗮𝘁𝗲: {self.last_ping.timestamp.strftime('%m-%d %H:%M')}\n"
             f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
@@ -240,7 +262,15 @@ class Runner:
         )
 
     def calculate_mile_mark(self, route) -> float:
-        """ """
+        """
+        Calculates the most likely mile mark of the runner. This is based on the runner's location
+        and pace. This will grab the 5 closest points on the course to the runner's ping,
+        calculate the probability (given the last pace) that the runner is at one of those points,
+        then return the point with the highest probability.
+
+        :param Route route: The route of the course.
+        :return float: The most probable mile mark.
+        """
         _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=5)
         return calculate_most_probable_mile_mark(
             [route.distances[i] for i in matched_indices],
@@ -249,7 +279,15 @@ class Runner:
         )
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
-        """ """
+        """
+        This method is called when a runner pings. This will update all of the runner's statistics
+        as well as update the map.
+
+        :param Ping ping: The runner's ping payload object.
+        :param datetime.datetime start_time: The race start time.
+        :param Route route: The route of the race.
+        :return None:
+        """
         self.pings += 1
         last_timestamp = self.last_ping.timestamp
         # Don't update if latest point is older than current point
