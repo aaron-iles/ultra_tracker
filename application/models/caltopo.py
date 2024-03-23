@@ -4,8 +4,8 @@
 from urllib.parse import urlencode
 
 import requests
-
 import uwsgidecorators
+
 
 class CaltopoMap:
     """
@@ -123,7 +123,7 @@ class CaltopoMarker(CaltopoFeature):
                 "class": "Marker",
             },
         }
-    
+
     @uwsgidecorators.thread
     def update(self) -> requests.Response:
         """
@@ -141,7 +141,10 @@ class CaltopoMarker(CaltopoFeature):
             "Connection": "keep-alive",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "Cookie": f"JSESSIONID={self.session_id}",
-        requests.post(url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120)
+        }
+        requests.post(
+            url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120
+        )
         return
 
 
