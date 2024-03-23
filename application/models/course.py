@@ -155,7 +155,8 @@ class AidStation(CaltopoMarker):
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
         self.description = self.aid_station_description
-        self.update()
+        # This must be called this way to work with the uwsgi thread decorator.
+        CaltopoMarker.update(self)
 
 
 class Route(CaltopoShape):

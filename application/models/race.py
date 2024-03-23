@@ -309,6 +309,7 @@ class Runner:
         self.marker.description = self.marker_description
         self.marker.coordinates = ping.lonlat
         self.marker.rotation = round(ping.heading)
-        # Issue the POST to update the marker.
-        self.marker.update()
+        # Issue the POST to update the marker. This must be called this way to work with the uwsgi
+        # thread decorator.
+        CaltopoMarker.update(self.marker)
         self.check_if_finished(route)

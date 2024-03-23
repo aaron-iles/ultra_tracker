@@ -5,8 +5,7 @@ from urllib.parse import urlencode
 
 import requests
 
-from .worker import post_queue
-
+import uwsgidecorators
 
 class CaltopoMap:
     """
@@ -124,7 +123,8 @@ class CaltopoMarker(CaltopoFeature):
                 "class": "Marker",
             },
         }
-
+    
+    @uwsgidecorators.thread
     def update(self) -> requests.Response:
         """
         Moves the marker to the provided location, updates its description, and rotates it.
@@ -141,18 +141,7 @@ class CaltopoMarker(CaltopoFeature):
             "Connection": "keep-alive",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "Cookie": f"JSESSIONID={self.session_id}",
-        }
-        post_queue.put(
-            (
-                {
-                    "url": url,
-                    "headers": headers,
-                    "data": urlencode({"json": self.as_json}),
-                    "verify": True,
-                    "timeout": 120,
-                }
-            )
-        )
+        requests.post(url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120)
         return
 
 
