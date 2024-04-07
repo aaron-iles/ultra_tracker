@@ -49,7 +49,32 @@
     </div>
     <div id="aid" class="container tab-content" style="padding-top: 64px;">
         <h2 class="teal-text">Aid</h2>
-        <p>Hello World!</p>
+        <table class="striped responsive-table stats-table">
+            <thead>
+                <tr class="teal lighten-2 white-text">
+                    <th>Start Time</th>
+                    <th>Last Update</th>
+                    <th>Elapsed Time</th>
+                    <th>Mile Mark</th>
+                    <th>Avg Pace</th>
+                    <th>Est Finish Date</th>
+                    <th>Est Finish Time</th>
+                    <th>Pings</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ start_time }}</td>
+                    <td>{{ last_update }}</td>
+                    <td>{{ elapsed_time }}</td>
+                    <td>{{ mile_mark }}</td>
+                    <td>{{ avg_pace }}</td>
+                    <td>{{ est_finish_date }}</td>
+                    <td>{{ est_finish_time }}</td>
+                    <td>{{ pings }}</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div id="map" class="container tab-content" style="padding-top: 64px;">
         <iframe src="{{ map_url }}" frameborder="0"></iframe>
