@@ -129,7 +129,17 @@ class Race:
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
-            "debug_data": {"last_ping": self.runner.last_ping.as_json, "estimated_course_location": self.runner.estimate_marker.coordinates[::-1], "pings": self.runner.pings, "course":{"distance": self.course.route.length, "aid_stations": len(self.course.aid_stations), "timezone": str(self.course.timezone), "points": len(self.course.route.points)}},
+            "debug_data": {
+                "last_ping": self.runner.last_ping.as_json,
+                "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
+                "pings": self.runner.pings,
+                "course": {
+                    "distance": self.course.route.length,
+                    "aid_stations": len(self.course.aid_stations),
+                    "timezone": str(self.course.timezone),
+                    "points": len(self.course.route.points),
+                },
+            },
         }
 
     def save(self) -> None:
@@ -286,7 +296,7 @@ class Runner:
         then return the point with the highest probability.
 
         :param Route route: The route of the course.
-        :return tuple: The most probable mile mark and the coordinates of that mile mark on the 
+        :return tuple: The most probable mile mark and the coordinates of that mile mark on the
         course.
         """
         _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=5)

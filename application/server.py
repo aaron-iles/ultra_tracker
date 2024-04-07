@@ -5,7 +5,7 @@ import datetime
 import json
 
 import yaml
-from flask import render_template, Flask, request
+from flask import Flask, render_template, request
 from jinja2 import Environment, FileSystemLoader
 from models.caltopo import CaltopoMap
 from models.course import Course
