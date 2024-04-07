@@ -276,7 +276,7 @@ class Runner:
             f"𝗘𝗙𝗧: {format_duration(self.estimated_finish_time)}"
         )
 
-    def calculate_mile_mark(self, route) -> float:
+    def calculate_mile_mark(self, route) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
         and pace. This will grab the 5 closest points on the course to the runner's ping,
@@ -284,7 +284,8 @@ class Runner:
         then return the point with the highest probability.
 
         :param Route route: The route of the course.
-        :return float: The most probable mile mark.
+        :return tuple: The most probable mile mark and the coordinates of that mile mark on the 
+        course.
         """
         _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=5)
         mile_mark = calculate_most_probable_mile_mark(
@@ -326,12 +327,12 @@ class Runner:
         self.marker.description = self.marker_description
         self.marker.coordinates = ping.lonlat
         self.marker.rotation = round(ping.heading)
-
+        # Update the estimate marker coordinates.
         self.estimate_marker.coordinates = coords[::-1]
         self.estimate_marker.rotation = round(ping.heading)
         self.estimate_marker.description = ""
+        # Issue the POST to update the estimate marker.
         CaltopoMarker.update(self.estimate_marker)
-
         # Issue the POST to update the marker. This must be called this way to work with the uwsgi
         # thread decorator.
         CaltopoMarker.update(self.marker)
