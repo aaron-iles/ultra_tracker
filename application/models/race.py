@@ -9,6 +9,7 @@ import numpy as np
 import pytz
 from scipy.stats import norm
 
+from scipy.spatial import KDTree
 from .caltopo import CaltopoMarker
 from .course import Route
 from .tracker import Ping
@@ -41,9 +42,9 @@ def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
     return f"{minutes}'{seconds:02d}\""
 
 
-def calculate_most_probable_mile_mark(
+def calculate_mile_mark_probabilities(
     mile_marks: list, elapsed_time: float, average_pace: float
-) -> float:
+) -> np.array:
     """
     Given a list of mile marks, calculates the most likely mile mark given the average pace and
     elapsed time.
@@ -63,10 +64,26 @@ def calculate_most_probable_mile_mark(
     # Calculate standard deviation based on average pace
     standard_deviation = average_pace / 3  # Adjust for variability in pace
     # Calculate probabilities for each mile mark
-    probabilities = norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
+    return norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
     # Find the mile mark with the highest probability
-    most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
-    return most_probable_mile_mark
+    #most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
+    #print(f"{average_pace} {elapsed_time} {mile_marks}\n")
+    #return most_probable_mile_mark
+
+
+
+def extract_largest_50_percent_indices(arr):
+    """
+    Extracts the indices of the largest 50% of elements from a numpy array while maintaining the original order.
+
+    :param numpy.ndarray arr: Input numpy array.
+    :return numpy.ndarray: Indices of the largest 50% of elements.
+    """
+    # Find the index that separates the largest 50% from the smallest 50%
+    index = len(arr) // 2
+    # Partition the array so that the elements at index and to the right are larger than arr[index]
+    partitioned_indices = np.argpartition(arr, -index)[-index:]
+    return partitioned_indices
 
 
 class Race:
@@ -96,6 +113,7 @@ class Race:
         self.last_ping_raw = {}
         self.map_url = caltopo_map.url
         self.restore()
+        print(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
     def stats(self) -> dict:
@@ -161,6 +179,7 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data, self.course.timezone)
+        print(ping)
         if ping.gps_fix == 0 or ping.latlon == [0, 0]:
             print("ping does not contain GPS coordinates, skipping")
             return
@@ -206,6 +225,11 @@ class Runner:
         :param CaltopoMap caltopo_map: The map object containing the markers.
         :return CaltopoMarker: The marker representing the runner.
         """
+        for marker in caltopo_map.markers:
+            if marker.title == f"{marker_name} (estimated)":
+                self.estimate_marker = marker
+                break
+
         for marker in caltopo_map.markers:
             if marker.title == marker_name:
                 return marker
@@ -279,12 +303,34 @@ class Runner:
         :param Route route: The route of the course.
         :return float: The most probable mile mark.
         """
-        _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=5)
-        return calculate_most_probable_mile_mark(
-            [route.distances[i] for i in matched_indices],
-            self.elapsed_time.total_seconds() / 60,
+        total_minutes = self.elapsed_time.total_seconds() / 60
+        kdtree = route.kdtree
+        distances = route.distances
+        points = route.points
+        _, matched_indices = kdtree.query(self.last_ping.latlon, k=10)
+        matched_distances = [distances[i] for i in matched_indices]
+        matched_points = [points[i] for i in matched_indices]
+        probs = calculate_mile_mark_probabilities(
+            matched_distances,
+            total_minutes,
             self.pace,
         )
+        indices = extract_largest_50_percent_indices(probs)
+        points = [matched_points[i] for i in indices]
+        distances = [matched_distances[i] for i in indices]
+        kdtree = KDTree(points)
+        _, matched_indices = kdtree.query(self.last_ping.latlon, k=2)
+        matched_distances = [distances[i] for i in matched_indices]
+        matched_points = [points[i] for i in matched_indices]
+        probs = calculate_mile_mark_probabilities(
+            matched_distances,
+            total_minutes,
+            self.pace,
+        )
+        # TODO move this
+        self.estimate_marker.coordinates = list(points[np.argmax(probs)][::-1])
+        CaltopoMarker.update(self.estimate_marker)
+        return distances[np.argmax(probs)]
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
         """
@@ -321,3 +367,7 @@ class Runner:
         # thread decorator.
         CaltopoMarker.update(self.marker)
         self.check_if_finished(route)
+        print(self)
+
+    def __str__(self):
+        return f"RUNNER {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.pace)} ({format_duration(self.elapsed_time)})"
