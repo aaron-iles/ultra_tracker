@@ -10,8 +10,9 @@ from scipy.spatial import KDTree
 from .caltopo import CaltopoMarker, CaltopoShape, get_timezone
 
 
-
-def interpolate_and_filter_points(coordinates: np.array, min_interval_dist: float, max_interval_dist: float):
+def interpolate_and_filter_points(
+    coordinates: np.array, min_interval_dist: float, max_interval_dist: float
+):
     """
     Interpolate points between the given coordinates and filter points based on the distance criteria.
 
@@ -38,7 +39,9 @@ def interpolate_and_filter_points(coordinates: np.array, min_interval_dist: floa
         # Calculate the distance between consecutive points
         distance_between_points = geodesic(coords1, coords2).miles
         # Include the starting point of each segment
-        interpolated_points = np.vstack([interpolated_points, [point1["latitude"], point1["longitude"]]])
+        interpolated_points = np.vstack(
+            [interpolated_points, [point1["latitude"], point1["longitude"]]]
+        )
         # Check if interpolation or removal is needed
         if distance_between_points > max_interval_dist:
             # Calculate the number of intervals needed
@@ -58,9 +61,10 @@ def interpolate_and_filter_points(coordinates: np.array, min_interval_dist: floa
             # Skip adding this point if it's too close to the previous one
             continue
     # Include the last point of the original array
-    interpolated_points = np.vstack([interpolated_points, [point2["latitude"], point2["longitude"]]])
+    interpolated_points = np.vstack(
+        [interpolated_points, [point2["latitude"], point2["longitude"]]]
+    )
     return interpolated_points
-
 
 
 def transform_path(path_data: list, min_step_size: float, max_step_size: float) -> tuple:
@@ -77,7 +81,9 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     """
     cumulative_distance = 0
     prev_point = None
-    interpolated_path_data = interpolate_and_filter_points(np.array(path_data), min_step_size, max_step_size)
+    interpolated_path_data = interpolate_and_filter_points(
+        np.array(path_data), min_step_size, max_step_size
+    )
     cumulative_distances_array = np.zeros(len(interpolated_path_data))
 
     for i, point in enumerate(interpolated_path_data):
@@ -156,7 +162,9 @@ class Route(CaltopoShape):
     def __init__(self, feature_dict: dict, map_id: str, session_id: str):
         super().__init__(feature_dict, map_id, session_id)
         # TODO this doesn't handle 3 long lists.
-        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 0.02, 0.05)
+        self.points, self.distances = transform_path(
+            [[y, x] for x, y in self.coordinates], 0.02, 0.05
+        )
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]

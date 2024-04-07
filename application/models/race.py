@@ -9,7 +9,6 @@ import numpy as np
 import pytz
 from scipy.stats import norm
 
-from scipy.spatial import KDTree
 from .caltopo import CaltopoMarker
 from .course import Route
 from .tracker import Ping
@@ -68,7 +67,6 @@ def calculate_most_probable_mile_mark(
     # Find the mile mark with the highest probability
     most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
     return most_probable_mile_mark
-
 
 
 class Race:
@@ -328,13 +326,11 @@ class Runner:
         self.marker.description = self.marker_description
         self.marker.coordinates = ping.lonlat
         self.marker.rotation = round(ping.heading)
-        
 
         self.estimate_marker.coordinates = coords[::-1]
         self.estimate_marker.rotation = round(ping.heading)
         self.estimate_marker.description = ""
         CaltopoMarker.update(self.estimate_marker)
-        
 
         # Issue the POST to update the marker. This must be called this way to work with the uwsgi
         # thread decorator.
