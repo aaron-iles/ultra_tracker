@@ -58,3 +58,25 @@ nav {
     height: 3px; /* Height of the highlight */
     background-color: teal; /* Color of the highlight */
 }
+/* CSS to remove underline from links */
+nav ul li a {
+  text-decoration: none;
+}
+/* Style for accordion */
+.accordion {
+    width: 100%;
+}
+
+.accordion-item {
+    margin-bottom: 10px;
+}
+
+.accordion-button {
+    width: 100%;
+    text-align: left;
+    background-color: #f5f5f5;
+}
+
+.accordion-body {
+    padding: 10px;
+}
