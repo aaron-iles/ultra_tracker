@@ -42,9 +42,9 @@ def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
     return f"{minutes}'{seconds:02d}\""
 
 
-def calculate_mile_mark_probabilities(
+def calculate_most_probable_mile_mark(
     mile_marks: list, elapsed_time: float, average_pace: float
-) -> np.array:
+) -> float:
     """
     Given a list of mile marks, calculates the most likely mile mark given the average pace and
     elapsed time.
@@ -64,26 +64,11 @@ def calculate_mile_mark_probabilities(
     # Calculate standard deviation based on average pace
     standard_deviation = average_pace / 3  # Adjust for variability in pace
     # Calculate probabilities for each mile mark
-    return norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
+    probabilities = norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
     # Find the mile mark with the highest probability
-    #most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
-    #print(f"{average_pace} {elapsed_time} {mile_marks}\n")
-    #return most_probable_mile_mark
+    most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
+    return most_probable_mile_mark
 
-
-
-def extract_largest_50_percent_indices(arr):
-    """
-    Extracts the indices of the largest 50% of elements from a numpy array while maintaining the original order.
-
-    :param numpy.ndarray arr: Input numpy array.
-    :return numpy.ndarray: Indices of the largest 50% of elements.
-    """
-    # Find the index that separates the largest 50% from the smallest 50%
-    index = len(arr) // 2
-    # Partition the array so that the elements at index and to the right are larger than arr[index]
-    partitioned_indices = np.argpartition(arr, -index)[-index:]
-    return partitioned_indices
 
 
 class Race:
@@ -303,34 +288,14 @@ class Runner:
         :param Route route: The route of the course.
         :return float: The most probable mile mark.
         """
-        total_minutes = self.elapsed_time.total_seconds() / 60
-        kdtree = route.kdtree
-        distances = route.distances
-        points = route.points
-        _, matched_indices = kdtree.query(self.last_ping.latlon, k=10)
-        matched_distances = [distances[i] for i in matched_indices]
-        matched_points = [points[i] for i in matched_indices]
-        probs = calculate_mile_mark_probabilities(
-            matched_distances,
-            total_minutes,
+        _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=5)
+        mile_mark = calculate_most_probable_mile_mark(
+            [route.distances[i] for i in matched_indices],
+            self.elapsed_time.total_seconds() / 60,
             self.pace,
         )
-        indices = extract_largest_50_percent_indices(probs)
-        points = [matched_points[i] for i in indices]
-        distances = [matched_distances[i] for i in indices]
-        kdtree = KDTree(points)
-        _, matched_indices = kdtree.query(self.last_ping.latlon, k=2)
-        matched_distances = [distances[i] for i in matched_indices]
-        matched_points = [points[i] for i in matched_indices]
-        probs = calculate_mile_mark_probabilities(
-            matched_distances,
-            total_minutes,
-            self.pace,
-        )
-        # TODO move this
-        self.estimate_marker.coordinates = list(points[np.argmax(probs)][::-1])
-        CaltopoMarker.update(self.estimate_marker)
-        return distances[np.argmax(probs)]
+        coords = route.points[np.where(route.distances == mile_mark)[0]].tolist()[0]
+        return mile_mark, coords
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
         """
@@ -351,7 +316,7 @@ class Runner:
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
         self.elapsed_time = ping.timestamp - start_time
-        self.mile_mark = self.calculate_mile_mark(route)
+        self.mile_mark, coords = self.calculate_mile_mark(route)
         self.check_if_started()
         if not self.in_progress:
             print(f"race not in progress; started: {self.started} finished: {self.finished}")
@@ -363,6 +328,14 @@ class Runner:
         self.marker.description = self.marker_description
         self.marker.coordinates = ping.lonlat
         self.marker.rotation = round(ping.heading)
+        
+
+        self.estimate_marker.coordinates = coords[::-1]
+        self.estimate_marker.rotation = round(ping.heading)
+        self.estimate_marker.description = ""
+        CaltopoMarker.update(self.estimate_marker)
+        
+
         # Issue the POST to update the marker. This must be called this way to work with the uwsgi
         # thread decorator.
         CaltopoMarker.update(self.marker)

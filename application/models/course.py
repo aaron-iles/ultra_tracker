@@ -77,7 +77,7 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     """
     cumulative_distance = 0
     prev_point = None
-    interpolated_path_data = interpolate_and_filter_points(np.array(path_data), .01, .03)
+    interpolated_path_data = interpolate_and_filter_points(np.array(path_data), min_step_size, max_step_size)
     cumulative_distances_array = np.zeros(len(interpolated_path_data))
 
     for i, point in enumerate(interpolated_path_data):
