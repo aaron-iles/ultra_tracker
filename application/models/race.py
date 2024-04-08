@@ -159,7 +159,7 @@ class Race:
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
-            "course_deviation": self.runner.uncertainty,
+            "course_deviation": self.runner.course_deviation,
             "debug_data": {
                 "course_deviaiton": self.runner.course_deviation,
                 "last_ping": self.runner.last_ping.as_json,
