@@ -176,6 +176,10 @@ class Race:
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
             "course_deviation": format_distance(self.runner.course_deviation),
+            "deviation_background_color": 'green' if self.runner.course_deviation < 100 else \
+                'yellow' if 100 <= self.runner.course_deviation <= 150 else \
+                'orange' if 151 <= self.runner.course_deviation <= 200 else \
+                'red',
             "debug_data": {
                 "course_deviaiton": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
@@ -308,7 +312,6 @@ class Runner:
 
         :return float: The uncertainty in the location calculation. 
         """
-        print(self.marker.coordinates, self.estimate_marker.coordinates)
         return abs(haversine_distance(self.marker.coordinates[::-1], self.estimate_marker.coordinates[::-1]))
 
     def check_if_finished(self, route) -> None:
