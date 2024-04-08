@@ -4,10 +4,10 @@
 import datetime
 import json
 import os
+from math import atan2, cos, radians, sin, sqrt
 
 import numpy as np
 import pytz
-from math import radians, sin, cos, sqrt, atan2
 from scipy.stats import norm
 
 from .caltopo import CaltopoMarker
@@ -36,7 +36,7 @@ def format_distance(distance_ft: float) -> str:
     :param float distance_ft: The distance in feet.
 
     :return str: A human-readable representation of the distance. If the distance is over 5280 feet,
-    it will be converted to miles with one decimal point, otherwise, it will be displayed in feet 
+    it will be converted to miles with one decimal point, otherwise, it will be displayed in feet
     with one decimal point.
     """
     if distance_ft >= 5280:
@@ -44,6 +44,7 @@ def format_distance(distance_ft: float) -> str:
         return f"{distance_mi:.1f} mi"
     else:
         return f"{distance_ft:.1f} ft"
+
 
 def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
     """
@@ -86,14 +87,13 @@ def calculate_most_probable_mile_mark(
     return most_probable_mile_mark
 
 
-
 def haversine_distance(coord1: list, coord2: list) -> float:
     """
     Calculate the Haversine distance between two points specified by their latitude and longitude coordinates.
-    
-    :param list coord1: Latitude and longitude coordinates of the first point in the format 
+
+    :param list coord1: Latitude and longitude coordinates of the first point in the format
     [latitude, longitude].
-    :param list coord2: Latitude and longitude coordinates of the second point in the format 
+    :param list coord2: Latitude and longitude coordinates of the second point in the format
     [latitude, longitude].
     :return float: The distance between the two points in feet.
     """
@@ -108,7 +108,7 @@ def haversine_distance(coord1: list, coord2: list) -> float:
     dlat = lat2 - lat1
     dlon = lon2 - lon1
     # Haversine formula
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     distance_km = R * c
     # Convert kilometers to feet (1 km = 3280.84 feet)
@@ -306,10 +306,14 @@ class Runner:
         """
         The difference (in feet) between the runner's true location and the course estimate.
 
-        :return float: The uncertainty in the location calculation. 
+        :return float: The uncertainty in the location calculation.
         """
         print(self.marker.coordinates, self.estimate_marker.coordinates)
-        return abs(haversine_distance(self.marker.coordinates[::-1], self.estimate_marker.coordinates[::-1]))
+        return abs(
+            haversine_distance(
+                self.marker.coordinates[::-1], self.estimate_marker.coordinates[::-1]
+            )
+        )
 
     def check_if_finished(self, route) -> None:
         """
