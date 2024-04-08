@@ -7,6 +7,7 @@ import os
 
 import numpy as np
 import pytz
+from math import radians, sin, cos, sqrt, atan2
 from scipy.stats import norm
 
 from .caltopo import CaltopoMarker
@@ -69,6 +70,35 @@ def calculate_most_probable_mile_mark(
     return most_probable_mile_mark
 
 
+
+def haversine_distance(coord1: list, coord2: list) -> float:
+    """
+    Calculate the Haversine distance between two points specified by their latitude and longitude coordinates.
+    
+    :param list coord1: Latitude and longitude coordinates of the first point in the format 
+    [latitude, longitude].
+    :param list coord2: Latitude and longitude coordinates of the second point in the format 
+    [latitude, longitude].
+    :return float: The distance between the two points in feet.
+    """
+    # Radius of the Earth in kilometers
+    R = 6371.0
+    # Convert latitude and longitude from degrees to radians
+    lat1 = radians(coord1[0])
+    lon1 = radians(coord1[1])
+    lat2 = radians(coord2[0])
+    lon2 = radians(coord2[1])
+    # Compute the differences between latitudes and longitudes
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    # Haversine formula
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance_km = R * c
+    # Convert kilometers to feet (1 km = 3280.84 feet)
+    return distance_km * 3280.84
+
+
 class Race:
     """
     This object orchestrates a race.
@@ -129,7 +159,9 @@ class Race:
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
+            "course_deviation": self.runner.uncertainty,
             "debug_data": {
+                "course_deviaiton": self.runner.course_deviation,
                 "last_ping": self.runner.last_ping.as_json,
                 "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
                 "pings": self.runner.pings,
@@ -208,7 +240,7 @@ class Runner:
         self.started = False
         self.mile_mark = 0
         self.last_ping = Ping({}, pytz.timezone("Etc/GMT"))
-        self.marker = self.extract_marker(marker_name, caltopo_map)
+        self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
         self.pace = 10
         self.pings = 0
 
@@ -220,14 +252,16 @@ class Runner:
         :param CaltopoMap caltopo_map: The map object containing the markers.
         :return CaltopoMarker: The marker representing the runner.
         """
+        estimate_marker = None
+        true_marker = None
         for marker in caltopo_map.markers:
             if marker.title == f"{marker_name} (estimated)":
-                self.estimate_marker = marker
-                break
+                estimate_marker = marker
+            elif marker.title == marker_name:
+                true_marker = marker
 
-        for marker in caltopo_map.markers:
-            if marker.title == marker_name:
-                return marker
+        if estimate_marker and true_marker:
+            return marker, estimate_marker
         raise LookupError(
             f"no marker called '{marker_name}' found in markers: {caltopo_map.markers}"
         )
@@ -250,6 +284,15 @@ class Runner:
         :return None:
         """
         self.started = self.mile_mark > 0.11
+
+    @property
+    def course_deviation(self) -> float:
+        """
+        The difference (in feet) between the runner's true location and the course estimate.
+
+        :return float: The uncertainty in the location calculation. 
+        """
+        return abs(haversine_distance(self.marker.coordinates[::-1], self.estimate_marker.coordinates[::-1]))
 
     def check_if_finished(self, route) -> None:
         """
