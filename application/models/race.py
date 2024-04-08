@@ -29,6 +29,22 @@ def format_duration(duration: datetime.timedelta) -> str:
     return f"{int(hours)}:{int(minutes):02}'{int(seconds):02}\""
 
 
+def format_distance(distance_ft: float) -> str:
+    """
+    Format a distance in feet into a human-readable format.
+
+    :param float distance_ft: The distance in feet.
+
+    :return str: A human-readable representation of the distance. If the distance is over 5280 feet,
+    it will be converted to miles with one decimal point, otherwise, it will be displayed in feet 
+    with one decimal point.
+    """
+    if distance_ft >= 5280:
+        distance_mi = distance_ft / 5280
+        return f"{distance_mi:.1f} mi"
+    else:
+        return f"{distance_ft:.1f} ft"
+
 def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
     """
     Formats a running pace in a traditional human format.
@@ -159,9 +175,9 @@ class Race:
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
-            "course_deviation": self.runner.course_deviation,
+            "course_deviation": format_distance(self.runner.course_deviation),
             "debug_data": {
-                "course_deviaiton": self.runner.course_deviation,
+                "course_deviaiton": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
                 "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
                 "pings": self.runner.pings,
@@ -261,7 +277,7 @@ class Runner:
                 true_marker = marker
 
         if estimate_marker and true_marker:
-            return marker, estimate_marker
+            return true_marker, estimate_marker
         raise LookupError(
             f"no marker called '{marker_name}' found in markers: {caltopo_map.markers}"
         )
@@ -292,6 +308,7 @@ class Runner:
 
         :return float: The uncertainty in the location calculation. 
         """
+        print(self.marker.coordinates, self.estimate_marker.coordinates)
         return abs(haversine_distance(self.marker.coordinates[::-1], self.estimate_marker.coordinates[::-1]))
 
     def check_if_finished(self, route) -> None:
