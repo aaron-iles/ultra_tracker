@@ -181,7 +181,7 @@ class Race:
                 'orange' if 151 <= self.runner.course_deviation <= 200 else \
                 'red',
             "debug_data": {
-                "course_deviaiton": format_distance(self.runner.course_deviation),
+                "course_deviation": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
                 "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
                 "pings": self.runner.pings,
@@ -312,7 +312,6 @@ class Runner:
 
         :return float: The uncertainty in the location calculation.
         """
-        print(self.marker.coordinates, self.estimate_marker.coordinates)
         return abs(
             haversine_distance(
                 self.marker.coordinates[::-1], self.estimate_marker.coordinates[::-1]
