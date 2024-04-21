@@ -27,9 +27,10 @@ def interpolate_and_filter_points(
     :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude coordinates.
     """
     interpolated_points = np.empty((0, 2), dtype=float)
-
-    for i in range(len(coordinates) - 1):
-        point1 = {"latitude": coordinates[i, 0], "longitude": coordinates[i, 1]}
+    interpolated_points = np.vstack([interpolated_points, [coordinates[0, 0], coordinates[0, 1]]])
+    last_point = interpolated_points[0]
+    for i in range(1, len(coordinates) - 1):
+        point1 = {"latitude": last_point[0], "longitude": last_point[1]}
         point2 = {"latitude": coordinates[i + 1, 0], "longitude": coordinates[i + 1, 1]}
 
         # Convert latitude and longitude to (lat, lon) tuples
@@ -37,13 +38,13 @@ def interpolate_and_filter_points(
         coords2 = (point2["latitude"], point2["longitude"])
 
         # Calculate the distance between consecutive points
-        distance_between_points = geodesic(coords1, coords2).miles
-        # Include the starting point of each segment
-        interpolated_points = np.vstack(
-            [interpolated_points, [point1["latitude"], point1["longitude"]]]
-        )
+        distance_between_points = geodesic(coords1, coords2).feet
+
+        if distance_between_points < min_interval_dist:
+            # Skip adding this point if it's too close to the previous one
+            continue
         # Check if interpolation or removal is needed
-        if distance_between_points > max_interval_dist:
+        elif distance_between_points > max_interval_dist:
             # Calculate the number of intervals needed
             num_intervals = int(distance_between_points / max_interval_dist)
             # Calculate the step size for latitude and longitude
@@ -57,9 +58,11 @@ def interpolate_and_filter_points(
                 ]
             )
             interpolated_points = np.vstack([interpolated_points, intermediate_array])
-        elif distance_between_points < min_interval_dist:
-            # Skip adding this point if it's too close to the previous one
-            continue
+        else:
+            interpolated_points = np.vstack(
+                [interpolated_points, [point2["latitude"], point2["longitude"]]]
+            )
+        last_point = interpolated_points[-1]
     # Include the last point of the original array
     interpolated_points = np.vstack(
         [interpolated_points, [point2["latitude"], point2["longitude"]]]
@@ -215,9 +218,7 @@ class Route(CaltopoShape):
     def __init__(self, feature_dict: dict, map_id: str, session_id: str):
         super().__init__(feature_dict, map_id, session_id)
         # TODO this doesn't handle 3 long lists.
-        self.points, self.distances = transform_path(
-            [[y, x] for x, y in self.coordinates], 0.02, 0.05
-        )
+        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]

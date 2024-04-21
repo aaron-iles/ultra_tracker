@@ -1,4 +1,6 @@
 flask
+sqlalchemy
+epdb
 geopy
 gpxpy
 jinja2

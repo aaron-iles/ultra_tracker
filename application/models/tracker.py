@@ -4,9 +4,20 @@
 import datetime
 
 
+def meters_to_feet(meters: float) -> float:
+    """
+    Convert meters to feet.
+
+    :param float meters: A distance in meters.
+    :return float: The distance in feet.
+    """
+    return meters * 3.28084
+
+
 class Ping:
     """
     Represents a single ping payload from the tracker.
+    See https://developer.garmin.com/inReach/IPC_Outbound.pdf
 
     :param dict ping_data: The raw tracker payload.
     """
@@ -22,11 +33,13 @@ class Ping:
         "message_code",
         "speed",
         "timestamp",
+        "low_battery",
+        "interval_change",
     }
 
     def __init__(self, ping_data: dict, timezone):
         self._event = ping_data.get("Events", [{}])[0]
-        self.altitude = self._event.get("point", {}).get("altitude", 0.0)
+        self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
         self.gps_fix = self._event.get("point", {}).get("gpsFix", 0)
         self.heading = self._event.get("point", {}).get("course", 0)
         self.imei = self._event.get("imei")
@@ -34,6 +47,8 @@ class Ping:
         self.longitude = self._event.get("point", {}).get("longitude", 0.0)
         self.message_code = self._event.get("messageCode")
         self.speed = self._event.get("point", {}).get("speed", 0.0)
+        self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
+        self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(timezone)
 
     @property
@@ -53,6 +68,15 @@ class Ping:
         :return list: The coordinates in (longitude, latitude) order.
         """
         return [self.longitude, self.latitude]
+
+    @property
+    def latlonalt(self) -> list:
+        """
+        The coordinates and altitude of the ping in (latitude, longitude, altitude) order.
+
+        :return list: The coordinates in (x, y, z) order.
+        """
+        return [self.latitude, self.longitude, self.altitude]
 
     def extract_timestamp(self, timezone):
         """
@@ -88,3 +112,31 @@ class Ping:
             "message_code": self.message_code,
             "speed": self.speed,
         }
+
+
+class Tracker:
+    """ """
+
+    def __init__(self, imei: str):
+        self.imei = imei
+        self.low_battery = False
+        self.pings = []
+        self.track_interval = 0
+
+    @property
+    def last_ping(self) -> Ping:
+        try:
+            return self.pings[-1]
+        except IndexError:
+            return
+
+    @property
+    def track(self) -> list:
+        """ """
+        return [ping.latlonalt for ping in self.pings]
+
+    def check_in(self, ping: Ping) -> None:
+        self.pings = sorted(self.pings + ping, key=lambda p: p.timestamp)
+        self.low_battery = self.last_ping.low_battery == 1
+        if self.last_ping.interval_change:
+            self.track_interval = self.last_ping.interval_change

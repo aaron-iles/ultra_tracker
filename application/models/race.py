@@ -154,7 +154,7 @@ class Race:
         """
         return {
             "pace": self.runner.pace,
-            "pings": self.runner.pings,
+            "pings": len(self.runner.pings),
             "last_ping": self.last_ping_raw,
         }
 
@@ -187,7 +187,7 @@ class Race:
                 "course_deviation": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
                 "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
-                "pings": self.runner.pings,
+                "pings": len(self.runner.pings),
                 "course": {
                     "distance": self.course.route.length,
                     "aid_stations": len(self.course.aid_stations),
@@ -216,8 +216,8 @@ class Race:
             with open(self.data_store, "r") as f:
                 data = json.load(f)
                 self.runner.pace = data.get("pace", 10)
-                self.runner.pings = data.get("pings", 0)
-                self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)
+                # self.runner.pings = data.get("pings", 0) # TODO
+                # self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)  TODO
                 print(f"restore success: {self.runner.last_ping}")
 
     def ingest_ping(self, ping_data: dict) -> None:
@@ -241,7 +241,6 @@ class Race:
         if self.runner.finished:
             print("runner already finished; ignoring ping")
             return
-        self.runner.pings += 1
         self.runner.check_in(ping, self.start_time, self.course.route)
         self.course.update_aid_stations(self.runner)
         self.save()
@@ -262,10 +261,9 @@ class Runner:
         self.finished = False
         self.started = False
         self.mile_mark = 0
-        self.last_ping = Ping({}, pytz.timezone("Etc/GMT"))
-        self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
         self.pace = 10
-        self.pings = 0
+        self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
+        self.pings = []
 
     def extract_marker(self, marker_name: str, caltopo_map) -> CaltopoMarker:
         """
@@ -287,16 +285,6 @@ class Runner:
             return true_marker, estimate_marker
         raise LookupError(
             f"no marker called '{marker_name}' found in markers: {caltopo_map.markers}"
-        )
-
-    def calculate_pace(self) -> float:
-        """
-        Calculates the average pace of the runner.
-
-        :return float: The pace in minutes per mile.
-        """
-        return (
-            (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
         )
 
     def check_if_started(self) -> None:
@@ -353,10 +341,22 @@ class Runner:
             f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
             f"𝗲𝗹𝗮𝗽𝘀𝗲𝗱 𝘁𝗶𝗺𝗲: {format_duration(self.elapsed_time)}\n"
             f"𝗮𝘃𝗴 𝗽𝗮𝗰𝗲: {convert_decimal_pace_to_pretty_format(self.pace)}\n"
-            f"𝗽𝗶𝗻𝗴𝘀: {self.pings}\n"
+            f"𝗽𝗶𝗻𝗴𝘀: {len(self.pings)}\n"
             f"𝗘𝗙𝗗: {self.estimated_finish_date.strftime('%m-%d %H:%M')}\n"
             f"𝗘𝗙𝗧: {format_duration(self.estimated_finish_time)}"
         )
+
+    @property
+    def last_ping(self) -> Ping:
+        try:
+            return self.pings[-1]
+        except IndexError:
+            return Ping({}, pytz.timezone("Etc/GMT"))
+
+    @property
+    def track(self) -> list:
+        """ """
+        return [ping.latlonalt for ping in self.pings]
 
     def calculate_mile_mark(self, route) -> tuple:
         """
@@ -369,7 +369,14 @@ class Runner:
         :return tuple: The most probable mile mark and the coordinates of that mile mark on the
         course.
         """
-        _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=5)
+        _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=100)
+        mile_marks = [route.distances[i] for i in matched_indices]
+        expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.pace)
+        for mm in mile_marks:
+            if abs(mm - expected_mile_mark) < 0.5:
+                return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0]
+        # If there was no mile mark found within a quarter mile of the anticipated mile mark, use
+        # a different method for guessing the mile mark.
         mile_mark = calculate_most_probable_mile_mark(
             [route.distances[i] for i in matched_indices],
             self.elapsed_time.total_seconds() / 60,
@@ -388,21 +395,30 @@ class Runner:
         :param Route route: The route of the race.
         :return None:
         """
-        self.pings += 1
+
         last_timestamp = self.last_ping.timestamp
+
+        self.pings = sorted(self.pings + [ping], key=lambda p: p.timestamp)
+        # self.low_battery = self.last_ping.low_battery == 1
+        # if self.last_ping.interval_change:
+        #    self.track_interval = self.last_ping.interval_change
+
+        # TODO add current pace and average pace
+
         # Don't update if latest point is older than current point
         if last_timestamp > ping.timestamp:
             print(f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}")
             return
         # At this point the race has started and this is a new ping.
-        self.last_ping = ping
         self.elapsed_time = ping.timestamp - start_time
         self.mile_mark, coords = self.calculate_mile_mark(route)
+        self.pace = (
+            (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
+        )
         self.check_if_started()
         if not self.in_progress:
             print(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
-        self.pace = self.calculate_pace()
         self.estimated_finish_time = datetime.timedelta(minutes=self.pace * route.length)
         self.estimated_finish_date = start_time + self.estimated_finish_time
         # Now update the marker attributes.
