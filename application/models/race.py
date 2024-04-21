@@ -287,6 +287,15 @@ class Runner:
             f"no marker called '{marker_name}' found in markers: {caltopo_map.markers}"
         )
 
+    def calculate_pace(self) -> float:
+        """
+        Calculates the average pace of the runner.
+        :return float: The pace in minutes per mile.
+        """
+        return (
+            (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
+        )
+
     def check_if_started(self) -> None:
         """
         Checks if the runner has started the race yet or not. This can only be triggered if the
@@ -412,9 +421,7 @@ class Runner:
         # At this point the race has started and this is a new ping.
         self.elapsed_time = ping.timestamp - start_time
         self.mile_mark, coords = self.calculate_mile_mark(route)
-        self.pace = (
-            (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
-        )
+        self.pace = self.calculate_pace()
         self.check_if_started()
         if not self.in_progress:
             print(f"race not in progress; started: {self.started} finished: {self.finished}")
