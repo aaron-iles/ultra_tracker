@@ -412,7 +412,7 @@ class Runner:
         :return None:
         """
         last_timestamp = self.last_ping.timestamp
-        self.pings += 1 
+        self.pings += 1
         self.low_battery = ping.low_battery == 1
         if ping.interval_change:
             self.track_interval = ping.interval_change

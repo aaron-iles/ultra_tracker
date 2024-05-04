@@ -18,7 +18,7 @@ def interpolate_and_filter_points(
 
     :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point with
     latitude and longitude coordinates.
-    :param float min_interval_dist: The minimum distance allowed (in feet) between two consecutive 
+    :param float min_interval_dist: The minimum distance allowed (in feet) between two consecutive
     points. If the distance between two points is less than this value, the point will be removed.
     :param float max_interval_dist: The maximum distance allowed between two consecutive points. If
     the distance between two points is greater than this value, additional points will be
