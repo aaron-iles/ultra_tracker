@@ -9,8 +9,8 @@ services:
       driver: none
     container_name: ultra-tracker
     ports:
-      - 80:8080
+      - '80:8080'
     restart: unless-stopped
     network_mode: bridge
     volumes:
-      - /proj/ultra_tracker/application:/app
+      - '/proj/ultra_tracker/application:/app'

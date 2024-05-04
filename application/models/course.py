@@ -18,8 +18,8 @@ def interpolate_and_filter_points(
 
     :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point with
     latitude and longitude coordinates.
-    :param float min_interval_dist: The minimum distance allowed between two consecutive points. If
-    the distance between two points is less than this value, the point will be removed.
+    :param float min_interval_dist: The minimum distance allowed (in feet) between two consecutive
+    points. If the distance between two points is less than this value, the point will be removed.
     :param float max_interval_dist: The maximum distance allowed between two consecutive points. If
     the distance between two points is greater than this value, additional points will be
     interpolated to meet the specified interval.
@@ -27,9 +27,10 @@ def interpolate_and_filter_points(
     :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude coordinates.
     """
     interpolated_points = np.empty((0, 2), dtype=float)
-
-    for i in range(len(coordinates) - 1):
-        point1 = {"latitude": coordinates[i, 0], "longitude": coordinates[i, 1]}
+    interpolated_points = np.vstack([interpolated_points, [coordinates[0, 0], coordinates[0, 1]]])
+    last_point = interpolated_points[0]
+    for i in range(1, len(coordinates) - 1):
+        point1 = {"latitude": last_point[0], "longitude": last_point[1]}
         point2 = {"latitude": coordinates[i + 1, 0], "longitude": coordinates[i + 1, 1]}
 
         # Convert latitude and longitude to (lat, lon) tuples
@@ -37,13 +38,13 @@ def interpolate_and_filter_points(
         coords2 = (point2["latitude"], point2["longitude"])
 
         # Calculate the distance between consecutive points
-        distance_between_points = geodesic(coords1, coords2).miles
-        # Include the starting point of each segment
-        interpolated_points = np.vstack(
-            [interpolated_points, [point1["latitude"], point1["longitude"]]]
-        )
+        distance_between_points = geodesic(coords1, coords2).feet
+
+        if distance_between_points < min_interval_dist:
+            # Skip adding this point if it's too close to the previous one
+            continue
         # Check if interpolation or removal is needed
-        if distance_between_points > max_interval_dist:
+        elif distance_between_points > max_interval_dist:
             # Calculate the number of intervals needed
             num_intervals = int(distance_between_points / max_interval_dist)
             # Calculate the step size for latitude and longitude
@@ -57,9 +58,11 @@ def interpolate_and_filter_points(
                 ]
             )
             interpolated_points = np.vstack([interpolated_points, intermediate_array])
-        elif distance_between_points < min_interval_dist:
-            # Skip adding this point if it's too close to the previous one
-            continue
+        else:
+            interpolated_points = np.vstack(
+                [interpolated_points, [point2["latitude"], point2["longitude"]]]
+            )
+        last_point = interpolated_points[-1]
     # Include the last point of the original array
     interpolated_points = np.vstack(
         [interpolated_points, [point2["latitude"], point2["longitude"]]]
@@ -74,8 +77,10 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     is to calculate a cumulative sum of the distances between the points.
 
     :param list path_data: The list of coordinates making up the path.
-    :param float min_step_size: The minumum distance allowed between points in the transformed path.
-    :param float max_step_size: The maximum distance allowed between points in the transformed path.
+    :param float min_step_size: The minumum distance allowed between points in the transformed path
+    (in feet).
+    :param float max_step_size: The maximum distance allowed between points in the transformed path
+    (in feet).
     :return tuple: The newly interpolated path as a numpy array and the array of the cumulative
     distances.
     """
@@ -158,7 +163,15 @@ class Course:
                 return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session_id)
         raise LookupError(f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}")
 
-    def update_aid_stations(self, runner):
+    def update_aid_stations(self, runner) -> None:
+        """
+        Loops over each aid station to allow it to get updated with the latest information from the
+        runner.
+
+        :param Runner runner: The runner of the race.
+        :return None:
+        """
+        # TODO: Deprecate this in favor of calculating these for any runner upon request.
         for aid_station in self.aid_stations:
             aid_station.refresh(runner)
 
@@ -174,17 +187,20 @@ class AidStation(CaltopoMarker):
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.distance_to = 0
 
-    @property
-    def aid_station_description(self) -> str:
+    def get_eta(self, runner) -> datetime.datetime:
         """
-        A human-friendly description for the aid station to be used in Caltopo.
+        Given a `Runner`, calculates the ETA of the runner to the aid station. If the runner has
+        already passed the aid station, this function returns None.
 
-        :return str: A comment string for the Caltopo marker.
+        :param Runner runner: A runner in the race.
+        :return datetime.datetime: The time and date of the runner's ETA.
         """
-        return (
-            f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
-            f"𝗘𝗧𝗔: {self.estimated_arrival_time.strftime('%m-%d %H:%M')}\n"
-        )
+        miles_to_me = self.mile_mark - runner.mile_mark
+        if miles_to_me < 0:
+            # The runner has already passed this aid station.
+            return
+        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
+        return runner.last_ping.timestamp + minutes_to_me
 
     def refresh(self, runner) -> None:
         """
@@ -193,15 +209,13 @@ class AidStation(CaltopoMarker):
         :param Runner runner: A runner object.
         :return None:
         """
+        # TODO: Deprecate this in favor of methods that allow any runner to ask for an ETA, etc.
         miles_to_me = self.mile_mark - runner.mile_mark
         if miles_to_me < 0:
             # The runner has already passed this aid station.
             return
-        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.pace)
+        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
-        self.description = self.aid_station_description
-        # This must be called this way to work with the uwsgi thread decorator.
-        CaltopoMarker.update(self)
 
     def __lt__(self, other):
         return self.mile_mark < other.mile_mark
@@ -215,9 +229,7 @@ class Route(CaltopoShape):
     def __init__(self, feature_dict: dict, map_id: str, session_id: str):
         super().__init__(feature_dict, map_id, session_id)
         # TODO this doesn't handle 3 long lists.
-        self.points, self.distances = transform_path(
-            [[y, x] for x, y in self.coordinates], 0.02, 0.05
-        )
+        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]
