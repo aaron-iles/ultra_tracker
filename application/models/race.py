@@ -59,6 +59,18 @@ def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
     return f"{minutes}'{seconds:02d}\""
 
 
+def kph_to_min_per_mi(kph: float) -> float:
+    """
+    Convert kilometers per hour (kph) to minutes per mile (min/mi).
+
+    Parameters:
+    :param float kph: Speed in kilometers per hour.
+    :return float: Speed in minutes per mile.
+    """
+    miles_per_hour = kph / 1.60934
+    return 60 / miles_per_hour if miles_per_hour != 0 else 0.0
+
+
 def calculate_most_probable_mile_mark(
     mile_marks: list, elapsed_time: float, average_pace: float
 ) -> float:
@@ -167,6 +179,7 @@ class Race:
         """
         return {
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.pace),
+            "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
             "last_update": self.runner.last_ping.timestamp.strftime("%m-%d %H:%M"),
@@ -257,18 +270,19 @@ class Runner:
     """
 
     def __init__(self, caltopo_map, marker_name: str):
+        self.current_pace = 10
         self.elapsed_time = datetime.timedelta(0)
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
         self.estimated_finish_time = datetime.timedelta(0)
         self.finished = False
-        self.started = False
-        self.mile_mark = 0
         self.last_ping = Ping({}, pytz.timezone("Etc/GMT"))
-        self.pace = 10
-        self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
-        self.pings = 0
-        self.track_interval = 300
         self.low_battery = False
+        self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
+        self.mile_mark = 0
+        self.pace = 10
+        self.pings = 0
+        self.started = False
+        self.track_interval = 300
 
     def extract_marker(self, marker_name: str, caltopo_map) -> CaltopoMarker:
         """
@@ -411,6 +425,7 @@ class Runner:
             return
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
+        self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
         self.mile_mark, coords = self.calculate_mile_mark(route)
         self.pace = self.calculate_pace()
