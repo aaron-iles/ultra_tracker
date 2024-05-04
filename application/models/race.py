@@ -154,7 +154,7 @@ class Race:
         """
         return {
             "pace": self.runner.pace,
-            "pings": len(self.runner.pings),
+            "pings": self.runner.pings,
             "last_ping": self.last_ping_raw,
         }
 
@@ -187,7 +187,9 @@ class Race:
                 "course_deviation": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
                 "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
-                "pings": len(self.runner.pings),
+                "pings": self.runner.pings,
+                "track_interval": self.runner.track_interval,
+                "low_battery": self.runner.low_battery,
                 "course": {
                     "distance": self.course.route.length,
                     "aid_stations": len(self.course.aid_stations),
@@ -216,8 +218,8 @@ class Race:
             with open(self.data_store, "r") as f:
                 data = json.load(f)
                 self.runner.pace = data.get("pace", 10)
-                # self.runner.pings = data.get("pings", 0) # TODO
-                # self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)  TODO
+                self.runner.pings = data.get("pings", 0)
+                self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)
                 print(f"restore success: {self.runner.last_ping}")
 
     def ingest_ping(self, ping_data: dict) -> None:
@@ -261,9 +263,12 @@ class Runner:
         self.finished = False
         self.started = False
         self.mile_mark = 0
+        self.last_ping = Ping({}, pytz.timezone("Etc/GMT"))
         self.pace = 10
         self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
-        self.pings = []
+        self.pings = 0
+        self.track_interval = 300
+        self.low_battery = False
 
     def extract_marker(self, marker_name: str, caltopo_map) -> CaltopoMarker:
         """
@@ -350,22 +355,10 @@ class Runner:
             f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
             f"𝗲𝗹𝗮𝗽𝘀𝗲𝗱 𝘁𝗶𝗺𝗲: {format_duration(self.elapsed_time)}\n"
             f"𝗮𝘃𝗴 𝗽𝗮𝗰𝗲: {convert_decimal_pace_to_pretty_format(self.pace)}\n"
-            f"𝗽𝗶𝗻𝗴𝘀: {len(self.pings)}\n"
+            f"𝗽𝗶𝗻𝗴𝘀: {self.pings}\n"
             f"𝗘𝗙𝗗: {self.estimated_finish_date.strftime('%m-%d %H:%M')}\n"
             f"𝗘𝗙𝗧: {format_duration(self.estimated_finish_time)}"
         )
-
-    @property
-    def last_ping(self) -> Ping:
-        try:
-            return self.pings[-1]
-        except IndexError:
-            return Ping({}, pytz.timezone("Etc/GMT"))
-
-    @property
-    def track(self) -> list:
-        """ """
-        return [ping.latlonalt for ping in self.pings]
 
     def calculate_mile_mark(self, route) -> tuple:
         """
@@ -404,13 +397,11 @@ class Runner:
         :param Route route: The route of the race.
         :return None:
         """
-
         last_timestamp = self.last_ping.timestamp
-
-        self.pings = sorted(self.pings + [ping], key=lambda p: p.timestamp)
-        # self.low_battery = self.last_ping.low_battery == 1
-        # if self.last_ping.interval_change:
-        #    self.track_interval = self.last_ping.interval_change
+        self.pings += 1 
+        self.low_battery = ping.low_battery == 1
+        if ping.interval_change:
+            self.track_interval = ping.interval_change
 
         # TODO add current pace and average pace
 
@@ -419,6 +410,7 @@ class Runner:
             print(f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}")
             return
         # At this point the race has started and this is a new ping.
+        self.last_ping = ping
         self.elapsed_time = ping.timestamp - start_time
         self.mile_mark, coords = self.calculate_mile_mark(route)
         self.pace = self.calculate_pace()

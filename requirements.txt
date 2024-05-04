@@ -1,6 +1,5 @@
-flask
-sqlalchemy
 epdb
+flask
 geopy
 gpxpy
 jinja2
