@@ -165,7 +165,7 @@ class Race:
         data.
         """
         return {
-            "pace": self.runner.pace,
+            "average_pace": self.runner.average_pace,
             "pings": self.runner.pings,
             "last_ping": self.last_ping_raw,
         }
@@ -178,7 +178,7 @@ class Race:
         :return dict: Runner and race stats.
         """
         return {
-            "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.pace),
+            "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
@@ -230,7 +230,7 @@ class Race:
         if os.path.exists(self.data_store):
             with open(self.data_store, "r") as f:
                 data = json.load(f)
-                self.runner.pace = data.get("pace", 10)
+                self.runner.average_pace = data.get("average_pace", 10)
                 self.runner.pings = data.get("pings", 0)
                 self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)
                 print(f"restore success: {self.runner.last_ping}")
@@ -270,6 +270,7 @@ class Runner:
     """
 
     def __init__(self, caltopo_map, marker_name: str):
+        self.average_pace = 10
         self.current_pace = 10
         self.elapsed_time = datetime.timedelta(0)
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
@@ -279,7 +280,6 @@ class Runner:
         self.low_battery = False
         self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
         self.mile_mark = 0
-        self.pace = 10
         self.pings = 0
         self.started = False
         self.track_interval = 300
@@ -368,7 +368,7 @@ class Runner:
             f"𝗹𝗮𝘀𝘁 𝘂𝗽𝗱𝗮𝘁𝗲: {self.last_ping.timestamp.strftime('%m-%d %H:%M')}\n"
             f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
             f"𝗲𝗹𝗮𝗽𝘀𝗲𝗱 𝘁𝗶𝗺𝗲: {format_duration(self.elapsed_time)}\n"
-            f"𝗮𝘃𝗴 𝗽𝗮𝗰𝗲: {convert_decimal_pace_to_pretty_format(self.pace)}\n"
+            f"𝗮𝘃𝗴 𝗽𝗮𝗰𝗲: {convert_decimal_pace_to_pretty_format(self.average_pace)}\n"
             f"𝗽𝗶𝗻𝗴𝘀: {self.pings}\n"
             f"𝗘𝗙𝗗: {self.estimated_finish_date.strftime('%m-%d %H:%M')}\n"
             f"𝗘𝗙𝗧: {format_duration(self.estimated_finish_time)}"
@@ -387,7 +387,7 @@ class Runner:
         """
         _, matched_indices = route.kdtree.query(self.last_ping.latlon, k=100)
         mile_marks = [route.distances[i] for i in matched_indices]
-        expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.pace)
+        expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.average_pace)
         for mm in mile_marks:
             if abs(mm - expected_mile_mark) < 0.5:
                 return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0]
@@ -396,7 +396,7 @@ class Runner:
         mile_mark = calculate_most_probable_mile_mark(
             [route.distances[i] for i in matched_indices],
             self.elapsed_time.total_seconds() / 60,
-            self.pace,
+            self.average_pace,
         )
         coords = route.points[np.where(route.distances == mile_mark)[0]].tolist()[0]
         return mile_mark, coords
@@ -428,12 +428,12 @@ class Runner:
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
         self.mile_mark, coords = self.calculate_mile_mark(route)
-        self.pace = self.calculate_pace()
+        self.average_pace = self.calculate_pace()
         self.check_if_started()
         if not self.in_progress:
             print(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
-        self.estimated_finish_time = datetime.timedelta(minutes=self.pace * route.length)
+        self.estimated_finish_time = datetime.timedelta(minutes=self.average_pace * route.length)
         self.estimated_finish_date = start_time + self.estimated_finish_time
         # Now update the marker attributes.
         self.marker.description = self.marker_description
@@ -452,4 +452,4 @@ class Runner:
         print(self)
 
     def __str__(self):
-        return f"RUNNER {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.pace)} ({format_duration(self.elapsed_time)})"
+        return f"RUNNER {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.average_pace)} ({format_duration(self.elapsed_time)})"

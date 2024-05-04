@@ -199,7 +199,7 @@ class AidStation(CaltopoMarker):
         if miles_to_me < 0:
             # The runner has already passed this aid station.
             return
-        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.pace)
+        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         return runner.last_ping.timestamp + minutes_to_me
 
     def refresh(self, runner) -> None:
@@ -214,7 +214,7 @@ class AidStation(CaltopoMarker):
         if miles_to_me < 0:
             # The runner has already passed this aid station.
             return
-        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.pace)
+        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
 
     def __lt__(self, other):
