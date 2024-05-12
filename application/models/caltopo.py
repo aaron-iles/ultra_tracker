@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import logging
 import uuid
 from urllib.parse import urlencode
 
@@ -8,6 +9,8 @@ import pytz
 import requests
 import uwsgidecorators
 from timezonefinder import TimezoneFinder
+
+logger = logging.getLogger(__name__)
 
 
 class CaltopoMap:
@@ -63,7 +66,7 @@ class CaltopoMap:
             elif feature_class == "Marker":
                 self.markers.add(CaltopoMarker(feature, self.map_id, self.session_id))
             else:
-                print(f"Unknown feature found: {feature}")
+                logger.info(f"Unknown feature found: {feature}")
 
     def test_authentication(self) -> bool:
         """
@@ -98,7 +101,7 @@ class CaltopoMap:
             timeout=120,
         )
         if not response.ok:
-            print(f"WARNING: unable to create test folder: {response.text}")
+            logger.info(f"WARNING: unable to create test folder: {response.text}")
             return False
         url = (
             f"https://caltopo.com/api/v1/map/{self.map_id}/Folder/{response.json()['result']['id']}"
@@ -205,7 +208,7 @@ class CaltopoMarker(CaltopoFeature):
             url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120
         )
         if not response.ok:
-            print(f"WARNING: unable to update marker: {response.text}")
+            logger.info(f"WARNING: unable to update marker: {response.text}")
         return
 
 

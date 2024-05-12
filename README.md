@@ -36,6 +36,7 @@ To get started with Ultra Tracker, follow these steps:
    - Generate a secure auth token and type it into the "Authorization Token" field.
 4. **Create a race config:** Create a file at ```/proj/ultra_tracker/application/race_config.yml``` and populate it with the following:
    ```yaml
+   race_name: My Race
    start_time: '2024-04-06T07:00:00'
    garmin_api_token: XXXXXXXX
    caltopo_map_id: XXXXX
@@ -48,6 +49,7 @@ To get started with Ultra Tracker, follow these steps:
      - name: 02 Aid Station
        mile_mark: 14.2
    ```
+   - ```race_name```: This is the human-friendly name of the race/event. 
    - ```start_time```: This is the start time of the race. The format must be ```YYYY-mm-ddTHH:MM:SS```.
    - ```garmin_api_token```: This is the token you created in step 3 above.
    - ```caltopo_map_id```: The is the map ID of the map you created in step 2 above (see the URL of the map in your browser).
