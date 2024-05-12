@@ -3,15 +3,36 @@
 import argparse
 import datetime
 import json
+import logging
+import sys
 
 import yaml
 from flask import Flask, render_template, request
-from jinja2 import Environment, FileSystemLoader
+
 from models.caltopo import CaltopoMap
 from models.course import Course
 from models.race import Race, Runner
 
 app = Flask(__name__)
+
+
+def setup_logging():
+    """
+    Configures the logging module to output log messages to stdout. This function sets up a stream
+    handler to log messages to stdout with the specified logging format. It adds the stream handler
+    to the root logger and sets the logging level to INFO.
+
+    :return None:
+    """
+    # Define the logging format
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    # Create a stream handler to log to stdout since the application will log via journald.
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(logging.Formatter(log_format))
+    # Add the stream handler to the root logger
+    logging.root.addHandler(stream_handler)
+    # Set the logging level to INFO
+    logging.root.setLevel(logging.INFO)
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,10 +63,10 @@ def get_config_data(file_path: str) -> dict:
             yaml_content = yaml.safe_load(file)
         return yaml_content
     except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found.")
+        logger.info(f"Error: File '{file_path}' not found.")
         return None
     except yaml.YAMLError as e:
-        print(f"Error: YAML parsing error in '{file_path}': {e}")
+        logger.info(f"Error: YAML parsing error in '{file_path}': {e}")
         return None
 
 
@@ -71,25 +92,28 @@ def post_data():
     content_length = request.headers.get("Content-Length", 0)
     if not content_length:
         return "Content-Length header is missing or zero", 411
-    post_data = request.get_data(as_text=True)
+    payload = request.get_data(as_text=True)
     with open("./.post_log.txt", "a") as file:
-        file.write(post_data + "\n")
-    race = app.config["UT_RACE"]
-    race.ingest_ping(json.loads(post_data))
+        file.write(f"{payload}\n")
+    app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200
 
 
 # Read in the config file.
 args = parse_args()
+# TODO: Need to validate values and keys.
 config_data = get_config_data(args.config)
+setup_logging()
+logger = logging.getLogger(__name__)
 # Create the objects to manage the race.
 caltopo_map = CaltopoMap(config_data["caltopo_map_id"], config_data["caltopo_session_id"])
-print("created map object...")
+logger.info("created map object...")
 course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
-print("created course object...")
+logger.info("created course object...")
 runner = Runner(caltopo_map, config_data["tracker_marker_name"])
-print("created runner object...")
+logger.info("created runner object...")
 race = Race(
+    config_data["race_name"],
     caltopo_map,
     course.timezone.localize(
         datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
@@ -98,14 +122,13 @@ race = Race(
     course,
     runner,
 )
-print("created race object...")
-# TODO perform a test to see if it authenticates
+logger.info("created race object...")
 app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
 app.config["UT_RACE"] = race
-print("performing authentication test...")
+logger.info("performing authentication test...")
 if not caltopo_map.test_authentication():
     exit(1)
-print("authentication test passed...")
+logger.info("authentication test passed...")
 
 
 if __name__ == "__main__":

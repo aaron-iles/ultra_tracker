@@ -15,6 +15,9 @@ from .course import Route
 from .tracker import Ping
 
 
+logger = logging.getLogger(__name__)
+
+
 def format_duration(duration: datetime.timedelta) -> str:
     """
     Formats a duration object as HH:mm'ss"
@@ -131,6 +134,7 @@ class Race:
     """
     This object orchestrates a race.
 
+    :param str name: The name of the race. This is to be used in the web application.
     :param CaltopoMap caltopo_map: The Caltopo map object that is associated with the course.
     :param datetime.datetime start_time: The start time of the race.
     :param str data_store: The filepath in which to store data.
@@ -140,6 +144,7 @@ class Race:
 
     def __init__(
         self,
+        name,
         caltopo_map,
         start_time,
         data_store,
@@ -154,7 +159,7 @@ class Race:
         self.last_ping_raw = {}
         self.map_url = caltopo_map.url
         self.restore()
-        print(f"race at {self.start_time} of {self.course.route.length} mi")
+        logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
     def stats(self) -> dict:
@@ -233,7 +238,7 @@ class Race:
                 self.runner.average_pace = data.get("average_pace", 10)
                 self.runner.pings = data.get("pings", 0)
                 self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)
-                print(f"restore success: {self.runner.last_ping}")
+                logger.info(f"restore success: {self.runner.last_ping}")
 
     def ingest_ping(self, ping_data: dict) -> None:
         """
@@ -244,17 +249,19 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data, self.course.timezone)
-        print(ping)
+        logger.info(ping)
         if ping.gps_fix == 0 or ping.latlon == [0, 0]:
-            print("ping does not contain GPS coordinates, skipping")
+            logger.info("ping does not contain GPS coordinates, skipping")
             return
         # Don't do anything if the race hasn't started yet.
         if ping.timestamp < self.start_time:
-            print(f"incoming timestamp {ping.timestamp} before race start time {self.start_time}")
+            logger.info(
+                f"incoming timestamp {ping.timestamp} before race start time {self.start_time}"
+            )
             return
         # Don't do anything if the runner has already finished.
         if self.runner.finished:
-            print("runner already finished; ignoring ping")
+            logger.info("runner already finished; ignoring ping")
             return
         self.runner.check_in(ping, self.start_time, self.course.route)
         self.course.update_aid_stations(self.runner)
@@ -417,11 +424,11 @@ class Runner:
         if ping.interval_change:
             self.track_interval = ping.interval_change
 
-        # TODO add current pace and average pace
-
         # Don't update if latest point is older than current point
         if last_timestamp > ping.timestamp:
-            print(f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}")
+            logger.info(
+                f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}"
+            )
             return
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
@@ -431,7 +438,7 @@ class Runner:
         self.average_pace = self.calculate_pace()
         self.check_if_started()
         if not self.in_progress:
-            print(f"race not in progress; started: {self.started} finished: {self.finished}")
+            logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
         self.estimated_finish_time = datetime.timedelta(minutes=self.average_pace * route.length)
         self.estimated_finish_date = start_time + self.estimated_finish_time
@@ -449,7 +456,7 @@ class Runner:
         # thread decorator.
         CaltopoMarker.update(self.marker)
         self.check_if_finished(route)
-        print(self)
+        logger.info(self)
 
     def __str__(self):
         return f"RUNNER {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.average_pace)} ({format_duration(self.elapsed_time)})"
