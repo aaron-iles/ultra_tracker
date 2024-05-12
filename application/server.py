@@ -8,7 +8,6 @@ import sys
 
 import yaml
 from flask import Flask, render_template, request
-
 from models.caltopo import CaltopoMap
 from models.course import Course
 from models.race import Race, Runner

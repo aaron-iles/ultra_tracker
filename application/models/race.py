@@ -3,6 +3,7 @@
 
 import datetime
 import json
+import logging
 import os
 from math import atan2, cos, radians, sin, sqrt
 
@@ -13,7 +14,6 @@ from scipy.stats import norm
 from .caltopo import CaltopoMarker
 from .course import Route
 from .tracker import Ping
-
 
 logger = logging.getLogger(__name__)
 
