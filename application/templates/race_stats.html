@@ -139,7 +139,7 @@
             },
             yaxis: {
                 title: 'Elevation (feet)',
-                range: [Math.min.apply(null, y_data), null],
+                range: [Math.min.apply(null, y_data), Math.max.apply(null, y_data)],
                 autorange: false
             },
             title: 'Elevation Profile'
