@@ -133,7 +133,7 @@ def add_elevation_to_points(points: np.array) -> list:
         try:
             new_data = np.array(response.json()['result'])
             first_two_columns = new_data[:, :2]
-            last_column = new_data[:, 3]
+            last_column = new_data[:, 3:4]
             # Reverse the order of the first two columns
             reversed_first_two_columns = first_two_columns[:, ::-1]
             # Concatenate the reversed first two columns with the last column
