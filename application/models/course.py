@@ -119,17 +119,24 @@ def add_elevation_to_points(points: list) -> list:
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'DNT': '1',
     }
+    reversed_points = points[:, ::-1]
     data = {
         "geometry": {
             "type": "LineString",
-            "coordinates": points
+            "coordinates": reversed_points
         }
     }
     response = requests.post(url, headers=headers, data={'json': json.dumps(data)})
     if response.ok:
         try:
-            new_data = response.json()['result']
-            return [[y, x, z] for x, y, z, _, _, _ in new_data]
+            new_data = np.array(response.json()['result'])
+            first_two_columns = new_data[:, :2]
+            last_column = array[:, 3]
+            # Reverse the order of the first two columns
+            reversed_first_two_columns = first_two_columns[:, ::-1]
+            # Concatenate the reversed first two columns with the last column
+            reversed_array = np.hstack((reversed_first_two_columns, last_column))
+            return reversed_array
         except (json.JSONDecodeError, KeyError):
             return points
     return points
@@ -261,7 +268,7 @@ class Route(CaltopoShape):
         super().__init__(feature_dict, map_id, session_id)
         # TODO this doesn't handle 3 long lists.
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
-        print(self.points[:10])
+        self.points = add_elevation_to_points(self.points)
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]
