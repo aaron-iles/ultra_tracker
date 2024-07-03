@@ -416,6 +416,7 @@ class Runner:
         )
         coords = route.points[np.where(route.distances == mile_mark)[0]].tolist()[0]
         elevation = route.elevations[np.where(route.distances == mile_mark)[0]].tolist()[0]
+        logger.info(f'{mile_mark} {coords} {elevation}')
         return mile_mark, coords, elevation
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
