@@ -384,9 +384,11 @@ class Runner:
     def calculate_mile_mark(self, route) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
-        and pace. This will grab the 5 closest points on the course to the runner's ping,
-        calculate the probability (given the last pace) that the runner is at one of those points,
-        then return the point with the highest probability.
+        and pace. This will grab the 100 closest points on the course to the runner's ping and 
+        return the closest point if it is within 0.25 mi of the anticipated mile mark of the runner.
+        If no point matches that criteria, this will calculate the probability (given the last pace) 
+        that the runner is at one of those points, then return the point with the highest 
+        probability.
 
         :param Route route: The route of the course.
         :return tuple: The most probable mile mark and the coordinates of that mile mark on the
@@ -396,7 +398,7 @@ class Runner:
         mile_marks = [route.distances[i] for i in matched_indices]
         expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.average_pace)
         for mm in mile_marks:
-            if abs(mm - expected_mile_mark) < 0.5:
+            if abs(mm - expected_mile_mark) < 0.25:
                 return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0]
         # If there was no mile mark found within a quarter mile of the anticipated mile mark, use
         # a different method for guessing the mile mark.
