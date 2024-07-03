@@ -139,7 +139,8 @@
             },
             yaxis: {
                 title: 'Elevation (feet)',
-                range: [{{ y_data | min }}, null]
+                range: [{{ y_data | min }}, null],
+                autorange: false
             },
             title: 'Elevation Profile'
         };
