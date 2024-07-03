@@ -183,6 +183,8 @@ class Race:
         :return dict: Runner and race stats.
         """
         return {
+            "x_data": self.course.route.distances.tolist(),
+            "y_data": self.course.route.elevations.tolist(),
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
             "altitude": format_distance(self.runner.last_ping.altitude),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
