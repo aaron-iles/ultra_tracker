@@ -143,15 +143,9 @@
                 autorange: false
             },
             title: 'Elevation Profile',
-            margin: {
-                l: 50,  // left margin
-                r: 50,  // right margin
-                t: 50,  // top margin
-                b: 50   // bottom margin
-            }
         };
 
-        Plotly.newPlot('graph', data, layout);
+        Plotly.newPlot('graph', data, layout, {responsive: true});
     });
   </script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
