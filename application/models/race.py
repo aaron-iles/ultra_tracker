@@ -444,7 +444,6 @@ class Runner:
         self.last_ping = ping
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
-        logger.info(str(self.calculate_mile_mark(route)))
         self.mile_mark, coords, self.elevation = self.calculate_mile_mark(route)
         self.average_pace = self.calculate_pace()
         self.check_if_started()
