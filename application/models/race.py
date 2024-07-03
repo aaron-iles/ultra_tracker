@@ -406,7 +406,7 @@ class Runner:
         expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.average_pace)
         for mm in mile_marks:
             if abs(mm - expected_mile_mark) < 0.25:
-                return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0]
+                return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0], route.elevations[np.where(route.distances == mm)[0]].tolist()[0]
         # If there was no mile mark found within a quarter mile of the anticipated mile mark, use
         # a different method for guessing the mile mark.
         mile_mark = calculate_most_probable_mile_mark(
