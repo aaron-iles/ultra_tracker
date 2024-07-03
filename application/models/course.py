@@ -106,7 +106,7 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     return interpolated_path_data, cumulative_distances_array
 
 
-def add_elevation_to_points(points: list) -> list:
+def add_elevation_to_points(points: np.array) -> list:
     """
     Given an array of 2D coordinates, this will append a third dimension to the coordinates 
     (altitude). 
@@ -121,7 +121,7 @@ def add_elevation_to_points(points: list) -> list:
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'DNT': '1',
     }
-    reversed_points = points[:, ::-1]
+    reversed_points = points[:, ::-1].tolist()
     data = {
         "geometry": {
             "type": "LineString",
