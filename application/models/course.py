@@ -104,6 +104,37 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     return interpolated_path_data, cumulative_distances_array
 
 
+def add_elevation_to_points(points: list) -> list:
+    """
+    Given an array of 2D coordinates, this will append a third dimension to the coordinates 
+    (altitude). 
+
+    :param list points: A list of lists of 2D points.
+    :return list: A list of lists of 3D points.
+    """
+    url = 'https://caltopo.com/dem/pointstats'
+    headers = {
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'DNT': '1',
+    }
+    data = {
+        "geometry": {
+            "type": "LineString",
+            "coordinates": points
+        }
+    }
+    response = requests.post(url, headers=headers, data={'json': json.dumps(data)})
+    if response.ok:
+        try:
+            new_data = response.json()['result']
+            return [[y, x, z] for x, y, z, _, _, _ in new_data]
+        except (json.JSONDecodeError, KeyError):
+            return points
+    return points
+
+
 class Course:
     """
     A course is a representation of the race's route, aid stations, and other physical attributes.
@@ -230,6 +261,7 @@ class Route(CaltopoShape):
         super().__init__(feature_dict, map_id, session_id)
         # TODO this doesn't handle 3 long lists.
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
+        print(self.points[:10])
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]
