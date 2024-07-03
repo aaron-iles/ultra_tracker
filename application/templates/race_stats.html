@@ -150,8 +150,10 @@
                 b: 50   // bottom margin
             },
         };
-
-        Plotly.newPlot('graph', data, layout, {responsive: true});
+        var config = {
+            displayModeBar: false  // Disable the mode bar
+        };
+        Plotly.newPlot('graph', data, layout, {responsive: true}, config);
     });
   </script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
