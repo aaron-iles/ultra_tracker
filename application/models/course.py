@@ -107,7 +107,7 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     return interpolated_path_data, cumulative_distances_array
 
 
-def find_elevation(points: np.array) -> list:
+def find_elevations(points: np.array) -> list:
     """
     Given an array of 2D coordinates, this will append a third dimension to the coordinates 
     (altitude). 
