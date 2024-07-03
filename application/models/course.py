@@ -10,6 +10,7 @@ from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMarker, CaltopoShape, get_timezone
+from .tracker import meters_to_feet
 
 
 def interpolate_and_filter_points(
@@ -106,7 +107,7 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     return interpolated_path_data, cumulative_distances_array
 
 
-def add_elevation_to_points(points: np.array) -> list:
+def find_elevation(points: np.array) -> list:
     """
     Given an array of 2D coordinates, this will append a third dimension to the coordinates 
     (altitude). 
@@ -131,17 +132,13 @@ def add_elevation_to_points(points: np.array) -> list:
     response = requests.post(url, headers=headers, data={'json': json.dumps(data)})
     if response.ok:
         try:
-            new_data = np.array(response.json()['result'])
-            first_two_columns = new_data[:, :2]
-            last_column = new_data[:, 3:4]
-            # Reverse the order of the first two columns
-            reversed_first_two_columns = first_two_columns[:, ::-1]
-            # Concatenate the reversed first two columns with the last column
-            reversed_array = np.hstack((reversed_first_two_columns, last_column))
-            return reversed_array
+            new_data = np.array(response.json()['result'])[:, 2]
+            # Vectorize the function
+            vectorized_function = np.vectorize(meters_to_feet)
+            # Apply the function to the array
+            return vectorized_function(new_data)
         except (json.JSONDecodeError, KeyError):
-            return points
-    return points
+            return 
 
 
 class Course:
@@ -268,9 +265,8 @@ class Route(CaltopoShape):
 
     def __init__(self, feature_dict: dict, map_id: str, session_id: str):
         super().__init__(feature_dict, map_id, session_id)
-        # TODO this doesn't handle 3 long lists.
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
-        self.points = add_elevation_to_points(self.points)
+        self.elevations = find_elevations(self.points)
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]

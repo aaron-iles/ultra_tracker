@@ -214,7 +214,7 @@ class Race:
                     "aid_stations": len(self.course.aid_stations),
                     "timezone": str(self.course.timezone),
                     "points": len(self.course.route.points),
-                    "xxx": self.course.route.points[:10].tolist(),
+                    "xxx": self.course.route.elevations[:10].tolist(),
                 },
             },
         }
