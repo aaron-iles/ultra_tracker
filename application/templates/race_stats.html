@@ -115,7 +115,9 @@
       </code></pre>
   </div>
   <div id="graph" class="container tab-content" style="padding-top: 64px;">
-    <script>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
         // Sample data
         var x_data = {{ x_data | safe }};
         var y_data = {{ y_data | safe }};
@@ -128,8 +130,8 @@
         };
         var data = [trace];
         Plotly.newPlot('graph', data);
-    </script>
-  </div>
+    });
+  </script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
