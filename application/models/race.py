@@ -185,8 +185,8 @@ class Race:
         return {
             "x_data": json.dumps(self.course.route.distances.tolist()),
             "y_data": json.dumps(self.course.route.elevations.tolist()),
-            "runner_x": self.runner.last_ping.lonlat[0],
-            "runner_y": self.runner.last_ping.lonlat[1],
+            "runner_x": self.runner.mile_mark,
+            "runner_y": self.runner.elevation,
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
             "altitude": format_distance(self.runner.last_ping.altitude),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
@@ -286,6 +286,7 @@ class Runner:
         self.average_pace = 10
         self.current_pace = 10
         self.elapsed_time = datetime.timedelta(0)
+        self.elevation = 0
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
         self.estimated_finish_time = datetime.timedelta(0)
         self.finished = False
@@ -414,7 +415,8 @@ class Runner:
             self.average_pace,
         )
         coords = route.points[np.where(route.distances == mile_mark)[0]].tolist()[0]
-        return mile_mark, coords
+        elevation = route.elevations[np.where(route.distances == mile_mark)[0]].tolist()[0]
+        return mile_mark, coords, elevation
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
         """
@@ -442,7 +444,7 @@ class Runner:
         self.last_ping = ping
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
-        self.mile_mark, coords = self.calculate_mile_mark(route)
+        self.mile_mark, coords, self.elevation = self.calculate_mile_mark(route)
         self.average_pace = self.calculate_pace()
         self.check_if_started()
         if not self.in_progress:
