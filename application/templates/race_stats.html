@@ -130,7 +130,20 @@
             mode: 'lines'
         };
 
-        var data = [trace];
+        // Create marker for the runner's position
+        var runner_marker = {
+            x: [runner_x],
+            y: [runner_y],
+            mode: 'markers',
+            marker: {
+                symbol: 'circle',
+                size: 10,
+                color: 'red'
+            },
+            name: 'Runner'
+        };
+
+        var data = [trace, runner_marker];
 
         // Define the layout with axis labels
         var layout = {
@@ -149,11 +162,23 @@
                 t: 50,  // top margin
                 b: 50   // bottom margin
             },
+            /*
+            annotations: [
+                {
+                    x: runner_x,
+                    y: runner_y,
+                    xref: 'x',
+                    yref: 'y',
+                    text: 'Runner',
+                    showarrow: true,
+                    arrowhead: 7,
+                    ax: 0,
+                    ay: -40
+                }
+            ]
+            */
         };
-        var config = {
-            displayModeBar: false  // Disable the mode bar
-        };
-        Plotly.newPlot('graph', data, layout, {responsive: true}, config);
+        Plotly.newPlot('graph', data, layout, {responsive: true});
     });
   </script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

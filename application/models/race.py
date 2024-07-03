@@ -185,6 +185,8 @@ class Race:
         return {
             "x_data": json.dumps(self.course.route.distances.tolist()),
             "y_data": json.dumps(self.course.route.elevations.tolist()),
+            "runner_x": self.runner.last_ping.lonlat[0],
+            "runner_y": self.runner.last_ping.lonlat[1],
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
             "altitude": format_distance(self.runner.last_ping.altitude),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
