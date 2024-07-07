@@ -25,12 +25,11 @@
           <a href="#map" class="tab-link">Map</a>
         </li>
         <li>
-          <a href="#nerds" class="tab-link">Nerds</a>
+          <a href="#profile" class="tab-link">Profile</a>
         </li>
         <li>
-          <a href="#graph" class="tab-link">Graph</a>
+          <a href="#raw" class="tab-link">Raw</a>
         </li>
-
       </ul>
     </div>
   </nav>
@@ -108,20 +107,26 @@
   <div id="map" class="container tab-content" style="padding-top: 64px;">
     <iframe src="{{map_url}}" frameborder="0"></iframe>
   </div>
-  <div id="nerds" class="container tab-content" style="padding-top: 64px;">
+  <div id="raw" class="container tab-content" style="padding-top: 64px;">
     <h1 class="page-header">Raw Data</h1>
     <pre><code id="json-data" class="language-json">
         {{ debug_data | tojson(indent=2) }}
       </code></pre>
   </div>
-  <div id="graph" class="container tab-content" style="padding-top: 64px; width: 100%; height: 90%;">
+  <div id="profile" class="container tab-content" style="padding-top: 64px; width: 100%; height: 90%;">
   </div>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-json.min.js"></script> 
+  <script type=text/javascript src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Sample data
         var x_data = {{ x_data | safe }};
         var y_data = {{ y_data | safe }};
-
+    
         var trace = {
             x: x_data,
             y: y_data,
@@ -129,8 +134,9 @@
             fill: 'tozeroy',  // Shade the area under the curve
             mode: 'lines'
         };
-
+    
         // Create marker for the runner's position
+        /*
         var runner_marker = {
             x: [{{ runner_x }}],
             y: [{{ runner_y }}],
@@ -142,9 +148,10 @@
             },
             name: 'Runner'
         };
-
-        var data = [trace, runner_marker];
-
+        */
+    
+        var data = [trace ]; //, runner_marker];
+    
         // Define the layout with axis labels
         var layout = {
             xaxis: {
@@ -162,50 +169,23 @@
                 t: 50,  // top margin
                 b: 50   // bottom margin
             },
-            /*
             annotations: [
                 {
-                    x: runner_x,
-                    y: runner_y,
+                    x: {{ runner_x }},
+                    y: {{ runner_y }},
                     xref: 'x',
                     yref: 'y',
-                    text: 'Runner',
+                    text: 'Aaron',
                     showarrow: true,
                     arrowhead: 7,
                     ax: 0,
                     ay: -40
                 }
             ]
-            */
         };
-        Plotly.newPlot('graph', data, layout, {responsive: true});
+        Plotly.newPlot('profile', data, layout, {responsive: true});
+        setInterval(fetchDataAndUpdatePlot, 10000);
     });
-  </script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script> 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script> 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-json.min.js"></script> 
-  <script>
-
-        $(document).ready(function(){
-            $(".tab-link").on("click", function(){
-                var tabId = $(this).attr("href");
-                $(".tab-content").removeClass("active");
-                $(".tab-link").removeClass("active"); // Remove active class from all tabs
-                $(this).addClass("active"); // Add active class to the clicked tab
-                $(tabId).addClass("active");
-                // Store selected tab in local storage
-                localStorage.setItem('selectedTab', tabId);
-            });
-            // Check if there's a selected tab in local storage and activate it
-            var selectedTab = localStorage.getItem('selectedTab');
-            if (selectedTab) {
-                $(selectedTab).addClass('active');
-                $('a[href="' + selectedTab + '"]').addClass('active');
-            }
-        });
   </script> 
   <script>
 
