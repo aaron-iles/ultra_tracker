@@ -218,7 +218,6 @@ class Race:
                     "aid_stations": len(self.course.aid_stations),
                     "timezone": str(self.course.timezone),
                     "points": len(self.course.route.points),
-                    "xxx": self.course.route.elevations[:10].tolist(),
                 },
             },
         }
@@ -243,7 +242,8 @@ class Race:
                 data = json.load(f)
                 self.runner.average_pace = data.get("average_pace", 10)
                 self.runner.pings = data.get("pings", 0)
-                self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)
+                ping = Ping(data.get("last_ping", {}), self.course.timezone)
+                self.runner.check_in(ping, self.start_time, self.course.route)
                 logger.info(f"restore success: {self.runner.last_ping}")
 
     def ingest_ping(self, ping_data: dict) -> None:
