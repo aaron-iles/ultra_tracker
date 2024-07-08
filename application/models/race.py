@@ -32,17 +32,18 @@ def format_duration(duration: datetime.timedelta) -> str:
     return f"{int(hours)}:{int(minutes):02}'{int(seconds):02}\""
 
 
-def format_distance(distance_ft: float) -> str:
+def format_distance(distance_ft: float, force_ft: bool = False) -> str:
     """
     Format a distance in feet into a human-readable format.
 
     :param float distance_ft: The distance in feet.
+    :param bool force_ft: True if the formatter should always return feet and False otherwise.
 
     :return str: A human-readable representation of the distance. If the distance is over 5280 feet,
     it will be converted to miles with one decimal point, otherwise, it will be displayed in feet
     with one decimal point.
     """
-    if distance_ft >= 5280:
+    if distance_ft >= 5280 and not force_ft:
         distance_mi = distance_ft / 5280
         return f"{distance_mi:.1f} mi"
     else:
@@ -188,7 +189,7 @@ class Race:
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
-            "altitude": format_distance(self.runner.last_ping.altitude),
+            "altitude": format_distance(self.runner.last_ping.altitude, True),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
@@ -199,13 +200,15 @@ class Race:
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
             "course_deviation": format_distance(self.runner.course_deviation),
-            "deviation_background_color": "#90EE90"
-            if self.runner.course_deviation < 100
-            else "#FAFAD2"
-            if 100 <= self.runner.course_deviation <= 150
-            else "#FFD700"
-            if 151 <= self.runner.course_deviation <= 200
-            else "#FFC0CB",
+            "deviation_background_color": (
+                "#90EE90"
+                if self.runner.course_deviation < 100
+                else (
+                    "#FAFAD2"
+                    if 100 <= self.runner.course_deviation <= 150
+                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                )
+            ),
             "debug_data": {
                 "course_deviation": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
@@ -392,10 +395,10 @@ class Runner:
     def calculate_mile_mark(self, route) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
-        and pace. This will grab the 100 closest points on the course to the runner's ping and 
+        and pace. This will grab the 100 closest points on the course to the runner's ping and
         return the closest point if it is within 0.25 mi of the anticipated mile mark of the runner.
-        If no point matches that criteria, this will calculate the probability (given the last pace) 
-        that the runner is at one of those points, then return the point with the highest 
+        If no point matches that criteria, this will calculate the probability (given the last pace)
+        that the runner is at one of those points, then return the point with the highest
         probability.
 
         :param Route route: The route of the course.
@@ -407,7 +410,11 @@ class Runner:
         expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.average_pace)
         for mm in mile_marks:
             if abs(mm - expected_mile_mark) < 0.25:
-                return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0], route.elevations[np.where(route.distances == mm)[0]].tolist()[0]
+                return (
+                    mm,
+                    route.points[np.where(route.distances == mm)[0]].tolist()[0],
+                    route.elevations[np.where(route.distances == mm)[0]].tolist()[0],
+                )
         # If there was no mile mark found within a quarter mile of the anticipated mile mark, use
         # a different method for guessing the mile mark.
         mile_mark = calculate_most_probable_mile_mark(

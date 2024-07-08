@@ -161,6 +161,7 @@
         var layout = {
             xaxis: {
                 title: 'Distance (miles)',
+                range: [0, Math.max.apply(null, x_data)],
                 fixedrange: true,
                 dtick: 5,
             },

@@ -109,36 +109,31 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
 
 def find_elevations(points: np.array) -> list:
     """
-    Given an array of 2D coordinates, this will append a third dimension to the coordinates 
-    (altitude). 
+    Given an array of 2D coordinates, this will append a third dimension to the coordinates
+    (altitude).
 
     :param list points: A list of lists of 2D points.
     :return list: A list of lists of 3D points.
     """
-    url = 'https://caltopo.com/dem/pointstats'
+    url = "https://caltopo.com/dem/pointstats"
     headers = {
-        'Accept': '*/*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'DNT': '1',
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "DNT": "1",
     }
     reversed_points = points[:, ::-1].tolist()
-    data = {
-        "geometry": {
-            "type": "LineString",
-            "coordinates": reversed_points
-        }
-    }
-    response = requests.post(url, headers=headers, data={'json': json.dumps(data)})
+    data = {"geometry": {"type": "LineString", "coordinates": reversed_points}}
+    response = requests.post(url, headers=headers, data={"json": json.dumps(data)})
     if response.ok:
         try:
-            new_data = np.array(response.json()['result'])[:, 2]
+            new_data = np.array(response.json()["result"])[:, 2]
             # Vectorize the function
             vectorized_function = np.vectorize(meters_to_feet)
             # Apply the function to the array
             return vectorized_function(new_data)
         except (json.JSONDecodeError, KeyError):
-            return 
+            return
 
 
 class Course:
