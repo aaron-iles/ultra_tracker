@@ -124,12 +124,12 @@
   <script type=text/javascript src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var x_data = {{ x_data | safe }};
-        var y_data = {{ y_data | safe }};
+        var distances = {{ distances | safe }};
+        var elevations = {{ elevations | safe }};
     
         var route = {
-            x: x_data,
-            y: y_data,
+            x: distances,
+            y: elevations,
             type: 'scatter',
             fill: 'tozeroy',  // Shade the area under the curve
             mode: 'lines',
@@ -161,13 +161,13 @@
         var layout = {
             xaxis: {
                 title: 'Distance (miles)',
-                range: [0, Math.max.apply(null, x_data)],
+                range: [0, Math.max.apply(null, distances)],
                 fixedrange: true,
                 dtick: 5,
             },
             yaxis: {
                 title: 'Elevation (feet)',
-                range: [Math.min.apply(null, y_data), Math.max.apply(null, y_data)],
+                range: [Math.min.apply(null, elevations), Math.max.apply(null, elevations)],
                 autorange: false,
                 fixedrange: true,
                 dtick: 500,

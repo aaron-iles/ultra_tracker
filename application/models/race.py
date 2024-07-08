@@ -184,8 +184,8 @@ class Race:
         :return dict: Runner and race stats.
         """
         return {
-            "x_data": json.dumps(self.course.route.distances.tolist()),
-            "y_data": json.dumps(self.course.route.elevations.tolist()),
+            "distances": json.dumps(self.course.route.distances.tolist()),
+            "elevations": json.dumps(self.course.route.elevations.tolist()),
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
@@ -467,7 +467,6 @@ class Runner:
         # Update the estimate marker coordinates.
         self.estimate_marker.coordinates = coords[::-1]
         self.estimate_marker.rotation = round(ping.heading)
-        self.estimate_marker.description = ""
         # Issue the POST to update the estimate marker.
         CaltopoMarker.update(self.estimate_marker)
         # Issue the POST to update the marker. This must be called this way to work with the uwsgi
