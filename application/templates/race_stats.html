@@ -16,19 +16,19 @@
     <div class="nav-wrapper">
       <ul id="nav-mobile">
         <li>
-          <a href="#stats" class="tab-link">Stats</a>
+          <a href="#stats" class="tab-link" onclick="location.reload()">Stats</a>
         </li>
         <li>
-          <a href="#aid" class="tab-link">Aid</a>
+          <a href="#aid" class="tab-link" onclick="location.reload()">Aid</a>
         </li>
         <li>
           <a href="#map" class="tab-link">Map</a>
         </li>
         <li>
-          <a href="#profile" class="tab-link">Profile</a>
+          <a href="#profile" class="tab-link" onclick="location.reload()">Profile</a>
         </li>
         <li>
-          <a href="#raw" class="tab-link">Raw</a>
+          <a href="#raw" class="tab-link" onclick="location.reload()">Raw</a>
         </li>
       </ul>
     </div>
@@ -127,40 +127,49 @@
         var x_data = {{ x_data | safe }};
         var y_data = {{ y_data | safe }};
     
-        var trace = {
+        var route = {
             x: x_data,
             y: y_data,
             type: 'scatter',
             fill: 'tozeroy',  // Shade the area under the curve
-            mode: 'lines'
+            mode: 'lines',
+            hoverinfo: 'skip',
         };
     
         // Create marker for the runner's position
-        /*
         var runner_marker = {
             x: [{{ runner_x }}],
             y: [{{ runner_y }}],
             mode: 'markers',
+            hoverinfo: 'x+y',
+            hovertemplate: '%{x:.2f} mi, %{y:.0f} ft<extra></extra>',
             marker: {
-                symbol: 'circle',
-                size: 10,
-                color: 'red'
+                symbol: 'diamond-dot',
+                size: 14,
+                color: 'purple',
+                line: {
+                    color: 'black',
+                    width: 1
+                },
             },
             name: 'Runner'
         };
-        */
     
-        var data = [trace ]; //, runner_marker];
+        var data = [route, runner_marker];
     
         // Define the layout with axis labels
         var layout = {
             xaxis: {
-                title: 'Distance (miles)'
+                title: 'Distance (miles)',
+                fixedrange: true,
+                dtick: 5,
             },
             yaxis: {
                 title: 'Elevation (feet)',
                 range: [Math.min.apply(null, y_data), Math.max.apply(null, y_data)],
-                autorange: false
+                autorange: false,
+                fixedrange: true,
+                dtick: 500,
             },
             title: 'Elevation Profile',
             margin: {
@@ -169,6 +178,8 @@
                 t: 50,  // top margin
                 b: 50   // bottom margin
             },
+            showlegend: false,
+            hovermode: 'closest',
             annotations: [
                 {
                     x: {{ runner_x }},
@@ -177,13 +188,20 @@
                     yref: 'y',
                     text: 'Aaron',
                     showarrow: true,
-                    arrowhead: 7,
+                    arrowhead: 0,
                     ax: 0,
                     ay: -40
                 }
             ]
         };
-        Plotly.newPlot('profile', data, layout, {responsive: true});
+        var config = {
+          responsive: true,
+          displayModeBar: false, // Hide the modebar
+          scrollZoom: false, // Disable scroll to zoom
+          doubleClick: false, // Disable double click interaction
+          staticPlot: false // Ensure staticPlot is false to allow hover
+        };
+        Plotly.newPlot('profile', data, layout, config); 
         setInterval(fetchDataAndUpdatePlot, 10000);
     });
   </script> 
