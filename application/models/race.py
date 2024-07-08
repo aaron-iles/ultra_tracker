@@ -244,6 +244,7 @@ class Race:
                 self.runner.pings = data.get("pings", 0)
                 ping = Ping(data.get("last_ping", {}), self.course.timezone)
                 self.runner.check_in(ping, self.start_time, self.course.route)
+                self.course.update_aid_stations(self.runner)
                 logger.info(f"restore success: {self.runner.last_ping}")
 
     def ingest_ping(self, ping_data: dict) -> None:
