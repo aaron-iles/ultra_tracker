@@ -16,16 +16,19 @@
     <div class="nav-wrapper">
       <ul id="nav-mobile">
         <li>
-          <a href="#stats" class="tab-link">Stats</a>
+          <a href="#stats" class="tab-link" onclick="location.reload()">Stats</a>
         </li>
         <li>
-          <a href="#aid" class="tab-link">Aid</a>
+          <a href="#aid" class="tab-link" onclick="location.reload()">Aid</a>
         </li>
         <li>
           <a href="#map" class="tab-link">Map</a>
         </li>
         <li>
-          <a href="#nerds" class="tab-link">Nerds</a>
+          <a href="#profile" class="tab-link" onclick="location.reload()">Profile</a>
+        </li>
+        <li>
+          <a href="#raw" class="tab-link" onclick="location.reload()">Raw</a>
         </li>
       </ul>
     </div>
@@ -39,6 +42,7 @@
           <th>Last Update</th>
           <th>Elapsed Time</th>
           <th>Mile Mark</th>
+          <th>Altitude</th>
           <th>Average Pace</th>
           <th>Current Pace</th>
           <th>Est Finish Date</th>
@@ -52,6 +56,7 @@
           <td>{{ last_update }}</td>
           <td>{{ elapsed_time }}</td>
           <td>{{ mile_mark }}</td>
+          <td>{{ altitude }}</td>
           <td>{{ avg_pace }}</td>
           <td>{{ current_pace }}</td>
           <td>{{ est_finish_date }}</td>
@@ -102,36 +107,104 @@
   <div id="map" class="container tab-content" style="padding-top: 64px;">
     <iframe src="{{map_url}}" frameborder="0"></iframe>
   </div>
-  <div id="nerds" class="container tab-content" style="padding-top: 64px;">
+  <div id="raw" class="container tab-content" style="padding-top: 64px;">
     <h1 class="page-header">Raw Data</h1>
     <pre><code id="json-data" class="language-json">
         {{ debug_data | tojson(indent=2) }}
       </code></pre>
   </div>
+  <div id="profile" class="container tab-content" style="padding-top: 64px; width: 100%; height: 90%;">
+  </div>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-json.min.js"></script> 
+  <script type=text/javascript src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
-
-        $(document).ready(function(){
-            $(".tab-link").on("click", function(){
-                var tabId = $(this).attr("href");
-                $(".tab-content").removeClass("active");
-                $(".tab-link").removeClass("active"); // Remove active class from all tabs
-                $(this).addClass("active"); // Add active class to the clicked tab
-                $(tabId).addClass("active");
-                // Store selected tab in local storage
-                localStorage.setItem('selectedTab', tabId);
-            });
-            // Check if there's a selected tab in local storage and activate it
-            var selectedTab = localStorage.getItem('selectedTab');
-            if (selectedTab) {
-                $(selectedTab).addClass('active');
-                $('a[href="' + selectedTab + '"]').addClass('active');
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        var distances = {{ distances | safe }};
+        var elevations = {{ elevations | safe }};
+    
+        var route = {
+            x: distances,
+            y: elevations,
+            type: 'scatter',
+            fill: 'tozeroy',  // Shade the area under the curve
+            mode: 'lines',
+            hoverinfo: 'skip',
+        };
+    
+        // Create marker for the runner's position
+        var runner_marker = {
+            x: [{{ runner_x }}],
+            y: [{{ runner_y }}],
+            mode: 'markers',
+            hoverinfo: 'x+y',
+            hovertemplate: '%{x:.2f} mi, %{y:.0f} ft<extra></extra>',
+            marker: {
+                symbol: 'diamond-dot',
+                size: 14,
+                color: 'purple',
+                line: {
+                    color: 'black',
+                    width: 1
+                },
+            },
+            name: 'Runner'
+        };
+    
+        var data = [route, runner_marker];
+    
+        // Define the layout with axis labels
+        var layout = {
+            xaxis: {
+                title: 'Distance (miles)',
+                range: [0, Math.max.apply(null, distances)],
+                fixedrange: true,
+                dtick: 5,
+            },
+            yaxis: {
+                title: 'Elevation (feet)',
+                range: [Math.min.apply(null, elevations), Math.max.apply(null, elevations)],
+                autorange: false,
+                fixedrange: true,
+                dtick: 500,
+            },
+            title: 'Elevation Profile',
+            margin: {
+                l: 50,  // left margin
+                r: 50,  // right margin
+                t: 50,  // top margin
+                b: 50   // bottom margin
+            },
+            showlegend: false,
+            hovermode: 'closest',
+            annotations: [
+                {
+                    x: {{ runner_x }},
+                    y: {{ runner_y }},
+                    xref: 'x',
+                    yref: 'y',
+                    text: 'Aaron',
+                    showarrow: true,
+                    arrowhead: 0,
+                    ax: 0,
+                    ay: -40
+                }
+            ]
+        };
+        var config = {
+          responsive: true,
+          displayModeBar: false, // Hide the modebar
+          scrollZoom: false, // Disable scroll to zoom
+          doubleClick: false, // Disable double click interaction
+          staticPlot: false // Ensure staticPlot is false to allow hover
+        };
+        Plotly.newPlot('profile', data, layout, config); 
+        setInterval(fetchDataAndUpdatePlot, 10000);
+    });
   </script> 
   <script>
 

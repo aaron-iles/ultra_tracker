@@ -32,17 +32,18 @@ def format_duration(duration: datetime.timedelta) -> str:
     return f"{int(hours)}:{int(minutes):02}'{int(seconds):02}\""
 
 
-def format_distance(distance_ft: float) -> str:
+def format_distance(distance_ft: float, force_ft: bool = False) -> str:
     """
     Format a distance in feet into a human-readable format.
 
     :param float distance_ft: The distance in feet.
+    :param bool force_ft: True if the formatter should always return feet and False otherwise.
 
     :return str: A human-readable representation of the distance. If the distance is over 5280 feet,
     it will be converted to miles with one decimal point, otherwise, it will be displayed in feet
     with one decimal point.
     """
-    if distance_ft >= 5280:
+    if distance_ft >= 5280 and not force_ft:
         distance_mi = distance_ft / 5280
         return f"{distance_mi:.1f} mi"
     else:
@@ -183,7 +184,12 @@ class Race:
         :return dict: Runner and race stats.
         """
         return {
+            "distances": json.dumps(self.course.route.distances.tolist()),
+            "elevations": json.dumps(self.course.route.elevations.tolist()),
+            "runner_x": self.runner.mile_mark,
+            "runner_y": self.runner.elevation,
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
+            "altitude": format_distance(self.runner.last_ping.altitude, True),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
@@ -194,13 +200,15 @@ class Race:
             "map_url": self.map_url,
             "aid_stations": self.course.aid_stations,
             "course_deviation": format_distance(self.runner.course_deviation),
-            "deviation_background_color": "#90EE90"
-            if self.runner.course_deviation < 100
-            else "#FAFAD2"
-            if 100 <= self.runner.course_deviation <= 150
-            else "#FFD700"
-            if 151 <= self.runner.course_deviation <= 200
-            else "#FFC0CB",
+            "deviation_background_color": (
+                "#90EE90"
+                if self.runner.course_deviation < 100
+                else (
+                    "#FAFAD2"
+                    if 100 <= self.runner.course_deviation <= 150
+                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                )
+            ),
             "debug_data": {
                 "course_deviation": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
@@ -237,7 +245,9 @@ class Race:
                 data = json.load(f)
                 self.runner.average_pace = data.get("average_pace", 10)
                 self.runner.pings = data.get("pings", 0)
-                self.runner.last_ping = Ping(data.get("last_ping", {}), self.course.timezone)
+                ping = Ping(data.get("last_ping", {}), self.course.timezone)
+                self.runner.check_in(ping, self.start_time, self.course.route)
+                self.course.update_aid_stations(self.runner)
                 logger.info(f"restore success: {self.runner.last_ping}")
 
     def ingest_ping(self, ping_data: dict) -> None:
@@ -280,6 +290,7 @@ class Runner:
         self.average_pace = 10
         self.current_pace = 10
         self.elapsed_time = datetime.timedelta(0)
+        self.elevation = 0
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
         self.estimated_finish_time = datetime.timedelta(0)
         self.finished = False
@@ -384,10 +395,10 @@ class Runner:
     def calculate_mile_mark(self, route) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
-        and pace. This will grab the 100 closest points on the course to the runner's ping and 
+        and pace. This will grab the 100 closest points on the course to the runner's ping and
         return the closest point if it is within 0.25 mi of the anticipated mile mark of the runner.
-        If no point matches that criteria, this will calculate the probability (given the last pace) 
-        that the runner is at one of those points, then return the point with the highest 
+        If no point matches that criteria, this will calculate the probability (given the last pace)
+        that the runner is at one of those points, then return the point with the highest
         probability.
 
         :param Route route: The route of the course.
@@ -399,7 +410,11 @@ class Runner:
         expected_mile_mark = (self.elapsed_time.total_seconds() / 60) * (1 / self.average_pace)
         for mm in mile_marks:
             if abs(mm - expected_mile_mark) < 0.25:
-                return mm, route.points[np.where(route.distances == mm)[0]].tolist()[0]
+                return (
+                    mm,
+                    route.points[np.where(route.distances == mm)[0]].tolist()[0],
+                    route.elevations[np.where(route.distances == mm)[0]].tolist()[0],
+                )
         # If there was no mile mark found within a quarter mile of the anticipated mile mark, use
         # a different method for guessing the mile mark.
         mile_mark = calculate_most_probable_mile_mark(
@@ -408,7 +423,8 @@ class Runner:
             self.average_pace,
         )
         coords = route.points[np.where(route.distances == mile_mark)[0]].tolist()[0]
-        return mile_mark, coords
+        elevation = route.elevations[np.where(route.distances == mile_mark)[0]].tolist()[0]
+        return mile_mark, coords, elevation
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
         """
@@ -436,7 +452,7 @@ class Runner:
         self.last_ping = ping
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
-        self.mile_mark, coords = self.calculate_mile_mark(route)
+        self.mile_mark, coords, self.elevation = self.calculate_mile_mark(route)
         self.average_pace = self.calculate_pace()
         self.check_if_started()
         if not self.in_progress:
@@ -451,7 +467,6 @@ class Runner:
         # Update the estimate marker coordinates.
         self.estimate_marker.coordinates = coords[::-1]
         self.estimate_marker.rotation = round(ping.heading)
-        self.estimate_marker.description = ""
         # Issue the POST to update the estimate marker.
         CaltopoMarker.update(self.estimate_marker)
         # Issue the POST to update the marker. This must be called this way to work with the uwsgi

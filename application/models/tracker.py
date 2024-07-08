@@ -3,6 +3,8 @@
 
 import datetime
 
+GPS_FIX_MAP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
+
 
 def meters_to_feet(meters: float) -> float:
     """
@@ -40,7 +42,7 @@ class Ping:
     def __init__(self, ping_data: dict, timezone):
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
-        self.gps_fix = self._event.get("point", {}).get("gpsFix", 0)
+        self.gps_fix = GPS_FIX_MAP.get(self._event.get("point", {}).get("gpsFix"))
         self.heading = self._event.get("point", {}).get("course", 0)
         self.imei = self._event.get("imei")
         self.latitude = self._event.get("point", {}).get("latitude", 0.0)
