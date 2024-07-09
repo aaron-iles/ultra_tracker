@@ -92,9 +92,9 @@
                   <td>{{ aid_station.distance_to | round(1) }} miles</td>
                   <td>{{ aid_station.estimated_arrival_time.strftime("%m-%d %H:%M") }}</td>
                   <td>
-                    <a href="{{ aid_station.gmaps_url }}" target="_blank">
-                      <img src="https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;">
-                    </a>
+                    <a href="{{aid_station.gmaps_url}}" target="_blank"><img src=
+                    "https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps Icon" style=
+                    "width: 24px; height: 24px; margin-right: 8px;"></a>
                   </td>
                 </tr>
               </tbody>
@@ -109,108 +109,24 @@
   </div>
   <div id="raw" class="container tab-content" style="padding-top: 64px;">
     <h1 class="page-header">Raw Data</h1>
-    <pre><code id="json-data" class="language-json">
-        {{ debug_data | tojson(indent=2) }}
-      </code></pre>
+    <pre>
+      <code id="json-data" class="language-json">{{ debug_data | tojson(indent=2) }}</code>
+    </pre>
   </div>
-  <div id="profile" class="container tab-content" style="padding-top: 64px; width: 100%; height: 90%;">
-  </div>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <div id="profile" class="container tab-content" style="padding-top: 64px; width: 100%; height: 90%;"></div>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-json.min.js"></script> 
-  <script type=text/javascript src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var distances = {{ distances | safe }};
-        var elevations = {{ elevations | safe }};
-    
-        var route = {
-            x: distances,
-            y: elevations,
-            type: 'scatter',
-            fill: 'tozeroy',  // Shade the area under the curve
-            mode: 'lines',
-            hoverinfo: 'skip',
-        };
-    
-        // Create marker for the runner's position
-        var runner_marker = {
-            x: [{{ runner_x }}],
-            y: [{{ runner_y }}],
-            mode: 'markers',
-            hoverinfo: 'x+y',
-            hovertemplate: '%{x:.2f} mi, %{y:.0f} ft<extra></extra>',
-            marker: {
-                symbol: 'diamond-dot',
-                size: 14,
-                color: 'purple',
-                line: {
-                    color: 'black',
-                    width: 1
-                },
-            },
-            name: 'Runner'
-        };
-    
-        var data = [route, runner_marker];
-    
-        // Define the layout with axis labels
-        var layout = {
-            xaxis: {
-                title: 'Distance (miles)',
-                range: [0, Math.max.apply(null, distances)],
-                fixedrange: true,
-                dtick: 5,
-            },
-            yaxis: {
-                title: 'Elevation (feet)',
-                range: [Math.min.apply(null, elevations), Math.max.apply(null, elevations)],
-                autorange: false,
-                fixedrange: true,
-                dtick: 500,
-            },
-            title: 'Elevation Profile',
-            margin: {
-                l: 50,  // left margin
-                r: 50,  // right margin
-                t: 50,  // top margin
-                b: 50   // bottom margin
-            },
-            showlegend: false,
-            hovermode: 'closest',
-            annotations: [
-                {
-                    x: {{ runner_x }},
-                    y: {{ runner_y }},
-                    xref: 'x',
-                    yref: 'y',
-                    text: 'Aaron',
-                    showarrow: true,
-                    arrowhead: 0,
-                    ax: 0,
-                    ay: -40
-                }
-            ]
-        };
-        var config = {
-          responsive: true,
-          displayModeBar: false, // Hide the modebar
-          scrollZoom: false, // Disable scroll to zoom
-          doubleClick: false, // Disable double click interaction
-          staticPlot: false // Ensure staticPlot is false to allow hover
-        };
-        Plotly.newPlot('profile', data, layout, config); 
-        setInterval(fetchDataAndUpdatePlot, 10000);
-    });
-  </script> 
-  <script>
+  <script type="text/javascript" src="{{url_for('static',filename='js/main.js')}}"></script> 
+  <script type="text/javascript">
 
-    document.addEventListener('DOMContentLoaded', function() {
-      Prism.highlightAll();
-    });
+    var distances = {{ distances | safe }};
+    var elevations = {{ elevations | safe }};
+    var runner_x = {{ runner_x }};
+    var runner_y = {{ runner_y }};
   </script>
 </body>
 </html>
