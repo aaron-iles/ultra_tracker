@@ -1,4 +1,3 @@
-/* Updated styles for better readability and contrast */
 .nav-wrapper {
   background-color: #081839;
   padding-left: 10px;
@@ -6,6 +5,7 @@
 }
 
 #nav-mobile {
+  list-style: none;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -19,12 +19,28 @@
   font-size: 55px; /* Increase font size for better readability */
 }
 
+.tab-link {
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+}
 
+/* Responsive font size */
+@media (max-width: 768px) {
+  .tab-link {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-link {
+    font-size: 14px;
+  }
+}
 
 .page-header {
   color: #081839;
 }
-
 
 .stats-table th,
 .stats-table td {
