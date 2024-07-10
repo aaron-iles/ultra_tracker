@@ -3,6 +3,7 @@
 
 import datetime
 import json
+import logging
 
 import numpy as np
 import requests
@@ -11,6 +12,8 @@ from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMarker, CaltopoShape, get_timezone
 from .tracker import meters_to_feet
+
+logger = logging.getLogger(__name__)
 
 
 def interpolate_and_filter_points(
@@ -136,6 +139,25 @@ def find_elevations(points: np.array) -> list:
             return
 
 
+def cumulative_altitude_changes(altitudes: np.array) -> tuple:
+    """
+    Calculates the cumulative gain and loss in an array of altitudes.
+
+    :param np.array altitudes: An array of altitudes of points along a line.
+    :return tuple: An array of gains, losses representing the cumulative gain and loss at each point
+    along the input array.
+    """
+    # Calculate the differences between consecutive altitudes
+    changes = np.diff(altitudes)
+    # Calculate cumulative gains and losses
+    gains = np.cumsum(np.where(changes > 0, changes, 0))
+    losses = np.cumsum(np.where(changes < 0, -changes, 0))
+    # Prepend 0 to the gains and losses arrays to align with the original altitude array
+    gains = np.insert(gains, 0, 0)
+    losses = np.insert(losses, 0, 0)
+    return gains, losses
+
+
 class Course:
     """
     A course is a representation of the race's route, aid stations, and other physical attributes.
@@ -147,8 +169,9 @@ class Course:
     """
 
     def __init__(self, caltopo_map, aid_stations: list, route_name: str):
-        self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
         self.route = self.extract_route(route_name, caltopo_map)
+        self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
+        logger.info(f"found {len(self.aid_stations)} on course")
         self.timezone = get_timezone(self.route.start_location)
 
     def extract_aid_stations(self, aid_stations: list, caltopo_map) -> list:
@@ -161,6 +184,7 @@ class Course:
         """
         # Map each marker's title to the object.
         title_to_marker = {marker.title: marker for marker in caltopo_map.markers}
+        # TODO: should add finish as an aid station?
         try:
             aid_objs = sorted(
                 [
@@ -174,10 +198,21 @@ class Course:
                 ]
             )
             prev_mile_mark = 0
-            # Now define all of the distances to each aid.
+            prev_gain = 0
+            prev_loss = 0
+            # Now define all of the distances, gains, and losses to each aid.
             for aso in aid_objs:
+                # This is the index in the big array of where the aid station lies. It calculates 
+                # the closest mile mark to the reported mile mark and gets the index in that array.
+                aid_index = np.argmin(np.abs(self.route.distances - aso.mile_mark))
+                total_gain_at_aso = self.route.gains[aid_index]
+                total_loss_at_aso = self.route.losses[aid_index]
                 aso.distance_to = aso.mile_mark - prev_mile_mark
+                aso.gain_to = total_gain_at_aso - prev_gain
+                aso.loss_to = total_loss_at_aso - prev_loss
                 prev_mile_mark = aso.mile_mark
+                prev_gain = total_gain_at_aso
+                prev_loss = total_loss_at_aso
             return aid_objs
         except KeyError as err:
             raise KeyError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
@@ -218,6 +253,8 @@ class AidStation(CaltopoMarker):
         self.mile_mark = mile_mark
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.distance_to = 0
+        self.gain_to = 0
+        self.loss_to = 0
 
     def get_eta(self, runner) -> datetime.datetime:
         """
@@ -261,8 +298,30 @@ class Route(CaltopoShape):
     def __init__(self, feature_dict: dict, map_id: str, session_id: str):
         super().__init__(feature_dict, map_id, session_id)
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
+        logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
+        logger.info(f"calculated elevations on map ID {map_id}")
+        self.gains, self.losses = cumulative_altitude_changes(self.elevations)
+        logger.info(f"calculated cumulative elevation changes on map ID {map_id}")
         self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]
         self.kdtree = KDTree(self.points)
+
+    @property
+    def gain(self) -> float:
+        """
+        The total amount of elevation gain in this route.
+
+        :return float: The total elevation loss.
+        """
+        return self.gains[-1]
+
+    @property
+    def loss(self) -> float:
+        """
+        The total amount of elevation loss in this route.
+
+        :return float: The total elevation loss.
+        """
+        return self.losses[-1]
