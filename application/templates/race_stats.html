@@ -82,6 +82,8 @@
                 <tr>
                   <th>Mile Mark</th>
                   <th>Leg Distance</th>
+                  <th>Leg Gain</th>
+                  <th>Leg Loss</th>
                   <th>ETA</th>
                   <th>Navigation</th>
                 </tr>
@@ -90,6 +92,8 @@
                 <tr>
                   <td>{{ aid_station.mile_mark }}</td>
                   <td>{{ aid_station.distance_to | round(1) }} miles</td>
+                  <td style="background-color:#FFC0CB">{{ aid_station.gain_to | int }} feet</td>
+                  <td style="background-color:#90EE90">{{ aid_station.loss_to | int }} feet</td>
                   <td>{{ aid_station.estimated_arrival_time.strftime("%m-%d %H:%M") }}</td>
                   <td>
                     <a href="{{aid_station.gmaps_url}}" target="_blank"><img src=

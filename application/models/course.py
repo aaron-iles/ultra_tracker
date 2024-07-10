@@ -169,9 +169,9 @@ class Course:
     """
 
     def __init__(self, caltopo_map, aid_stations: list, route_name: str):
+        self.route = self.extract_route(route_name, caltopo_map)
         self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
         logger.info(f"found {len(self.aid_stations)} on course")
-        self.route = self.extract_route(route_name, caltopo_map)
         self.timezone = get_timezone(self.route.start_location)
 
     def extract_aid_stations(self, aid_stations: list, caltopo_map) -> list:
@@ -184,6 +184,7 @@ class Course:
         """
         # Map each marker's title to the object.
         title_to_marker = {marker.title: marker for marker in caltopo_map.markers}
+        # TODO: should add finish as an aid station?
         try:
             aid_objs = sorted(
                 [
@@ -192,16 +193,26 @@ class Course:
                         caltopo_map.map_id,
                         caltopo_map.session_id,
                         aid_station["mile_mark"],
-                        # TODO add gain/loss to
                     )
                     for aid_station in aid_stations
                 ]
             )
             prev_mile_mark = 0
-            # Now define all of the distances to each aid.
+            prev_gain = 0
+            prev_loss = 0
+            # Now define all of the distances, gains, and losses to each aid.
             for aso in aid_objs:
+                # This is the index in the big array of where the aid station lies. It calculates 
+                # the closest mile mark to the reported mile mark and gets the index in that array.
+                aid_index = np.argmin(np.abs(self.route.distances - aso.mile_mark))
+                total_gain_at_aso = self.route.gains[aid_index]
+                total_loss_at_aso = self.route.losses[aid_index]
                 aso.distance_to = aso.mile_mark - prev_mile_mark
+                aso.gain_to = total_gain_at_aso - prev_gain
+                aso.loss_to = total_loss_at_aso - prev_loss
                 prev_mile_mark = aso.mile_mark
+                prev_gain = total_gain_at_aso
+                prev_loss = total_loss_at_aso
             return aid_objs
         except KeyError as err:
             raise KeyError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
@@ -242,6 +253,8 @@ class AidStation(CaltopoMarker):
         self.mile_mark = mile_mark
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.distance_to = 0
+        self.gain_to = 0
+        self.loss_to = 0
 
     def get_eta(self, runner) -> datetime.datetime:
         """
