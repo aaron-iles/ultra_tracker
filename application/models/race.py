@@ -218,6 +218,8 @@ class Race:
                 "low_battery": self.runner.low_battery,
                 "course": {
                     "distance": self.course.route.length,
+                    "gain": self.course.route.gain,
+                    "loss": self.course.route.loss,
                     "aid_stations": len(self.course.aid_stations),
                     "timezone": str(self.course.timezone),
                     "points": len(self.course.route.points),
