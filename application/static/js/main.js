@@ -98,5 +98,4 @@ document.addEventListener('DOMContentLoaded', function() {
       staticPlot: false // Ensure staticPlot is false to allow hover
     };
     Plotly.newPlot('profile', data, layout, config); 
-    setInterval(fetchDataAndUpdatePlot, 10000);
 });

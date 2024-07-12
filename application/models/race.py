@@ -251,6 +251,9 @@ class Race:
                 self.runner.check_in(ping, self.start_time, self.course.route)
                 self.course.update_aid_stations(self.runner)
                 logger.info(f"restore success: {self.runner.last_ping}")
+        else:
+            self.runner.mile_mark = 0
+            self.runner.elevation = self.course.route.elevations[0]
 
     def ingest_ping(self, ping_data: dict) -> None:
         """
