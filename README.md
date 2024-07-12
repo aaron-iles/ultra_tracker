@@ -70,4 +70,4 @@ Caltopo does not document its API though it is exposed. Managing session tokens 
 4. Click "Log In" and check the box for "Remember Me" (this is critical!)
 5. Log into your account as normal
 6. When the log in is complete, look through the network activity for a GET request to https://caltopo.com/sideload/account/XXXXXX.json where `XXXXXX` is your Caltopo user ID (NOT your username).
-7. Look at the request headers for something like this ```JSESSIONID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX```; this is your session ID and it should be good for 3 months as of this writing
+7. Look at the request headers for something like this ```SESSION=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX```; this is your session ID and it should be good for 3 months as of this writing

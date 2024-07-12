@@ -40,7 +40,7 @@ class CaltopoMap:
             "Accept-Language": "en-US,en;q=0.9",
             "Connection": "keep-alive",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Cookie": f"JSESSIONID={self.session_id}",
+            "Cookie": f"SESSION={self.session_id}",
         }
         response = requests.get(url, headers=headers, verify=True, timeout=60)
         return response.json()
@@ -80,7 +80,7 @@ class CaltopoMap:
             "Accept-Language": "en-US,en;q=0.9",
             "Connection": "keep-alive",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Cookie": f"JSESSIONID={self.session_id}",
+            "Cookie": f"SESSION={self.session_id}",
         }
         response = requests.post(
             url,
@@ -202,7 +202,7 @@ class CaltopoMarker(CaltopoFeature):
             "Accept-Language": "en-US,en;q=0.9",
             "Connection": "keep-alive",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Cookie": f"JSESSIONID={self.session_id}",
+            "Cookie": f"SESSION={self.session_id}",
         }
         response = requests.post(
             url, headers=headers, data=urlencode({"json": self.as_json}), verify=True, timeout=120
