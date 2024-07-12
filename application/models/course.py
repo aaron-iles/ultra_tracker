@@ -171,7 +171,7 @@ class Course:
     def __init__(self, caltopo_map, aid_stations: list, route_name: str):
         self.route = self.extract_route(route_name, caltopo_map)
         self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
-        logger.info(f"found {len(self.aid_stations)} on course")
+        logger.info(f"found {len(self.aid_stations)} aid stations on course")
         self.timezone = get_timezone(self.route.start_location)
 
     def extract_aid_stations(self, aid_stations: list, caltopo_map) -> list:
@@ -202,7 +202,7 @@ class Course:
             prev_loss = 0
             # Now define all of the distances, gains, and losses to each aid.
             for aso in aid_objs:
-                # This is the index in the big array of where the aid station lies. It calculates 
+                # This is the index in the big array of where the aid station lies. It calculates
                 # the closest mile mark to the reported mile mark and gets the index in that array.
                 aid_index = np.argmin(np.abs(self.route.distances - aso.mile_mark))
                 total_gain_at_aso = self.route.gains[aid_index]
