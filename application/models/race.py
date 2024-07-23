@@ -206,7 +206,9 @@ class Race:
                 else (
                     "#FAFAD2"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                    else "#FFD700"
+                    if 151 <= self.runner.course_deviation <= 200
+                    else "#FFC0CB"
                 )
             ),
             "debug_data": {
@@ -457,7 +459,14 @@ class Runner:
         self.last_ping = ping
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
+        last_mile_mark = self.mile_mark
         self.mile_mark, coords, self.elevation = self.calculate_mile_mark(route)
+        # If the runner is seen to move backward by more than 1/10th of a mile, print a warning.
+        # Sometimes this is valid, but it may indicate the previous or current mile mark estimates
+        # are wrong. Movements of less than 1/10th of a mile can be ignored since they could be
+        # seen frequently at aid stations.
+        if (self.mile_mark - last_mile_mark) < -0.1:
+            logger.warning(f"runner has moved backward from {last_mile_mark} to {self.mile_mark}")
         self.average_pace = self.calculate_pace()
         self.check_if_started()
         if not self.in_progress:
