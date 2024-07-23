@@ -252,6 +252,7 @@ class AidStation(CaltopoMarker):
         super().__init__(feature_dict, map_id, session_id)
         self.mile_mark = mile_mark
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
+        self.is_passed = False
         self.distance_to = 0
         self.gain_to = 0
         self.loss_to = 0
@@ -273,7 +274,8 @@ class AidStation(CaltopoMarker):
 
     def refresh(self, runner) -> None:
         """
-        Updates the aid station marker on the map with the latest data.
+        Updates the aid station object with the latest ETA of the runner. If the runner has already
+        passed, it will switch a boolean to note that.
 
         :param Runner runner: A runner object.
         :return None:
@@ -282,7 +284,12 @@ class AidStation(CaltopoMarker):
         miles_to_me = self.mile_mark - runner.mile_mark
         if miles_to_me < 0:
             # The runner has already passed this aid station.
+            # TODO: This only works for a single runner using this application.
+            self.is_passed = True
             return
+        # It may be necessary to set this back to False if the tracker momentarily thought the
+        # runner passed the aid (and changed the bool above) but then corrected itself.
+        self.is_passed = False
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
 

@@ -136,14 +136,20 @@ nav ul li a {
 .accordion-button {
   width: 100%;
   text-align: left;
-  background-color: #23ce00;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .accordion-body {
   padding: 10px;
 }
 
-.accordion-button {
-  font-weight: bold;
-  font-size: 16px;
+.accordion-item .accordion-button.not-completed-item {
+  background-color: #B0BEC5;
+  color: #37474F; 
+}
+
+.accordion-item .accordion-button.completed-item {
+  background-color: #FFFFFF; 
+  color: #000000; 
 }
