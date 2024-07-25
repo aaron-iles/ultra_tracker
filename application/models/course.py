@@ -250,39 +250,23 @@ class CourseElement:
         pass
 
 
-class Leg(CourseElement):
-    def __init__(self):
-        self.gain
-        self.loss
-        self.distance
-        self.start_
-        self.end_mile_mark
+class Leg:
+    def __init__(self, name: str, gain: int, loss: int, distance: float):
+        self.name = name
+        self.gain = gain
+        self.loss = loss
+        self.distance = distance
 
 
-class CourseMarker(CourseElement):
+class CourseMarker:
     # start and finish
     def __init__(self, mile_mark: float):
         self.mile_mark = mile_mark
-
-
-
-class AidStation(CourseMarker):
-    def __init__(self):
-
-
-class AidStation(CaltopoMarker):
-    """
-    This special type of marker represents a race's aid station.
-    """
-
-    def __init__(self, feature_dict: dict, map_id: str, session_id: str, mile_mark: float):
-        super().__init__(feature_dict, map_id, session_id)
-        self.mile_mark = mile_mark
-        self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.is_passed = False
-        self.distance_to = 0
-        self.gain_to = 0
-        self.loss_to = 0
+        self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
+
+    def __lt__(self, other):
+        return self.mile_mark < other.mile_mark
 
     def get_eta(self, runner) -> datetime.datetime:
         """
@@ -298,6 +282,18 @@ class AidStation(CaltopoMarker):
             return
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         return runner.last_ping.timestamp + minutes_to_me
+
+
+# The only useful thing from this is the gmaps url
+class AidStation(CourseMarker):
+    """
+    This special type of marker represents a race's aid station.
+    """
+
+    def __init__(self, mile_mark: float):
+        super().__init__(mile_mark)
+
+
 
     def refresh(self, runner) -> None:
         """
@@ -320,8 +316,6 @@ class AidStation(CaltopoMarker):
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
 
-    def __lt__(self, other):
-        return self.mile_mark < other.mile_mark
 
 
 class Route(CaltopoShape):
