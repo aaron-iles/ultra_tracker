@@ -243,6 +243,33 @@ class Course:
             aid_station.refresh(runner)
 
 
+class CourseElement:
+    """
+    """
+    def __init__(self):
+        pass
+
+
+class Leg(CourseElement):
+    def __init__(self):
+        self.gain
+        self.loss
+        self.distance
+        self.start_
+        self.end_mile_mark
+
+
+class CourseMarker(CourseElement):
+    # start and finish
+    def __init__(self, mile_mark: float):
+        self.mile_mark = mile_mark
+
+
+
+class AidStation(CourseMarker):
+    def __init__(self):
+
+
 class AidStation(CaltopoMarker):
     """
     This special type of marker represents a race's aid station.
