@@ -118,6 +118,7 @@ class CaltopoMap:
 
     def __init__(self, map_id: str, session: CaltopoSession):
         self.folders = set()
+        self.url = f"https://caltopo.com/m/{map_id}"
         self.map_id = map_id
         self.markers = set()
         self.session = session

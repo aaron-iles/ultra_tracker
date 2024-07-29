@@ -243,24 +243,24 @@ class Course:
             aid_station.refresh(runner)
 
 
-class CourseElement:
-    """ """
+class AidStation(CaltopoMarker):
+    """
+    This special type of marker represents a race's aid station.
+    """
 
-    def __init__(
-        self,
-    ):
-        self.name = name
+    def __init__(self, feature_dict: dict, map_id: str, session: str, mile_mark: float):
+        super().__init__(feature_dict, map_id, session)
         self.mile_mark = mile_mark
-        self.is_passed = False
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
-
-    def __lt__(self, other):
-        return self.mile_mark < other.mile_mark
+        self.is_passed = False
+        self.distance_to = 0
+        self.gain_to = 0
+        self.loss_to = 0
 
     def get_eta(self, runner) -> datetime.datetime:
         """
-        Given a `Runner`, calculates the ETA of the runner to the course element. If the runner has
-        already passed the course element, this function returns None.
+        Given a `Runner`, calculates the ETA of the runner to the aid station. If the runner has
+        already passed the aid station, this function returns None.
 
         :param Runner runner: A runner in the race.
         :return datetime.datetime: The time and date of the runner's ETA.
@@ -271,31 +271,6 @@ class CourseElement:
             return
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         return runner.last_ping.timestamp + minutes_to_me
-
-
-class Leg(CourseElement):
-    def __init__(self, name: str, mile_mark: float, gain: int, loss: int, distance: float):
-        super().__init__(name, mile_mark)
-        self.gain = gain
-        self.loss = loss
-        self.distance = distance
-
-
-class CourseMarker(CourseElement):
-    # start and finish and aids
-    def __init__(self, name: str, mile_mark: float):
-        super().__init__(name, mile_mark)
-        self.caltopo_marker = None
-
-
-# The only useful thing from this is the gmaps url
-class AidStation(CourseMarker):
-    """
-    This special type of marker represents a race's aid station.
-    """
-
-    def __init__(self, mile_mark: float):
-        super().__init__(mile_mark)
 
     def refresh(self, runner) -> None:
         """
@@ -318,13 +293,16 @@ class AidStation(CourseMarker):
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
 
+    def __lt__(self, other):
+        return self.mile_mark < other.mile_mark
+
 
 class Route(CaltopoShape):
     """
     This subclass of the CaltopoShape represents a race's route.
     """
 
-    def __init__(self, feature_dict: dict, map_id: str, session):
+    def __init__(self, feature_dict: dict, map_id: str, session: str):
         super().__init__(feature_dict, map_id, session)
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
         logger.info(f"created route object from map ID {map_id}")
