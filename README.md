@@ -54,7 +54,8 @@ To get started with Ultra Tracker, follow these steps:
    - ```start_time```: This is the start time of the race. The format must be ```YYYY-mm-ddTHH:MM:SS```.
    - ```garmin_api_token```: This is the token you created in step 3 above.
    - ```caltopo_map_id```: The is the map ID of the map you created in step 2 above (see the URL of the map in your browser).
-   - ```caltopo_session_id```: This is the tricky one to obtain. See the instructions down below on managing the session ID.
+   - ```caltopo_credential_id```: This is the tricky one to obtain. See the instructions down below on managing Caltopo credentials.
+   - ```caltopo_key```: This is the tricky one to obtain. See the instructions down below on managing Caltopo credentials.
    - ```tracker_marker_name```: This is the literal name of the marker that represents the runner on the map. This was created in step 2 above.
    - ```route_name```: The literal name of the line in Caltopo that represents the route.
    - ```aid_stations```: This is a list of dictionaries representing the aid stations on the map. For each aid station you must have the ```name``` and ```mile_mark```.
@@ -93,7 +94,7 @@ To create a new credential and to determine its credential ID and public key, fo
 finish-activate?code=........&name=......
 ```
 8. Write down or copy the 8-character value after `code=` from that request. This is not the value to put in the configuration file; you will use it in the next step.
-9. In a new browser tab, go to: `caltopo.com/api/v1/activate?code=<code>` replacing <code> with the 8-character code from the previous step.
+9. In a new browser tab, go to: `caltopo.com/api/v1/activate?code=<code>` replacing `<code>` with the 8-character code from the previous step.
 10. This should load a page that looks like the following (possibly all compressed into one line):
 ```json
 {
