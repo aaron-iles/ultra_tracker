@@ -54,7 +54,8 @@ To get started with Ultra Tracker, follow these steps:
    - ```start_time```: This is the start time of the race. The format must be ```YYYY-mm-ddTHH:MM:SS```.
    - ```garmin_api_token```: This is the token you created in step 3 above.
    - ```caltopo_map_id```: The is the map ID of the map you created in step 2 above (see the URL of the map in your browser).
-   - ```caltopo_session_id```: This is the tricky one to obtain. See the instructions down below on managing the session ID.
+   - ```caltopo_credential_id```: This is the tricky one to obtain. See the instructions down below on managing Caltopo credentials.
+   - ```caltopo_key```: This is the tricky one to obtain. See the instructions down below on managing Caltopo credentials.
    - ```tracker_marker_name```: This is the literal name of the marker that represents the runner on the map. This was created in step 2 above.
    - ```route_name```: The literal name of the line in Caltopo that represents the route.
    - ```aid_stations```: This is a list of dictionaries representing the aid stations on the map. For each aid station you must have the ```name``` and ```mile_mark```.
@@ -83,7 +84,7 @@ Currently, the public key is most easily determined during the process of creati
 To create a new credential and to determine its credential ID and public key, follow these steps (based on the README at https://github.com/elliottshane/sme-sartopo-mapsrv):
 
 1. Open a web page to caltopo.com. Make sure you are signed in to your account: you should see your user name or login name at the top right, to the right of "Your Data".
-2. In a separate browser tab, go to https://caltopo.com/app/activate/offline?redirect=localhost. This should show a web page similar to the one used during CalTopo Desktop activation from the CalTopo Desktop Installation instructions. Don’t click Sync Account yet.
+2. In a separate browser tab, go to https://caltopo.com/app/activate/offline?redirect=localhost. This should show a web page similar to the one used during CalTopo Desktop activation from the CalTopo Desktop Installation instructions.
 3. Open the developer console of your browser and start monitoring network traffic. For Chrome, use F12 to open Chrome DevTools; network traffic logging should be on when you open DevTools, as indicated by a red square-in-circle near the top left, which would stop monitoring network traffic when clicked.
 4. Type "ultra_tracker" or a similar name for "Your device will be synced as". The exact name is not important, but can help you keep track of credentials in case you have several. Afterwards, the name you enter here will show up in the Credentials section of the Your Account dialog as above.
 5. Check the checkbox and click Sync Account. (This should load an error page, which is OK.)
@@ -93,7 +94,7 @@ To create a new credential and to determine its credential ID and public key, fo
 finish-activate?code=........&name=......
 ```
 8. Write down or copy the 8-character value after `code=` from that request. This is not the value to put in the configuration file; you will use it in the next step.
-9. In a new browser tab, go to: `caltopo.com/api/v1/activate?code=<code>` replacing <code> with the 8-character code from the previous step.
+9. In a new browser tab, go to: `caltopo.com/api/v1/activate?code=<code>` replacing `<code>` with the 8-character code from the previous step.
 10. This should load a page that looks like the following (possibly all compressed into one line):
 ```json
 {
