@@ -206,9 +206,7 @@ class Race:
                 else (
                     "#FAFAD2"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700"
-                    if 151 <= self.runner.course_deviation <= 200
-                    else "#FFC0CB"
+                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
                 )
             ),
             "debug_data": {

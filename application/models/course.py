@@ -191,7 +191,7 @@ class Course:
                     AidStation(
                         title_to_marker[aid_station["name"]]._feature_dict,
                         caltopo_map.map_id,
-                        caltopo_map.session_id,
+                        caltopo_map.session,
                         aid_station["mile_mark"],
                     )
                     for aid_station in aid_stations
@@ -227,7 +227,7 @@ class Course:
         """
         for shape in caltopo_map.shapes:
             if shape.title == route_name:
-                return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session_id)
+                return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session)
         raise LookupError(f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}")
 
     def update_aid_stations(self, runner) -> None:
@@ -248,8 +248,8 @@ class AidStation(CaltopoMarker):
     This special type of marker represents a race's aid station.
     """
 
-    def __init__(self, feature_dict: dict, map_id: str, session_id: str, mile_mark: float):
-        super().__init__(feature_dict, map_id, session_id)
+    def __init__(self, feature_dict: dict, map_id: str, session: str, mile_mark: float):
+        super().__init__(feature_dict, map_id, session)
         self.mile_mark = mile_mark
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.is_passed = False
@@ -302,8 +302,8 @@ class Route(CaltopoShape):
     This subclass of the CaltopoShape represents a race's route.
     """
 
-    def __init__(self, feature_dict: dict, map_id: str, session_id: str):
-        super().__init__(feature_dict, map_id, session_id)
+    def __init__(self, feature_dict: dict, map_id: str, session: str):
+        super().__init__(feature_dict, map_id, session)
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
         logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
