@@ -40,7 +40,8 @@ To get started with Ultra Tracker, follow these steps:
    start_time: '2024-04-06T07:00:00'
    garmin_api_token: XXXXXXXX
    caltopo_map_id: XXXXX
-   caltopo_session_id: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   caltopo_credential_id: XXXXXXXXXXXX
+   caltopo_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
    tracker_marker_name: MyName
    route_name: Route
    aid_stations:
@@ -88,13 +89,13 @@ To create a new credential and to determine its credential ID and public key, fo
 5. Check the checkbox and click Sync Account. (This should load an error page, which is OK.)
 6. In the network traffic monitor, you will see many requests. After a few seconds, you can stop or pause network traffic monitoring to make sure the important entry does not get scrolled away as more new traffic happens.
 7. In the first few requests, at the top of the list, you should see a request similar to:
-```
+```text
 finish-activate?code=........&name=......
 ```
 8. Write down or copy the 8-character value after `code=` from that request. This is not the value to put in the configuration file; you will use it in the next step.
 9. In a new browser tab, go to: `caltopo.com/api/v1/activate?code=<code>` replacing <code> with the 8-character code from the previous step.
 10. This should load a page that looks like the following (possibly all compressed into one line):
-```
+```json
 {
   "code": "XXXXXXXXXXX",
   "account": {
@@ -114,4 +115,4 @@ finish-activate?code=........&name=......
   "key": "xXXXXxXXXXXXXXXxxxXXXXxXxXXXXXXXXXXXX="
 }
 ```
-11. Copy the 12-character "code" value as `caltopo_credential_id` in the `race_config.yml` file. Enter the 44-character value of "key" as "caltopo_key" in the configuration file.
+11. Copy the 12-character "code" value as `caltopo_credential_id` in the `race_config.yml` file. Enter the 44-character value of "key" as `caltopo_key` in the configuration file.
