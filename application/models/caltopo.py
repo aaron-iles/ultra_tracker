@@ -44,9 +44,8 @@ class CaltopoSession:
         """
         Issue a GET request to Caltopo and reutrn the response.
 
-        :param str url_endpoint: The URL endpoint to which to issue the POST.
-        :param dict payload: The payload data to send.
-        :return requests.Response: The raw response object from the POST.
+        :param str url_endpoint: The URL endpoint to which to issue the GET.
+        :return requests.Response: The raw response object from the GET.
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"GET {url_endpoint}\n{expires}\n"
@@ -83,14 +82,13 @@ class CaltopoSession:
             timeout=60,
         )
 
-
     def delete(self, url_endpoint: str, payload: dict) -> requests.Response:
         """
         Issue a DELETE request to Caltopo and reutrn the response.
 
-        :param str url_endpoint: The URL endpoint to which to issue the POST.
+        :param str url_endpoint: The URL endpoint to which to issue the DELETE.
         :param dict payload: The payload data to send.
-        :return requests.Response: The raw response object from the POST.
+        :return requests.Response: The raw response object from the DELETE.
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"DELETE {url_endpoint}\n{expires}\n{json.dumps(payload)}"
@@ -105,9 +103,6 @@ class CaltopoSession:
             verify=True,
             timeout=60,
         )
-
-
-
 
 
 class CaltopoMap:
