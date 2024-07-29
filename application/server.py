@@ -8,7 +8,7 @@ import sys
 
 import yaml
 from flask import Flask, render_template, request
-from models.caltopo import CaltopoMap
+from models.caltopo import CaltopoMap, CaltopoSession
 from models.course import Course
 from models.race import Race, Runner
 
@@ -105,7 +105,9 @@ config_data = get_config_data(args.config)
 setup_logging()
 logger = logging.getLogger(__name__)
 # Create the objects to manage the race.
-caltopo_map = CaltopoMap(config_data["caltopo_map_id"], config_data["caltopo_session_id"])
+caltopo_session = CaltopoSession(config_data["caltopo_credential_id"], config_data["caltopo_key"])
+logger.info("created session object...")
+caltopo_map = CaltopoMap(config_data["caltopo_map_id"], caltopo_session)
 logger.info("created map object...")
 course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
 logger.info("created course object...")

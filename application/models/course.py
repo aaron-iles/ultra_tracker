@@ -191,7 +191,7 @@ class Course:
                     AidStation(
                         title_to_marker[aid_station["name"]]._feature_dict,
                         caltopo_map.map_id,
-                        caltopo_map.session_id,
+                        caltopo_map.session,
                         aid_station["mile_mark"],
                     )
                     for aid_station in aid_stations
@@ -227,7 +227,7 @@ class Course:
         """
         for shape in caltopo_map.shapes:
             if shape.title == route_name:
-                return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session_id)
+                return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session)
         raise LookupError(f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}")
 
     def update_aid_stations(self, runner) -> None:
@@ -244,9 +244,11 @@ class Course:
 
 
 class CourseElement:
-    """
-    """
-    def __init__(self,):
+    """ """
+
+    def __init__(
+        self,
+    ):
         self.name = name
         self.mile_mark = mile_mark
         self.is_passed = False
@@ -279,13 +281,11 @@ class Leg(CourseElement):
         self.distance = distance
 
 
-
 class CourseMarker(CourseElement):
     # start and finish and aids
     def __init__(self, name: str, mile_mark: float):
         super().__init__(name, mile_mark)
         self.caltopo_marker = None
-
 
 
 # The only useful thing from this is the gmaps url
@@ -296,8 +296,6 @@ class AidStation(CourseMarker):
 
     def __init__(self, mile_mark: float):
         super().__init__(mile_mark)
-
-
 
     def refresh(self, runner) -> None:
         """
@@ -321,14 +319,13 @@ class AidStation(CourseMarker):
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
 
 
-
 class Route(CaltopoShape):
     """
     This subclass of the CaltopoShape represents a race's route.
     """
 
-    def __init__(self, feature_dict: dict, map_id: str, session_id: str):
-        super().__init__(feature_dict, map_id, session_id)
+    def __init__(self, feature_dict: dict, map_id: str, session):
+        super().__init__(feature_dict, map_id, session)
         self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
         logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
