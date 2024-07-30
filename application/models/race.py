@@ -380,23 +380,6 @@ class Runner:
         """
         return self.started and not self.finished
 
-    @property
-    def marker_description(self) -> str:
-        """
-        A nicely formatted string for the runner's map marker.
-
-        :return str: The runner's map marker description.
-        """
-        return (
-            f"𝗹𝗮𝘀𝘁 𝘂𝗽𝗱𝗮𝘁𝗲: {self.last_ping.timestamp.strftime('%m-%d %H:%M')}\n"
-            f"𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: {round(self.mile_mark, 2)}\n"
-            f"𝗲𝗹𝗮𝗽𝘀𝗲𝗱 𝘁𝗶𝗺𝗲: {format_duration(self.elapsed_time)}\n"
-            f"𝗮𝘃𝗴 𝗽𝗮𝗰𝗲: {convert_decimal_pace_to_pretty_format(self.average_pace)}\n"
-            f"𝗽𝗶𝗻𝗴𝘀: {self.pings}\n"
-            f"𝗘𝗙𝗗: {self.estimated_finish_date.strftime('%m-%d %H:%M')}\n"
-            f"𝗘𝗙𝗧: {format_duration(self.estimated_finish_time)}"
-        )
-
     def calculate_mile_mark(self, route) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
@@ -473,7 +456,6 @@ class Runner:
         self.estimated_finish_time = datetime.timedelta(minutes=self.average_pace * route.length)
         self.estimated_finish_date = start_time + self.estimated_finish_time
         # Now update the marker attributes.
-        self.marker.description = self.marker_description
         self.marker.coordinates = ping.lonlat
         self.marker.rotation = round(ping.heading)
         # Update the estimate marker coordinates.

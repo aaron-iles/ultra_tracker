@@ -82,24 +82,23 @@ class CaltopoSession:
             timeout=60,
         )
 
-    def delete(self, url_endpoint: str, payload: dict) -> requests.Response:
+    def delete(self, url_endpoint: str) -> requests.Response:
         """
         Issue a DELETE request to Caltopo and reutrn the response.
 
         :param str url_endpoint: The URL endpoint to which to issue the DELETE.
-        :param dict payload: The payload data to send.
         :return requests.Response: The raw response object from the DELETE.
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
-        data = f"DELETE {url_endpoint}\n{expires}\n{json.dumps(payload)}"
+        data = f"DELETE {url_endpoint}\n{expires}\n"
         params = {}
         params["id"] = self.credential_id
         params["expires"] = expires
         params["signature"] = self._get_token(data)
-        params["json"] = json.dumps(payload)
+        params["json"] = ""
         return requests.delete(
             f"{self.url_prefix}{url_endpoint}",
-            data=params,
+            params=params,
             verify=True,
             timeout=60,
         )
@@ -174,7 +173,10 @@ class CaltopoMap:
             logger.info(f"WARNING: unable to create test folder: {response.text}")
             return False
         url = f"/api/v1/map/{self.map_id}/Folder/{response.json()['result']['id']}"
-        self.session.delete(url, {})
+        response = self.session.delete(url)
+        if not response.ok:
+            logger.info(f"WARNING: unable to delete test folder: {response.text}")
+            return False
         logger.info(f"authentication test passed for map ID {self.map_id}")
         return True
 
