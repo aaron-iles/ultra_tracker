@@ -243,19 +243,18 @@ class Course:
             aid_station.refresh(runner)
 
 
-class AidStation(CaltopoMarker):
-    """
-    This special type of marker represents a race's aid station.
-    """
 
-    def __init__(self, feature_dict: dict, map_id: str, session: str, mile_mark: float):
-        super().__init__(feature_dict, map_id, session)
+
+class CourseElement:
+    def __init__(self, name: str, mile_mark: float):
+        self.name = name
         self.mile_mark = mile_mark
-        self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.is_passed = False
         self.distance_to = 0
-        self.gain_to = 0
-        self.loss_to = 0
+        self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
+
+    def __lt__(self, other):
+        return self.mile_mark < other.mile_mark
 
     def get_eta(self, runner) -> datetime.datetime:
         """
@@ -271,6 +270,14 @@ class AidStation(CaltopoMarker):
             return
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         return runner.last_ping.timestamp + minutes_to_me
+
+
+class AidStation(CourseElement):
+    """
+    This special type of marker represents a race's aid station.
+    """
+    def __init__(self, name: str, mile_mark: float):
+        super().__init__(name, mile_mark)
 
     def refresh(self, runner) -> None:
         """
@@ -293,8 +300,6 @@ class AidStation(CaltopoMarker):
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
 
-    def __lt__(self, other):
-        return self.mile_mark < other.mile_mark
 
 
 class Route(CaltopoShape):
