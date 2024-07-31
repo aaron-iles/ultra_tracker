@@ -198,7 +198,7 @@ class Race:
             "est_finish_time": format_duration(self.runner.estimated_finish_time),
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
             "map_url": self.map_url,
-            "aid_stations": self.course.aid_stations,
+            "course_elements": self.course.course_elements,
             "course_deviation": format_distance(self.runner.course_deviation),
             "deviation_background_color": (
                 "#90EE90"
@@ -206,7 +206,9 @@ class Race:
                 else (
                     "#FAFAD2"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                    else "#FFD700"
+                    if 151 <= self.runner.course_deviation <= 200
+                    else "#FFC0CB"
                 )
             ),
             "debug_data": {
@@ -220,7 +222,7 @@ class Race:
                     "distance": self.course.route.length,
                     "gain": self.course.route.gain,
                     "loss": self.course.route.loss,
-                    "aid_stations": len(self.course.aid_stations),
+                    "course_elements": len(self.course.course_elements),
                     "timezone": str(self.course.timezone),
                     "points": len(self.course.route.points),
                 },

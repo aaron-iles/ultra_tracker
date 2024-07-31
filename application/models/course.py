@@ -170,62 +170,52 @@ class Course:
 
     def __init__(self, caltopo_map, aid_stations: list, route_name: str):
         self.route = self.extract_route(route_name, caltopo_map)
-        self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
-        logger.info(f"found {len(self.aid_stations)} aid stations on course")
+        # self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
+        self.course_elements = self.get_course_elements(aid_stations)
         self.timezone = get_timezone(self.route.start_location)
 
-    def get_course_elements(self, aid_stations):
-        """
-        """
-        aid_objs = []
-        # TODO sort these
-        for aid_station in aid_stations:
-            aid = AidStation(aid_station['name'], aid_station['mile_mark'])
-            leg = # TODo
+    def get_course_elements(self, aid_stations: list) -> list:
+        """ """
 
-
-    def extract_aid_stations(self, aid_stations: list, caltopo_map) -> list:
-        """
-        Finds each marker in the CaltopoMap and maps it to an aid station.
-
-        :param list aid_stations: A list of dicts of aid station names and mile marks.
-        :param CaltopoMap caltopo_map: A CaltopoMap object.
-        :return list: A list of AidStation objects making up the course.
-        """
-        # Map each marker's title to the object.
-        title_to_marker = {marker.title: marker for marker in caltopo_map.markers}
-        # TODO: should add finish as an aid station?
-        try:
-            aid_objs = sorted(
-                [
-                    AidStation(
-                        title_to_marker[aid_station["name"]]._feature_dict,
-                        caltopo_map.map_id,
-                        caltopo_map.session,
-                        aid_station["mile_mark"],
-                    )
-                    for aid_station in aid_stations
+        aid_station_objects = sorted(
+            [
+                AidStation(asi["name"], asi["mile_mark"])
+                for asi in [
+                    {"name": "Start", "mile_mark": 0},
+                    {"name": "Finish", "mile_mark": self.route.length},
                 ]
+                + aid_stations
+            ]
+        )
+
+        leg_objects = []
+        prev_aid = aid_station_objects[0]
+        prev_gain = 0
+        prev_loss = 0
+        for aso in aid_station_objects[1:]:
+            # This is the index in the big array of where the aid station lies. It calculates
+            # the closest mile mark to the reported mile mark and gets the index in that array.
+            aso_index = np.argmin(np.abs(self.route.distances - aso.mile_mark))
+
+            total_gain_at_aso = self.route.gains[aso_index]
+            total_loss_at_aso = self.route.losses[aso_index]
+            distance_to_aso = aso.mile_mark - prev_aid.mile_mark
+            gain_to_aso = total_gain_at_aso - prev_gain
+            loss_to_aso = total_loss_at_aso - prev_loss
+            prev_gain = total_gain_at_aso
+            prev_loss = total_loss_at_aso
+
+            leg_objects.append(
+                Leg(
+                    f"{prev_aid.name} ➡ {aso.name}",
+                    prev_aid.mile_mark,
+                    distance_to_aso,
+                    gain_to_aso,
+                    loss_to_aso,
+                )
             )
-            prev_mile_mark = 0
-            prev_gain = 0
-            prev_loss = 0
-            # Now define all of the distances, gains, and losses to each aid.
-            for aso in aid_objs:
-                # This is the index in the big array of where the aid station lies. It calculates
-                # the closest mile mark to the reported mile mark and gets the index in that array.
-                aid_index = np.argmin(np.abs(self.route.distances - aso.mile_mark))
-                total_gain_at_aso = self.route.gains[aid_index]
-                total_loss_at_aso = self.route.losses[aid_index]
-                aso.distance_to = aso.mile_mark - prev_mile_mark
-                aso.gain_to = total_gain_at_aso - prev_gain
-                aso.loss_to = total_loss_at_aso - prev_loss
-                prev_mile_mark = aso.mile_mark
-                prev_gain = total_gain_at_aso
-                prev_loss = total_loss_at_aso
-            return aid_objs
-        except KeyError as err:
-            raise KeyError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
+            prev_aid = aso
+        return sorted(aid_station_objects + leg_objects)
 
     def extract_route(self, route_name: str, caltopo_map):
         """
@@ -249,10 +239,13 @@ class Course:
         :return None:
         """
         # TODO: Deprecate this in favor of calculating these for any runner upon request.
-        for aid_station in self.aid_stations:
-            aid_station.refresh(runner)
+        for ce in self.course_elements:
+            ce.refresh(runner)
 
 
+
+
+# TODO gmaps_url is gone!
 
 
 class CourseElement:
@@ -264,6 +257,8 @@ class CourseElement:
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
 
     def __lt__(self, other):
+        if isinstance(other, Leg) and self.mile_mark == other.mile_mark:
+            return False
         return self.mile_mark < other.mile_mark
 
     def refresh(self, runner) -> None:
@@ -304,18 +299,20 @@ class CourseElement:
 
 
 class AidStation(CourseElement):
-    """
-    """
+    """ """
+
     def __init__(self, name: str, mile_mark: float):
         super().__init__(name, mile_mark)
 
 
 class Leg(CourseElement):
-    """
-    """
-    def __init__(self, name: str, mile_mark: float):
-        super().__init__(name, mile_mark)
+    """ """
 
+    def __init__(self, name: str, mile_mark: float, distance: float, gain: int, loss: int):
+        super().__init__(name, mile_mark)
+        self.distance = distance
+        self.gain = gain
+        self.loss = loss
 
 
 class Route(CaltopoShape):

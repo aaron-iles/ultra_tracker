@@ -69,12 +69,12 @@
   <div id="aid" class="container tab-content" style="padding-top: 64px;">
     <h1 class="page-header">Aid Stations</h1>
     <div class="accordion" id="accordionExample">
-      {% for aid_station in (aid_stations | sort(attribute='mile_mark')) %}
+      {% for course_element in (course_elements | sort(attribute='mile_mark')) %}
       <div class="accordion-item">
         <h1 class="accordion-header" id="heading{{ loop.index }}"><button class=
-        "accordion-button collapsed {% if not aid_station.is_passed %}completed-item{% else %}not-completed-item{% endif %}" type="button"
+        "accordion-button collapsed {% if not course_element.is_passed %}completed-item{% else %}not-completed-item{% endif %}" type="button"
         data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">{{
-        aid_station.title }} (mile {{ aid_station.mile_mark }})</button></h1>
+        course_element.name }} (mile {{ course_element.mile_mark }})</button></h1>
         <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent=
         "#accordionExample">
           <div class="accordion-body">
@@ -91,13 +91,13 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>{{ aid_station.mile_mark }}</td>
-                  <td>{{ aid_station.distance_to | round(1) }} miles</td>
-                  <td style="background-color:#FFC0CB">{{ aid_station.gain_to | int }} feet</td>
-                  <td style="background-color:#90EE90">{{ aid_station.loss_to | int }} feet</td>
-                  <td>{{ aid_station.estimated_arrival_time.strftime("%m-%d %H:%M") }}</td>
+                  <td>{{ course_element.mile_mark }}</td>
+                  <td>{{ course_element.distance | default(0) | round(1) }} miles</td>
+                  <td style="background-color:#FFC0CB">{{ course_element.gain | d(0) | int }} feet</td>
+                  <td style="background-color:#90EE90">{{ course_element.loss | d(0) | int }} feet</td>
+                  <td>{{ course_element.estimated_arrival_time.strftime("%m-%d %H:%M") }}</td>
                   <td>
-                    <a href="{{aid_station.gmaps_url}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
+                    <a href="{{course_element.gmaps_url | d('')}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
                     alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;"></a>
                   </td>
                 </tr>
