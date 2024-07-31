@@ -174,6 +174,16 @@ class Course:
         logger.info(f"found {len(self.aid_stations)} aid stations on course")
         self.timezone = get_timezone(self.route.start_location)
 
+    def get_course_elements(self, aid_stations):
+        """
+        """
+        aid_objs = []
+        # TODO sort these
+        for aid_station in aid_stations:
+            aid = AidStation(aid_station['name'], aid_station['mile_mark'])
+            leg = # TODo
+
+
     def extract_aid_stations(self, aid_stations: list, caltopo_map) -> list:
         """
         Finds each marker in the CaltopoMap and maps it to an aid station.
@@ -256,29 +266,6 @@ class CourseElement:
     def __lt__(self, other):
         return self.mile_mark < other.mile_mark
 
-    def get_eta(self, runner) -> datetime.datetime:
-        """
-        Given a `Runner`, calculates the ETA of the runner to the aid station. If the runner has
-        already passed the aid station, this function returns None.
-
-        :param Runner runner: A runner in the race.
-        :return datetime.datetime: The time and date of the runner's ETA.
-        """
-        miles_to_me = self.mile_mark - runner.mile_mark
-        if miles_to_me < 0:
-            # The runner has already passed this aid station.
-            return
-        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
-        return runner.last_ping.timestamp + minutes_to_me
-
-
-class AidStation(CourseElement):
-    """
-    This special type of marker represents a race's aid station.
-    """
-    def __init__(self, name: str, mile_mark: float):
-        super().__init__(name, mile_mark)
-
     def refresh(self, runner) -> None:
         """
         Updates the aid station object with the latest ETA of the runner. If the runner has already
@@ -299,6 +286,35 @@ class AidStation(CourseElement):
         self.is_passed = False
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
+
+    def get_eta(self, runner) -> datetime.datetime:
+        """
+        Given a `Runner`, calculates the ETA of the runner to the aid station. If the runner has
+        already passed the aid station, this function returns None.
+
+        :param Runner runner: A runner in the race.
+        :return datetime.datetime: The time and date of the runner's ETA.
+        """
+        miles_to_me = self.mile_mark - runner.mile_mark
+        if miles_to_me < 0:
+            # The runner has already passed this aid station.
+            return
+        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
+        return runner.last_ping.timestamp + minutes_to_me
+
+
+class AidStation(CourseElement):
+    """
+    """
+    def __init__(self, name: str, mile_mark: float):
+        super().__init__(name, mile_mark)
+
+
+class Leg(CourseElement):
+    """
+    """
+    def __init__(self, name: str, mile_mark: float):
+        super().__init__(name, mile_mark)
 
 
 
