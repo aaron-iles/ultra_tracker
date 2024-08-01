@@ -10,8 +10,9 @@ import requests
 from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
-from .caltopo import CaltopoMarker, CaltopoShape, get_timezone
+from .caltopo import CaltopoMap, CaltopoShape
 from .tracker import meters_to_feet
+from .utils import format_duration, get_gmaps_url, get_timezone
 
 logger = logging.getLogger(__name__)
 
@@ -171,22 +172,43 @@ class Course:
     def __init__(self, caltopo_map, aid_stations: list, route_name: str):
         self.route = self.extract_route(route_name, caltopo_map)
         # self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
-        self.course_elements = self.get_course_elements(aid_stations)
+        self.course_elements = self.get_course_elements(aid_stations, caltopo_map)
         self.timezone = get_timezone(self.route.start_location)
 
-    def get_course_elements(self, aid_stations: list) -> list:
-        """ """
+    def get_course_elements(self, aid_stations: list, caltopo_map: CaltopoMap) -> list:
+        """
+        Searches the provided list of aid stations and route to generate all `AidStation` and `Leg`
+        objects.
 
+        :param list aid_stations: A list of dicts of aid station names and mile marks.
+        :param CaltopoMap caltopo_map: A CaltopoMap object.
+        :return list: A list of `CourseElement` objects alternating between `AidStation` and `Leg`.
+        """
+        # First create each of the AidStation objects. This also includes the start and finish even
+        # though they are not technically aid stations.
         aid_station_objects = sorted(
             [
                 AidStation(asi["name"], asi["mile_mark"])
                 for asi in [
                     {"name": "Start", "mile_mark": 0},
-                    {"name": "Finish", "mile_mark": self.route.length},
+                    {"name": "Finish", "mile_mark": round(self.route.length, 1)},
                 ]
                 + aid_stations
             ]
         )
+
+        # Map each marker's title to the object.
+        title_to_marker = {marker.title: marker for marker in caltopo_map.markers}
+        # Now take each marker and get the Google Maps URL associated with it. We do this by finding
+        # the marker in the list of markers parsed from Caltopo and associating them based on name.
+        for aso in aid_station_objects[1:-1]:
+            try:
+                aso.gmaps_url = title_to_marker[aso.name].gmaps_url
+            except KeyError as err:
+                raise KeyError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
+        # Since the start and finish aren't markers on the map, we do them separately.
+        aid_station_objects[0].gmaps_url = get_gmaps_url(self.route.points[0])
+        aid_station_objects[-1].gmaps_url = get_gmaps_url(self.route.points[-1])
 
         leg_objects = []
         prev_aid = aid_station_objects[0]
@@ -207,7 +229,7 @@ class Course:
 
             leg_objects.append(
                 Leg(
-                    f"{prev_aid.name} ➡ {aso.name}",
+                    f"{prev_aid.name} ➤ {aso.name}",
                     prev_aid.mile_mark,
                     distance_to_aso,
                     gain_to_aso,
@@ -230,10 +252,10 @@ class Course:
                 return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session)
         raise LookupError(f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}")
 
-    def update_aid_stations(self, runner) -> None:
+    def update_course_elements(self, runner) -> None:
         """
-        Loops over each aid station to allow it to get updated with the latest information from the
-        runner.
+        Loops over each course element (leg or aid station) to allow it to get updated with the
+        latest information from the runner.
 
         :param Runner runner: The runner of the race.
         :return None:
@@ -243,18 +265,23 @@ class Course:
             ce.refresh(runner)
 
 
-
-
-# TODO gmaps_url is gone!
-
-
 class CourseElement:
+    """
+    An abstract representation of an element of the course. This can be a waypoint, aid station,
+    leg, or anything else that makes up the course.
+
+    :param str name: The name of the course element.
+    :param float mile_mark: The mile mark at which this course element can be found along the route.
+    """
+
     def __init__(self, name: str, mile_mark: float):
         self.name = name
+        self.display_name = name
         self.mile_mark = mile_mark
         self.is_passed = False
         self.distance_to = 0
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
+        self.associated_caltopo_marker = None
 
     def __lt__(self, other):
         if isinstance(other, Leg) and self.mile_mark == other.mile_mark:
@@ -263,8 +290,8 @@ class CourseElement:
 
     def refresh(self, runner) -> None:
         """
-        Updates the aid station object with the latest ETA of the runner. If the runner has already
-        passed, it will switch a boolean to note that.
+        Updates the object with the latest ETA of the runner and the boolean to indicate if the
+        runner has already passed.
 
         :param Runner runner: A runner object.
         :return None:
@@ -272,7 +299,7 @@ class CourseElement:
         # TODO: Deprecate this in favor of methods that allow any runner to ask for an ETA, etc.
         miles_to_me = self.mile_mark - runner.mile_mark
         if miles_to_me < 0:
-            # The runner has already passed this aid station.
+            # The runner has already passed this course element.
             # TODO: This only works for a single runner using this application.
             self.is_passed = True
             return
@@ -284,8 +311,8 @@ class CourseElement:
 
     def get_eta(self, runner) -> datetime.datetime:
         """
-        Given a `Runner`, calculates the ETA of the runner to the aid station. If the runner has
-        already passed the aid station, this function returns None.
+        Given a `Runner`, calculates the ETA of the runner to the mile mark. If the runner has
+        already passed the mile mark, this function returns None.
 
         :param Runner runner: A runner in the race.
         :return datetime.datetime: The time and date of the runner's ETA.
@@ -299,20 +326,57 @@ class CourseElement:
 
 
 class AidStation(CourseElement):
-    """ """
+    """
+    A special course element that represents an aid station on the route.
+
+    :param str name: The name of the course element.
+    :param float mile_mark: The mile mark at which this course element can be found along the route.
+    """
 
     def __init__(self, name: str, mile_mark: float):
         super().__init__(name, mile_mark)
+        self.display_name = f"✚ {name}"
+        self.gmaps_url = ""  # TODO
 
 
 class Leg(CourseElement):
-    """ """
+    """
+    A special course element that represents a leg of the course.
+
+    :param str name: The name of the course element.
+    :param float mile_mark: The mile mark at which this course element can be found along the route.
+    :param float distance: The length of the leg.
+    :param int gain: The amount of vertical gain (in feet) of the leg.
+    :param int loss: The amount of vertical loss (in feet) of the leg.
+    """
 
     def __init__(self, name: str, mile_mark: float, distance: float, gain: int, loss: int):
         super().__init__(name, mile_mark)
         self.distance = distance
         self.gain = gain
         self.loss = loss
+        self.estimated_duration = datetime.timedelta(0)
+
+    @property
+    def estimated_duration_str(self) -> str:
+        """
+        The pretty string representation of the estimated duration.
+
+        :return str: A human-friendly representation of the duration.
+        """
+        return format_duration(self.estimated_duration)
+
+    def refresh(self, runner) -> None:
+        """
+        Refreshes the estimated duration of the leg based on the runner's average pace.
+
+        :param Runner runner: The runner in the race.
+        :return None:
+        """
+        super().refresh(runner)
+        # TODO This should be calculated based on moving pace and exclude stoppage time.
+        self.estimated_duration = datetime.timedelta(minutes=self.distance * runner.average_pace)
+        return
 
 
 class Route(CaltopoShape):
