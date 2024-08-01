@@ -171,7 +171,6 @@ class Course:
 
     def __init__(self, caltopo_map, aid_stations: list, route_name: str):
         self.route = self.extract_route(route_name, caltopo_map)
-        # self.aid_stations = self.extract_aid_stations(aid_stations, caltopo_map)
         self.course_elements = self.get_course_elements(aid_stations, caltopo_map)
         self.timezone = get_timezone(self.route.start_location)
 
@@ -284,6 +283,7 @@ class CourseElement:
         self.associated_caltopo_marker = None
 
     def __lt__(self, other):
+        # Since legs and aid stations share the same mile mark, ensure that the leg comes after.
         if isinstance(other, Leg) and self.mile_mark == other.mile_mark:
             return False
         return self.mile_mark < other.mile_mark
@@ -336,7 +336,7 @@ class AidStation(CourseElement):
     def __init__(self, name: str, mile_mark: float):
         super().__init__(name, mile_mark)
         self.display_name = f"✚ {name}"
-        self.gmaps_url = ""  # TODO
+        self.gmaps_url = ""
 
 
 class Leg(CourseElement):
