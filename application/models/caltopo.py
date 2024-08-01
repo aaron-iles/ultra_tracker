@@ -7,12 +7,11 @@ import json
 import logging
 import time
 import uuid
-from urllib.parse import urlencode
 
-import pytz
 import requests
 import uwsgidecorators
-from timezonefinder import TimezoneFinder
+
+from .utils import get_gmaps_url
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +231,7 @@ class CaltopoMarker(CaltopoFeature):
         self.rotation = self.properties.get("marker-rotation", 0)
         self.size = self.properties.get("marker-size", "1")
         self.symbol = self.properties.get("marker-symbol")
-        self.gmaps_url = f"http://maps.google.com/maps?z=12&t=m&q=loc:{self.coordinates[1]}+{self.coordinates[0]}"
+        self.gmaps_url = get_gmaps_url(self.coordinates[::-1])
 
     @property
     def as_json(self) -> dict:
@@ -300,19 +299,3 @@ class CaltopoFolder(CaltopoFeature):
 
     def __init__(self, feature_dict: dict, map_id: str, session: CaltopoSession):
         super().__init__(feature_dict, map_id, session)
-
-
-def get_timezone(latlon: list):
-    """
-    Given a location by coordinates, returns the timezone.
-
-    :param list latlon: The latitude, longitude of the location.
-    :return pytz: A timezone object.
-    """
-    tf = TimezoneFinder()
-    timezone_str = tf.timezone_at(lat=latlon[0], lng=latlon[1])
-    if timezone_str:
-        logger.info(f"determined {latlon} to be in timezone {timezone_str}")
-        return pytz.timezone(timezone_str)
-    else:
-        return None

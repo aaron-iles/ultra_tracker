@@ -14,65 +14,14 @@ from scipy.stats import norm
 from .caltopo import CaltopoMarker
 from .course import Route
 from .tracker import Ping
+from .utils import (
+    convert_decimal_pace_to_pretty_format,
+    format_distance,
+    format_duration,
+    kph_to_min_per_mi,
+)
 
 logger = logging.getLogger(__name__)
-
-
-def format_duration(duration: datetime.timedelta) -> str:
-    """
-    Formats a duration object as HH:mm'ss"
-
-    :param datetime.timedelta duration: A time duration.
-    :return str: The formatted duration.
-    """
-    total_hours = duration.total_seconds() / 3600
-    hours, remainder = divmod(total_hours, 1)
-    minutes, remainder = divmod(remainder * 60, 1)
-    seconds, _ = divmod(remainder * 60, 1)
-    return f"{int(hours)}:{int(minutes):02}'{int(seconds):02}\""
-
-
-def format_distance(distance_ft: float, force_ft: bool = False) -> str:
-    """
-    Format a distance in feet into a human-readable format.
-
-    :param float distance_ft: The distance in feet.
-    :param bool force_ft: True if the formatter should always return feet and False otherwise.
-
-    :return str: A human-readable representation of the distance. If the distance is over 5280 feet,
-    it will be converted to miles with one decimal point, otherwise, it will be displayed in feet
-    with one decimal point.
-    """
-    if distance_ft >= 5280 and not force_ft:
-        distance_mi = distance_ft / 5280
-        return f"{distance_mi:.1f} mi"
-    else:
-        return f"{distance_ft:.1f} ft"
-
-
-def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
-    """
-    Formats a running pace in a traditional human format.
-
-    :param float decimal_pace: A running pace in minutes per mile.
-    :return str: The formatted pace as mm'ss".
-    """
-    total_seconds = int(decimal_pace * 60)  # Convert pace to total seconds
-    minutes, remainder = divmod(total_seconds, 60)
-    seconds, _ = divmod(remainder, 1)
-    return f"{minutes}'{seconds:02d}\""
-
-
-def kph_to_min_per_mi(kph: float) -> float:
-    """
-    Convert kilometers per hour (kph) to minutes per mile (min/mi).
-
-    Parameters:
-    :param float kph: Speed in kilometers per hour.
-    :return float: Speed in minutes per mile.
-    """
-    miles_per_hour = kph / 1.60934
-    return 60 / miles_per_hour if miles_per_hour != 0 else 0.0
 
 
 def calculate_most_probable_mile_mark(
@@ -114,7 +63,7 @@ def haversine_distance(coord1: list, coord2: list) -> float:
     :return float: The distance between the two points in feet.
     """
     # Radius of the Earth in kilometers
-    R = 6371.0
+    radius = 6371.0
     # Convert latitude and longitude from degrees to radians
     lat1 = radians(coord1[0])
     lon1 = radians(coord1[1])
@@ -126,7 +75,7 @@ def haversine_distance(coord1: list, coord2: list) -> float:
     # Haversine formula
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    distance_km = R * c
+    distance_km = radius * c
     # Convert kilometers to feet (1 km = 3280.84 feet)
     return distance_km * 3280.84
 
@@ -198,7 +147,7 @@ class Race:
             "est_finish_time": format_duration(self.runner.estimated_finish_time),
             "start_time": self.start_time.strftime("%m-%d %H:%M"),
             "map_url": self.map_url,
-            "aid_stations": self.course.aid_stations,
+            "course_elements": self.course.course_elements,
             "course_deviation": format_distance(self.runner.course_deviation),
             "deviation_background_color": (
                 "#90EE90"
@@ -206,7 +155,9 @@ class Race:
                 else (
                     "#FAFAD2"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                    else "#FFD700"
+                    if 151 <= self.runner.course_deviation <= 200
+                    else "#FFC0CB"
                 )
             ),
             "debug_data": {
@@ -220,7 +171,7 @@ class Race:
                     "distance": self.course.route.length,
                     "gain": self.course.route.gain,
                     "loss": self.course.route.loss,
-                    "aid_stations": len(self.course.aid_stations),
+                    "course_elements": len(self.course.course_elements),
                     "timezone": str(self.course.timezone),
                     "points": len(self.course.route.points),
                 },
@@ -249,7 +200,7 @@ class Race:
                 self.runner.pings = data.get("pings", 0)
                 ping = Ping(data.get("last_ping", {}), self.course.timezone)
                 self.runner.check_in(ping, self.start_time, self.course.route)
-                self.course.update_aid_stations(self.runner)
+                self.course.update_course_elements(self.runner)
                 logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
@@ -279,7 +230,7 @@ class Race:
             logger.info("runner already finished; ignoring ping")
             return
         self.runner.check_in(ping, self.start_time, self.course.route)
-        self.course.update_aid_stations(self.runner)
+        self.course.update_course_elements(self.runner)
         self.save()
 
 
