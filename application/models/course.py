@@ -230,6 +230,7 @@ class Course:
                 Leg(
                     f"{prev_aid.name} ➤ {aso.name}",
                     prev_aid.mile_mark,
+                    aso.mile_mark,
                     distance_to_aso,
                     gain_to_aso,
                     loss_to_aso,
@@ -277,6 +278,7 @@ class CourseElement:
         self.name = name
         self.display_name = name
         self.mile_mark = mile_mark
+        self.end_mile_mark = mile_mark
         self.is_passed = False
         self.distance_to = 0
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
@@ -297,8 +299,9 @@ class CourseElement:
         :return None:
         """
         # TODO: Deprecate this in favor of methods that allow any runner to ask for an ETA, etc.
-        miles_to_me = self.mile_mark - runner.mile_mark
-        if miles_to_me < 0:
+        miles_to_start = self.mile_mark - runner.mile_mark
+        miles_to_end = self.end_mile_mark - runner.mile_mark
+        if miles_to_start < 0 and miles_to_end < 0:
             # The runner has already passed this course element.
             # TODO: This only works for a single runner using this application.
             self.is_passed = True
@@ -306,8 +309,8 @@ class CourseElement:
         # It may be necessary to set this back to False if the tracker momentarily thought the
         # runner passed the aid (and changed the bool above) but then corrected itself.
         self.is_passed = False
-        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
-        self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_me
+        minutes_to_start = datetime.timedelta(minutes=miles_to_start * runner.average_pace)
+        self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_start
 
     def get_eta(self, runner) -> datetime.datetime:
         """
@@ -344,15 +347,26 @@ class Leg(CourseElement):
     A special course element that represents a leg of the course.
 
     :param str name: The name of the course element.
-    :param float mile_mark: The mile mark at which this course element can be found along the route.
+    :param float start_mile_mark: The mile mark at which this course element can be found along the
+    route.
+    :param float end_mile_mark: The mile mark at which the leg ends.
     :param float distance: The length of the leg.
     :param int gain: The amount of vertical gain (in feet) of the leg.
     :param int loss: The amount of vertical loss (in feet) of the leg.
     """
 
-    def __init__(self, name: str, mile_mark: float, distance: float, gain: int, loss: int):
-        super().__init__(name, mile_mark)
+    def __init__(
+        self,
+        name: str,
+        start_mile_mark: float,
+        end_mile_mark: float,
+        distance: float,
+        gain: int,
+        loss: int,
+    ):
+        super().__init__(name, start_mile_mark)
         self.distance = distance
+        self.end_mile_mark = end_mile_mark
         self.gain = gain
         self.loss = loss
         self.estimated_duration = datetime.timedelta(0)
