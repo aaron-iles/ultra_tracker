@@ -63,7 +63,7 @@ def haversine_distance(coord1: list, coord2: list) -> float:
     :return float: The distance between the two points in feet.
     """
     # Radius of the Earth in kilometers
-    R = 6371.0
+    radius = 6371.0
     # Convert latitude and longitude from degrees to radians
     lat1 = radians(coord1[0])
     lon1 = radians(coord1[1])
@@ -75,7 +75,7 @@ def haversine_distance(coord1: list, coord2: list) -> float:
     # Haversine formula
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    distance_km = R * c
+    distance_km = radius * c
     # Convert kilometers to feet (1 km = 3280.84 feet)
     return distance_km * 3280.84
 

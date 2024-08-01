@@ -114,32 +114,3 @@ class Ping:
             "message_code": self.message_code,
             "speed": self.speed,
         }
-
-
-# TODO: This is a WIP.
-class Tracker:
-    """ """
-
-    def __init__(self, imei: str):
-        self.imei = imei
-        self.low_battery = False
-        self.pings = []
-        self.track_interval = 0
-
-    @property
-    def last_ping(self) -> Ping:
-        try:
-            return self.pings[-1]
-        except IndexError:
-            return
-
-    @property
-    def track(self) -> list:
-        """ """
-        return [ping.latlonalt for ping in self.pings]
-
-    def check_in(self, ping: Ping) -> None:
-        self.pings = sorted(self.pings + ping, key=lambda p: p.timestamp)
-        self.low_battery = self.last_ping.low_battery == 1
-        if self.last_ping.interval_change:
-            self.track_interval = self.last_ping.interval_change
