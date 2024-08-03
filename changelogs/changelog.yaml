@@ -1,0 +1,57 @@
+ancestor: null
+releases:
+  0.0.0:
+    changes:
+      major_changes:
+      - Initial release
+      release_summary: Initial release
+    release_date: '2024-02-22'
+  0.1.0:
+    changes:
+      minor_changes:
+      - Refactors server logging and webpage rendering
+      release_summary: Minor refactors of server logs and page render
+    release_date: '2024-02-22'
+  1.0.0:
+    changes:
+      major_changes:
+      - Adds application threading for improved performance
+      - Switches from stock Flask to uwsgi
+      minor_changes:
+      - Improves mile estimates on pings
+      - Updates all docstrings
+      - Various updates to Dockerfile
+      release_summary: Significant refactor of application
+    release_date: '2024-04-09'
+  2.0.0:
+    changes:
+      breaking_changes:
+      - Refactors credential management with Caltopo to avoid having to use session
+        cookies
+      minor_changes:
+      - Updates aid station accordions for better readbility after passing
+      release_summary: Overhauls credential management and some UI improvements
+    release_date: '2024-07-29'
+  2.0.1:
+    changes:
+      bugfixes:
+      - Fixes issues with marker deletions after authentication test
+      - Removes marker description updates
+      release_summary: Fixes marker deletions not working
+    release_date: '2024-07-30'
+  2.1.0:
+    changes:
+      minor_changes:
+      - Adds course legs to UI and backend
+      - Overhauls ``Course`` object to better manage course elements
+      - Refactors ``AidStation`` objects to not inherit from ``CaltopoMarker``
+      release_summary: Adds course legs with UI enhancements
+    release_date: '2024-08-02'
+  2.2.0:
+    changes:
+      minor_changes:
+      - Upgrades Docker container from Python 3.11 to 3.12
+      release_summary: Upgrades Docker container from Python 3.11 to 3.12
+    fragments:
+    - summary.yml
+    release_date: '2024-08-03'
