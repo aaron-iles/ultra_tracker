@@ -218,12 +218,14 @@ class Race:
         logger.info(ping)
         if ping.gps_fix == 0 or ping.latlon == [0, 0]:
             logger.info("ping does not contain GPS coordinates, skipping")
+            self.runner.pings += 1
             return
         # Don't do anything if the race hasn't started yet.
         if ping.timestamp < self.start_time:
             logger.info(
                 f"incoming timestamp {ping.timestamp} before race start time {self.start_time}"
             )
+            self.runner.pings += 1
             return
         # Don't do anything if the runner has already finished.
         if self.runner.finished:
