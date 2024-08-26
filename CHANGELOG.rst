@@ -4,6 +4,21 @@ Project Release Notes
 
 .. contents:: Topics
 
+v2.3.0
+======
+
+Release Summary
+---------------
+
+Adds optional comments for aid stations, cleans up the UI
+
+Minor Changes
+-------------
+
+- Adds a favicon
+- Adds optional comments section for aid stations
+- Minor cleanups in html
+
 v2.2.0
 ======
 
