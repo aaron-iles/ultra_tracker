@@ -55,3 +55,13 @@ releases:
     fragments:
     - summary.yml
     release_date: '2024-08-03'
+  2.3.0:
+    changes:
+      minor_changes:
+      - Adds a favicon
+      - Adds optional comments section for aid stations
+      - Minor cleanups in html
+      release_summary: Adds optional comments for aid stations, cleans up the UI
+    fragments:
+    - summary.yml
+    release_date: '2024-08-26'
