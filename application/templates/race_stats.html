@@ -9,6 +9,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <title>Ultra Tracker</title>
 </head>
 <body>
@@ -19,7 +20,7 @@
           <a href="#stats" class="tab-link">Stats</a>
         </li>
         <li>
-          <a href="#aid" class="tab-link">Course</a>
+          <a href="#course" class="tab-link">Course</a>
         </li>
         <li>
           <a href="#map" class="tab-link">Map</a>
@@ -66,7 +67,7 @@
       </tbody>
     </table>
   </div>
-  <div id="aid" class="container tab-content" style="padding-top: 64px;">
+  <div id="course" class="container tab-content" style="padding-top: 64px;">
     <h1 class="page-header">Course Overview</h1>
     <div class="accordion" id="accordionExample">
       {% for course_element in (course_elements | sort(attribute='mile_mark')) %}
@@ -78,7 +79,7 @@
         <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent=
         "#accordionExample">
           <div class="accordion-body">
-            <table class="responsive-table aid-table">
+            <table class="responsive-table course-table">
             {% if course_element.__class__.__name__ == 'Leg' %}
               <thead>
                 <tr>
@@ -103,6 +104,7 @@
                   <th>Mile Mark</th>
                   <th>ETA</th>
                   <th>Navigation</th>
+                  <th>Comments</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,6 +115,7 @@
                     <a href="{{course_element.gmaps_url}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
                     alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;"></a>
                   </td>
+                  <td>{{ course_element.comments }}</td>
                 </tr>
               </tbody>
             {% endif %}

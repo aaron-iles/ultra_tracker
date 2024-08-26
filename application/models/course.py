@@ -187,7 +187,7 @@ class Course:
         # though they are not technically aid stations.
         aid_station_objects = sorted(
             [
-                AidStation(asi["name"], asi["mile_mark"])
+                AidStation(asi["name"], asi["mile_mark"], asi.get("comments", ""))
                 for asi in [
                     {"name": "Start", "mile_mark": 0},
                     {"name": "Finish", "mile_mark": round(self.route.length, 1)},
@@ -336,10 +336,10 @@ class AidStation(CourseElement):
     :param float mile_mark: The mile mark at which this course element can be found along the route.
     """
 
-    def __init__(self, name: str, mile_mark: float):
+    def __init__(self, name: str, mile_mark: float, comments: str=""):
         super().__init__(name, mile_mark)
-        self.display_name = f"✚ {name}"
         self.gmaps_url = ""
+        self.comments = comments
 
 
 class Leg(CourseElement):
@@ -391,6 +391,9 @@ class Leg(CourseElement):
         # TODO This should be calculated based on moving pace and exclude stoppage time.
         self.estimated_duration = datetime.timedelta(minutes=self.distance * runner.average_pace)
         return
+
+    def __len__(self) -> float:
+        return self.distance
 
 
 class Route(CaltopoShape):

@@ -1,0 +1,5 @@
+release_summary: Adds optional comments for aid stations, cleans up the UI
+minor_changes:
+  - Adds a favicon
+  - Adds optional comments section for aid stations
+  - Minor cleanups in html
