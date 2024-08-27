@@ -56,8 +56,8 @@
   color: white;
 }
 
-.aid-table th,
-.aid-table td {
+.course-table th,
+.course-table td {
   padding: 10px;
   text-align: left;
   font-size: 14px;
@@ -65,7 +65,7 @@
   color: black;
 }
 
-.aid-table th {
+.course-table th {
   background-color: #081839;
   color: white;
 }
