@@ -1,3 +1,0 @@
-bugfixes:
-  - Changes the Google Maps URL for navigation to conform to standard API allowing it to work with any platform
-  - Adds ``uwsgi`` as dependency to requirements.txt
