@@ -65,3 +65,13 @@ releases:
     fragments:
     - summary.yml
     release_date: '2024-08-26'
+  2.3.1:
+    changes:
+      bugfixes:
+      - Adds ``uwsgi`` as dependency to requirements.txt
+      - Changes the Google Maps URL for navigation to conform to standard API allowing
+        it to work with any platform
+      release_summary: Fixes issue with navigation link not working on iPhone
+    fragments:
+    - summary.yml
+    release_date: '2024-09-11'

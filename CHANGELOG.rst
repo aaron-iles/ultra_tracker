@@ -4,6 +4,20 @@ Project Release Notes
 
 .. contents:: Topics
 
+v2.3.1
+======
+
+Release Summary
+---------------
+
+Fixes issue with navigation link not working on iPhone
+
+Bugfixes
+--------
+
+- Adds ``uwsgi`` as dependency to requirements.txt
+- Changes the Google Maps URL for navigation to conform to standard API allowing it to work with any platform
+
 v2.3.0
 ======
 
