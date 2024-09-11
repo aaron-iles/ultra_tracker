@@ -13,7 +13,7 @@ def meters_to_feet(meters: float) -> float:
     :param float meters: A distance in meters.
     :return float: The distance in feet.
     """
-    return meters * 3.28084
+    return meters * 3.280839895
 
 
 class Ping:

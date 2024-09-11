@@ -90,4 +90,4 @@ def get_gmaps_url(latlon: list) -> str:
     :param list latlon: The latitude, longitude.
     :return str: The URL of the lat lon in Gmaps.
     """
-    return f"http://maps.google.com/maps?z=12&t=m&q=loc:{latlon[0]}+{latlon[1]}"
+    return f"https://www.google.com/maps/search/?api=1&query={latlon[0]},{latlon[1]}"

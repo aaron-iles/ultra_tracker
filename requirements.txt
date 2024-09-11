@@ -10,5 +10,6 @@ pyuwsgi
 pyyaml
 requests
 scipy
+uwsgi
 timezonefinder
 uwsgidecorators
