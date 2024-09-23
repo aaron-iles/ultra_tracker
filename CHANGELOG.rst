@@ -4,6 +4,19 @@ Project Release Notes
 
 .. contents:: Topics
 
+v2.3.2
+======
+
+Release Summary
+---------------
+
+Fixes issues with hanging application after too many requests
+
+Bugfixes
+--------
+
+- Removes ``max_workers`` from uwsgi configuration
+
 v2.3.1
 ======
 

@@ -75,3 +75,11 @@ releases:
     fragments:
     - summary.yml
     release_date: '2024-09-11'
+  2.3.2:
+    changes:
+      bugfixes:
+      - Removes ``max_workers`` from uwsgi configuration
+      release_summary: Fixes issues with hanging application after too many requests
+    fragments:
+    - summary.yml
+    release_date: '2024-09-23'
