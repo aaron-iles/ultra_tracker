@@ -9,7 +9,6 @@ import time
 import uuid
 
 import requests
-import uwsgidecorators
 
 from .utils import get_gmaps_url
 
@@ -143,12 +142,20 @@ class CaltopoMap:
         for feature in features:
             feature_class = feature.get("properties", {}).get("class")
             if feature_class == "Folder":
-                # TODO
-                self.folders.add(CaltopoFolder(feature, self.map_id, self.session))
+                new_folder = CaltopoFolder(feature, self.map_id, self.session)
+                if new_folder in self.folders:
+                    raise ValueError(f"folder names must be unique: {new_folder}")
+                self.folders.add(new_folder)
             elif feature_class == "Shape":
-                self.shapes.add(CaltopoShape(feature, self.map_id, self.session))
+                new_shape = CaltopoShape(feature, self.map_id, self.session)
+                if new_shape in self.shapes:
+                    raise ValueError(f"shape names must be unique: {new_shape}")
+                self.shapes.add(new_shape)
             elif feature_class == "Marker":
-                self.markers.add(CaltopoMarker(feature, self.map_id, self.session))
+                new_marker = CaltopoMarker(feature, self.map_id, self.session)
+                if new_marker in self.markers:
+                    raise ValueError(f"marker names must be unique: {new_marker}")
+                self.markers.add(new_marker)
             else:
                 logger.info(f"Unknown feature found: {feature}")
 
@@ -179,6 +186,83 @@ class CaltopoMap:
         logger.info(f"authentication test passed for map ID {self.map_id}")
         return True
 
+    def get_or_create_folder(self, title: str):
+        """
+        Gets a folder from the map. If it does not exist, the folder is created.
+
+        :param str title: The title of the folder.
+        :return CaltopoFolder: The folder object.
+        """
+        folder_feature_dict = {
+            "properties": {"title": title, "visible": True, "labelVisible": True},
+            "id": None,
+        }
+        new_folder = CaltopoFolder(folder_feature_dict, self.map_id, self.session)
+        if new_folder in self.folders:
+            logger.info(f"folder '{title}' already exists")
+            return next((obj for obj in self.folders if obj.title == title))
+        logger.info(f"folder '{title}' not found; creating folder")
+        url = f"/api/v1/map/{self.map_id}/Folder"
+        response = self.session.post(url, new_folder.as_json)
+        if not response.ok:
+            logger.warning(f"unable to create folder: {response.text}")
+        new_folder.id = response.json()["result"]["id"]
+        self.folders.add(new_folder)
+        return new_folder
+
+    def get_or_create_marker(
+        self,
+        title: str,
+        folder_title: str,
+        marker_size: str,
+        marker_symbol: str,
+        marker_color: str,
+        coordinates: list,
+    ):
+        """
+        Gets a marker from the map or creates it if it doesn't already exist.
+
+        :param str title: The marker title.
+        :param str folder_title: The folder title to house the marker.
+        :param str marker_size: The size of the marker.
+        :param str marker_symbol: The symbol to use for the marker.
+        :param str marker_color: The color to assign the marker.
+        :param list coordinates: The coordinates to assign the marker.
+        :return CaltopoMarker: The marker.
+        """
+        folder = self.get_or_create_folder(folder_title)
+
+        marker_feature_dict = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": coordinates[::-1],
+            },
+            "properties": {
+                "title": title,
+                "description": "",
+                "folderId": folder.id,
+                "marker-size": marker_size,
+                "marker-symbol": marker_symbol,
+                "marker-color": marker_color,
+                "marker-rotation": 0,
+                "class": "Marker",
+            },
+        }
+
+        new_marker = CaltopoMarker(marker_feature_dict, self.map_id, self.session)
+        if new_marker in self.markers:
+            logger.info(f"marker '{title}' already exists")
+            return next((obj for obj in self.markers if obj.title == title))
+        logger.info(f"marker '{title}' not found; creating marker")
+        url = f"/api/v1/map/{self.map_id}/Marker"
+        response = self.session.post(url, new_marker.as_json)
+        if not response.ok:
+            logger.warning(f"unable to create marker: {response.text}")
+        new_marker.id = response.json()["result"]["id"]
+        self.markers.add(new_marker)
+        return new_marker
+
 
 class CaltopoFeature:
     """
@@ -186,7 +270,7 @@ class CaltopoFeature:
 
     :param dict feature_dict: The raw dict of features from Caltopo.
     :param str map_id: The map ID (UUID-like) from Caltopo.
-    :param str session_id: The auth token for Caltopo.
+    :param CaltopoSession session: The session to use to update Caltopo.
     """
 
     feature_class = "Feature"
@@ -203,10 +287,12 @@ class CaltopoFeature:
         self.title = self.properties.get("title", "")
 
     def __hash__(self):
-        return hash(self.id)
+        return hash(self.title)
 
+    # Caltopo allows features with the same title, but this application does not and will treat the
+    # titles as the unique identifiers.
     def __eq__(self, other):
-        return self.id == other.id
+        return self.title == other.title
 
     def __repr__(self):
         return f"{self.title} ({self.id})"
@@ -259,7 +345,6 @@ class CaltopoMarker(CaltopoFeature):
             },
         }
 
-    @uwsgidecorators.thread
     def update(self) -> requests.Response:
         """
         Moves the marker to the provided location, updates its description, and rotates it.
@@ -299,3 +384,15 @@ class CaltopoFolder(CaltopoFeature):
 
     def __init__(self, feature_dict: dict, map_id: str, session: CaltopoSession):
         super().__init__(feature_dict, map_id, session)
+
+    @property
+    def as_json(self) -> dict:
+        """
+        Converts the folder to a dict.
+
+        :return dict: A dict representation of the folder object.
+        """
+        return {
+            "properties": {"title": self.title, "visible": True, "labelVisible": True},
+            "id": self.id,
+        }

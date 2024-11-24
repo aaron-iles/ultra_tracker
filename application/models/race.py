@@ -103,6 +103,7 @@ class Race:
     ):
         self.course = course
         self.runner = runner
+        self.name = name
         self.data_store = data_store
         self.start_time = start_time
         self.started = False
@@ -155,9 +156,7 @@ class Race:
                 else (
                     "#FAFAD2"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700"
-                    if 151 <= self.runner.course_deviation <= 200
-                    else "#FFC0CB"
+                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
                 )
             ),
             "debug_data": {
@@ -242,9 +241,11 @@ class Runner:
 
     :param CaltopoMap caltopo_map: The Caltopo map object that is associated with the course.
     :param str marker_name: The name of the marker representing the runner.
+    :param list default_start_location: The lat/lon coordinates of where to place the runner marker
+    if not found before race start.
     """
 
-    def __init__(self, caltopo_map, marker_name: str):
+    def __init__(self, caltopo_map, marker_name: str, default_start_location: list = [0, 0]):
         self.average_pace = 10
         self.current_pace = 10
         self.elapsed_time = datetime.timedelta(0)
@@ -254,33 +255,37 @@ class Runner:
         self.finished = False
         self.last_ping = Ping({}, pytz.timezone("Etc/GMT"))
         self.low_battery = False
-        self.marker, self.estimate_marker = self.extract_marker(marker_name, caltopo_map)
+        self.marker, self.estimate_marker = self.extract_marker(
+            marker_name, caltopo_map, default_start_location
+        )
         self.mile_mark = 0
         self.pings = 0
         self.started = False
         self.track_interval = 300
 
-    def extract_marker(self, marker_name: str, caltopo_map) -> CaltopoMarker:
+    def extract_marker(self, marker_name: str, caltopo_map, default_start_location: list) -> tuple:
         """
         Given a marker name, extracts the marker from the map object to associate with the runner.
+        This also includes the estimate marker for troubleshooting.
 
         :param str marker_name: The marker name or title.
         :param CaltopoMap caltopo_map: The map object containing the markers.
-        :return CaltopoMarker: The marker representing the runner.
+        :param list default_start_location: The lat/lon coordinates of where to place the runner
+        marker if not found before race start.
+        :return tuple: The marker representing the runner and the runner's estimated location.
         """
-        estimate_marker = None
-        true_marker = None
-        for marker in caltopo_map.markers:
-            if marker.title == f"{marker_name} (estimated)":
-                estimate_marker = marker
-            elif marker.title == marker_name:
-                true_marker = marker
-
-        if estimate_marker and true_marker:
-            return true_marker, estimate_marker
-        raise LookupError(
-            f"no marker called '{marker_name}' found in markers: {caltopo_map.markers}"
+        true_marker = caltopo_map.get_or_create_marker(
+            marker_name, "Live Tracking", "1", "a:4", "A200FF", default_start_location
         )
+        estimate_marker = caltopo_map.get_or_create_marker(
+            f"{marker_name} (estimated)",
+            "Live Tracking",
+            "0.5",
+            "a:4",
+            "FFFFFF",
+            default_start_location,
+        )
+        return true_marker, estimate_marker
 
     def calculate_pace(self) -> float:
         """
