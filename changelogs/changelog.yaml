@@ -83,3 +83,15 @@ releases:
     fragments:
     - summary.yml
     release_date: '2024-09-23'
+  3.0.0:
+    changes:
+      breaking_changes:
+      - Enforces unique names for all Caltopo objects
+      - Renames config parameter from ``tracker_marker_name`` to ``runner_name``
+      minor_changes:
+      - Adds ability to automatically create runner marker (with estimate marker)
+      - Removes uwsgi threading for POST updates
+      release_summary: Adds ability to automatically create runner marker
+    fragments:
+    - 21-runner.yml
+    release_date: '2024-11-24'

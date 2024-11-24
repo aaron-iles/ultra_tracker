@@ -4,6 +4,26 @@ Project Release Notes
 
 .. contents:: Topics
 
+v3.0.0
+======
+
+Release Summary
+---------------
+
+Adds ability to automatically create runner marker
+
+Minor Changes
+-------------
+
+- Adds ability to automatically create runner marker (with estimate marker)
+- Removes uwsgi threading for POST updates
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- Enforces unique names for all Caltopo objects
+- Renames config parameter from ``tracker_marker_name`` to ``runner_name``
+
 v2.3.2
 ======
 
