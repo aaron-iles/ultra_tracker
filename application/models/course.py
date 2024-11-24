@@ -336,7 +336,7 @@ class AidStation(CourseElement):
     :param float mile_mark: The mile mark at which this course element can be found along the route.
     """
 
-    def __init__(self, name: str, mile_mark: float, comments: str=""):
+    def __init__(self, name: str, mile_mark: float, comments: str = ""):
         super().__init__(name, mile_mark)
         self.gmaps_url = ""
         self.comments = comments

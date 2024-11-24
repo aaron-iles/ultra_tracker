@@ -155,9 +155,7 @@ class Race:
                 else (
                     "#FAFAD2"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700"
-                    if 151 <= self.runner.course_deviation <= 200
-                    else "#FFC0CB"
+                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
                 )
             ),
             "debug_data": {
@@ -278,9 +276,13 @@ class Runner:
 
         if estimate_marker and true_marker:
             return true_marker, estimate_marker
-        raise LookupError(
-            f"no marker called '{marker_name}' found in markers: {caltopo_map.markers}"
-        )
+        # This means the marker does not exist in the map and we must create it.
+        else:
+            self.true_marker = caltopo_map.get_or_create_marker(
+                marker_name, "Live Tracking", "1", "a:4", "FF0000", [-76.74229, 39.24107]
+            )
+
+            # TODO
 
     def calculate_pace(self) -> float:
         """
