@@ -103,6 +103,7 @@ class Race:
     ):
         self.course = course
         self.runner = runner
+        self.name = name
         self.data_store = data_store
         self.start_time = start_time
         self.started = False
@@ -273,7 +274,6 @@ class Runner:
         marker if not found before race start.
         :return tuple: The marker representing the runner and the runner's estimated location.
         """
-        # TODO what lat lon??
         true_marker = caltopo_map.get_or_create_marker(
             marker_name, "Live Tracking", "1", "a:4", "A200FF", default_start_location
         )

@@ -8,6 +8,7 @@ import sys
 
 import yaml
 from flask import Flask, render_template, request
+
 from models.caltopo import CaltopoMap, CaltopoSession
 from models.course import Course
 from models.race import Race, Runner
@@ -115,7 +116,7 @@ if not caltopo_map.test_authentication():
 logger.info("authentication test passed...")
 course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
 logger.info("created course object...")
-runner = Runner(caltopo_map, config_data["runner_name"], list(course.route.start_location)[::-1])
+runner = Runner(caltopo_map, config_data["runner_name"], list(course.route.start_location))
 logger.info("created runner object...")
 race = Race(
     config_data["race_name"],

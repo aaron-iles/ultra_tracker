@@ -10,8 +10,6 @@ import uuid
 
 import requests
 
-# import uwsgidecorators
-
 from .utils import get_gmaps_url
 
 logger = logging.getLogger(__name__)
@@ -215,20 +213,30 @@ class CaltopoMap:
     def get_or_create_marker(
         self,
         title: str,
-        folder_name: str,
-        marker_size: int,
+        folder_title: str,
+        marker_size: str,
         marker_symbol: str,
         marker_color: str,
         coordinates: list,
     ):
-        """ """
-        folder = self.get_or_create_folder(folder_name)
+        """
+        Gets a marker from the map or creates it if it doesn't already exist.
+
+        :param str title: The marker title.
+        :param str folder_title: The folder title to house the marker.
+        :param str marker_size: The size of the marker.
+        :param str marker_symbol: The symbol to use for the marker.
+        :param str marker_color: The color to assign the marker.
+        :param list coordinates: The coordinates to assign the marker.
+        :return CaltopoMarker: The marker.
+        """
+        folder = self.get_or_create_folder(folder_title)
 
         marker_feature_dict = {
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": coordinates,
+                "coordinates": coordinates[::-1],
             },
             "properties": {
                 "title": title,
@@ -337,7 +345,6 @@ class CaltopoMarker(CaltopoFeature):
             },
         }
 
-    # @uwsgidecorators.thread
     def update(self) -> requests.Response:
         """
         Moves the marker to the provided location, updates its description, and rotates it.
