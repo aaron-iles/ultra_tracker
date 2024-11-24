@@ -109,9 +109,13 @@ caltopo_session = CaltopoSession(config_data["caltopo_credential_id"], config_da
 logger.info("created session object...")
 caltopo_map = CaltopoMap(config_data["caltopo_map_id"], caltopo_session)
 logger.info("created map object...")
+logger.info("performing authentication test...")
+if not caltopo_map.test_authentication():
+    exit(1)
+logger.info("authentication test passed...")
 course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
 logger.info("created course object...")
-runner = Runner(caltopo_map, config_data["tracker_marker_name"])
+runner = Runner(caltopo_map, config_data["runner_name"], list(course.route.start_location)[::-1])
 logger.info("created runner object...")
 race = Race(
     config_data["race_name"],
@@ -126,10 +130,6 @@ race = Race(
 logger.info("created race object...")
 app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
 app.config["UT_RACE"] = race
-logger.info("performing authentication test...")
-if not caltopo_map.test_authentication():
-    exit(1)
-logger.info("authentication test passed...")
 
 
 if __name__ == "__main__":

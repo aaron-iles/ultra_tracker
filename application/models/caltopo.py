@@ -201,16 +201,15 @@ class CaltopoMap:
         }
         new_folder = CaltopoFolder(folder_feature_dict, self.map_id, self.session)
         if new_folder in self.folders:
-            logger.info(f"INFO: folder '{title}' already exists")
+            logger.info(f"folder '{title}' already exists")
             return next((obj for obj in self.folders if obj.title == title))
-        logger.info(f"INFO: folder '{title}' not found; creating folder")
-        self.folders.add(new_folder)
-        url = f"/api/v1/map/{self.map_id}/Folder/"
+        logger.info(f"folder '{title}' not found; creating folder")
+        url = f"/api/v1/map/{self.map_id}/Folder"
         response = self.session.post(url, new_folder.as_json)
-        import ipdb; ipdb.set_trace()
         if not response.ok:
-            logger.info(f"WARNING: unable to create folder: {response.text}")
-        new_folder.id = response.json()['result']['id']
+            logger.warning(f"unable to create folder: {response.text}")
+        new_folder.id = response.json()["result"]["id"]
+        self.folders.add(new_folder)
         return new_folder
 
     def get_or_create_marker(
@@ -224,9 +223,8 @@ class CaltopoMap:
     ):
         """ """
         folder = self.get_or_create_folder(folder_name)
-        import ipdb; ipdb.set_trace()
 
-        feature_dict = {
+        marker_feature_dict = {
             "type": "Feature",
             "geometry": {
                 "type": "Point",
@@ -235,7 +233,7 @@ class CaltopoMap:
             "properties": {
                 "title": title,
                 "description": "",
-                "folderId": folder_id,
+                "folderId": folder.id,
                 "marker-size": marker_size,
                 "marker-symbol": marker_symbol,
                 "marker-color": marker_color,
@@ -244,7 +242,18 @@ class CaltopoMap:
             },
         }
 
-        assert new_marker not in self.markers
+        new_marker = CaltopoMarker(marker_feature_dict, self.map_id, self.session)
+        if new_marker in self.markers:
+            logger.info(f"marker '{title}' already exists")
+            return next((obj for obj in self.markers if obj.title == title))
+        logger.info(f"marker '{title}' not found; creating marker")
+        url = f"/api/v1/map/{self.map_id}/Marker"
+        response = self.session.post(url, new_marker.as_json)
+        if not response.ok:
+            logger.warning(f"unable to create marker: {response.text}")
+        new_marker.id = response.json()["result"]["id"]
+        self.markers.add(new_marker)
+        return new_marker
 
 
 class CaltopoFeature:
@@ -376,4 +385,7 @@ class CaltopoFolder(CaltopoFeature):
 
         :return dict: A dict representation of the folder object.
         """
-        return {"properties":{"title":self.title,"visible":True,"labelVisible":True},"id":self.id}
+        return {
+            "properties": {"title": self.title, "visible": True, "labelVisible": True},
+            "id": self.id,
+        }
