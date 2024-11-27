@@ -138,6 +138,7 @@ class Race:
             "elevations": json.dumps(self.course.route.elevations.tolist()),
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
+            "runner_name": self.runner.marker.title,
             "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
             "altitude": format_distance(self.runner.last_ping.altitude, True),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),

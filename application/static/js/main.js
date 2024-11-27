@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 y: runner_y,
                 xref: 'x',
                 yref: 'y',
-                text: 'Aaron',
+                text: runner_name,
                 showarrow: true,
                 arrowhead: 0,
                 ax: 0,

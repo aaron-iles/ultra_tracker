@@ -95,3 +95,11 @@ releases:
     fragments:
     - 21-runner.yml
     release_date: '2024-11-24'
+  3.0.1:
+    changes:
+      bugfixes:
+      - Uses the runner name in the race config for the elevation profile
+      release_summary: Enables dynamic runner names
+    fragments:
+    - release.yml
+    release_date: '2024-11-27'

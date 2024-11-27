@@ -4,6 +4,19 @@ Project Release Notes
 
 .. contents:: Topics
 
+v3.0.1
+======
+
+Release Summary
+---------------
+
+Enables dynamic runner names
+
+Bugfixes
+--------
+
+- Uses the runner name in the race config for the elevation profile
+
 v3.0.0
 ======
 
