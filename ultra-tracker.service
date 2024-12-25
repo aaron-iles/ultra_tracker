@@ -5,8 +5,8 @@ Wants=network-pre.target
 
 [Service]
 Type=simple
-Environment="COMPOSE_PROJECT_DIR=/proj/ultra_tracker"
-Environment="COMPOSE_FILE=/proj/ultra_tracker/docker-compose.yml"
+Environment="COMPOSE_PROJECT_DIR=/ultra-tracker/ultra_tracker"
+Environment="COMPOSE_FILE=/ultra-tracker/ultra_tracker/docker-compose.yml"
 ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down -t 2
 Restart=always
