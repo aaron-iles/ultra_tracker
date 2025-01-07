@@ -75,7 +75,7 @@
         <h1 class="accordion-header" id="heading{{ loop.index }}"><button class=
         "accordion-button collapsed {% if not course_element.is_passed %}completed-item{% else %}not-completed-item{% endif %}" type="button"
         data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">{{
-        course_element.display_name }} (mile {{ course_element.mile_mark }})</button></h1>
+        course_element.display_name }}</button></h1>
         <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent=
         "#accordionExample">
           <div class="accordion-body">

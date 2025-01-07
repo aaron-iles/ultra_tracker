@@ -349,6 +349,7 @@ class AidStation(CourseElement):
         super().__init__(name, mile_mark)
         self.gmaps_url = ""
         self.comments = comments
+        self.display_name = f"{name} (mile {mile_mark})"
 
 
 class Leg(CourseElement):

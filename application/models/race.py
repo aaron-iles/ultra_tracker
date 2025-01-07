@@ -325,6 +325,9 @@ class Runner:
         :return tuple: The most probable mile mark and the coordinates of that mile mark on the
         course.
         """
+        # TODO: Should we allow the mile marker to move backward? There are some legitimate times
+        # when it happens but usually only a small amount.
+
         # This step right here has been found to result in better estimates. Rather than performing
         # the math based on the actual location of the runner, we "snap to" the closest point on the
         # course and THEN perform the math. This helps account for satellite reception issues,
@@ -358,6 +361,8 @@ class Runner:
             )
             coords = route.get_point_at_mile_mark(mile_mark)
             elevation = route.get_elevation_at_mile_mark(mile_mark)
+            # TODO maybe check here if the mile mark moved backward more than X miles and do a
+            # different calculation if so.
             return mile_mark, coords, elevation
 
         # Case 3: This should only occur if the latlon is more than 100 ft from the closest course
