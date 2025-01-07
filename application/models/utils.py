@@ -40,8 +40,7 @@ def format_distance(distance_ft: float, force_ft: bool = False) -> str:
     if distance_ft >= 5280 and not force_ft:
         distance_mi = distance_ft / 5280
         return f"{distance_mi:.1f} mi"
-    else:
-        return f"{distance_ft:.1f} ft"
+    return f"{distance_ft:.1f} ft"
 
 
 def convert_decimal_pace_to_pretty_format(decimal_pace: float) -> str:
@@ -81,8 +80,7 @@ def get_timezone(latlon: list):
     if timezone_str:
         logger.info(f"determined {latlon} to be in timezone {timezone_str}")
         return pytz.timezone(timezone_str)
-    else:
-        return None
+    return None
 
 
 def get_gmaps_url(latlon: list) -> str:
@@ -117,7 +115,8 @@ def feet_to_meters(feet: float) -> float:
 
 def haversine_distance(coord1: list, coord2: list) -> float:
     """
-    Calculate the Haversine distance between two points specified by their latitude and longitude coordinates.
+    Calculate the Haversine distance between two points specified by their latitude and longitude 
+    coordinates.
 
     :param list coord1: Latitude and longitude coordinates of the first point in the format
     [latitude, longitude].

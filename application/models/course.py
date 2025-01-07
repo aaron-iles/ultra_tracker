@@ -12,11 +12,10 @@ from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMap, CaltopoShape
-from .tracker import meters_to_feet
 from .utils import (
     detect_consecutive_sequences,
-    feet_to_meters,
     format_duration,
+    meters_to_feet,
     get_gmaps_url,
     get_timezone,
     haversine_distance,
@@ -29,17 +28,19 @@ def interpolate_and_filter_points(
     coordinates: np.array, min_interval_dist: float, max_interval_dist: float
 ):
     """
-    Interpolate points between the given coordinates and filter points based on the distance criteria.
+    Interpolate points between the given coordinates and filter points based on the distance 
+    criteria.
 
-    :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point with
-    latitude and longitude coordinates.
+    :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point 
+    with latitude and longitude coordinates.
     :param float min_interval_dist: The minimum distance allowed (in feet) between two consecutive
     points. If the distance between two points is less than this value, the point will be removed.
     :param float max_interval_dist: The maximum distance allowed between two consecutive points. If
     the distance between two points is greater than this value, additional points will be
     interpolated to meet the specified interval.
 
-    :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude coordinates.
+    :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude 
+    coordinates.
     """
     interpolated_points = np.empty((0, 2), dtype=float)
     interpolated_points = np.vstack([interpolated_points, [coordinates[0, 0], coordinates[0, 1]]])
@@ -59,7 +60,7 @@ def interpolate_and_filter_points(
             # Skip adding this point if it's too close to the previous one
             continue
         # Check if interpolation or removal is needed
-        elif distance_between_points > max_interval_dist:
+        if distance_between_points > max_interval_dist:
             # Calculate the number of intervals needed
             num_intervals = int(distance_between_points / max_interval_dist)
             # Calculate the step size for latitude and longitude
@@ -136,7 +137,7 @@ def find_elevations(points: np.array) -> list:
     }
     reversed_points = points[:, ::-1].tolist()
     data = {"geometry": {"type": "LineString", "coordinates": reversed_points}}
-    response = requests.post(url, headers=headers, data={"json": json.dumps(data)})
+    response = requests.post(url, headers=headers, data={"json": json.dumps(data)}, timeout=60)
     if response.ok:
         try:
             new_data = np.array(response.json()["result"])[:, 2]
@@ -145,7 +146,7 @@ def find_elevations(points: np.array) -> list:
             # Apply the function to the array
             return vectorized_function(new_data)
         except (json.JSONDecodeError, KeyError):
-            return
+            return []
 
 
 def cumulative_altitude_changes(altitudes: np.array) -> tuple:

@@ -351,7 +351,7 @@ class Runner:
 
         # Case 2: When there are course points close to the ping and they are not consecutive, then
         # the runner must be either on an out and back, loop, or intersection. This is trickier.
-        elif len(indices_within_radius) > 0 and not are_consecutive:
+        if len(indices_within_radius) > 0 and not are_consecutive:
             mile_marks = [route.distances[i] for i in indices_within_radius]
             mile_mark = calculate_most_probable_mile_mark(
                 mile_marks, self.elapsed_time.total_seconds() / 60, self.average_pace
@@ -361,10 +361,10 @@ class Runner:
             return mile_mark, coords, elevation
 
         # Case 3: This should only occur if the latlon is more than 100 ft from the closest course
-        # point. This is impossible because above we "snapped to" the closest course point.
-        else:
-            logger.warning(f"unable to find mile mark given point {latlon}")
-            return 0, [0, 0], 0
+        # point. This is impossible because above we "snapped to" the closest course point, but
+        # keeping this here in case that changes in the future.
+        logger.warning(f"unable to find mile mark given point {latlon}")
+        return 0, [0, 0], 0
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
         """
