@@ -3,7 +3,9 @@
 
 import datetime
 import logging
+import numpy as np
 
+from math import atan2, cos, radians, sin, sqrt
 import pytz
 from timezonefinder import TimezoneFinder
 
@@ -91,3 +93,73 @@ def get_gmaps_url(latlon: list) -> str:
     :return str: The URL of the lat lon in Gmaps.
     """
     return f"https://www.google.com/maps/search/?api=1&query={latlon[0]},{latlon[1]}"
+
+
+def meters_to_feet(meters: float) -> float:
+    """
+    Convert meters to feet.
+
+    :param float meters: A distance in meters.
+    :return float: The distance in feet.
+    """
+    return meters * 3.280839895
+
+
+def feet_to_meters(feet: float) -> float:
+    """
+    Convert feet to meters.
+
+    :param float feet: A distance in feet.
+    :return float: The distance in meters.
+    """
+    return feet / 3.280839895
+
+
+def haversine_distance(coord1: list, coord2: list) -> float:
+    """
+    Calculate the Haversine distance between two points specified by their latitude and longitude coordinates.
+
+    :param list coord1: Latitude and longitude coordinates of the first point in the format
+    [latitude, longitude].
+    :param list coord2: Latitude and longitude coordinates of the second point in the format
+    [latitude, longitude].
+    :return float: The distance between the two points in feet.
+    """
+    # Radius of the Earth in kilometers
+    radius = 6371.0
+    # Convert latitude and longitude from degrees to radians
+    lat1 = radians(coord1[0])
+    lon1 = radians(coord1[1])
+    lat2 = radians(coord2[0])
+    lon2 = radians(coord2[1])
+    # Compute the differences between latitudes and longitudes
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    # Haversine formula
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance_km = radius * c
+    # Convert kilometers to feet (1 km = 3280.84 feet)
+    return meters_to_feet(distance_km * 1000)
+
+
+def detect_consecutive_sequences(integers: list) -> list:
+    """
+    Detects consecutive sequences of integers in a list of integers.
+    This function sorts the input integers and then identifies groups of consecutive integers 
+    by checking for breaks (gaps) in the sequence. It returns a list of lists, where each inner 
+    list contains a sequence of consecutive integers.
+
+    :param integers: A list or array of integers representing the integers to be checked.
+    :type integers: list or ndarray
+    :return list: A list of lists, where each inner list contains consecutive integers from 
+             the input list, sorted in ascending order.
+    """
+    sorted_integers = np.sort(integers)
+    diffs = np.diff(sorted_integers)
+    break_points = np.where(diffs > 1)[0] + 1  # Identify where the break occurs (diff > 1)
+    
+    # Add the start and end integers of the split sequences
+    sequences = np.split(sorted_integers, break_points)
+    # TODO need to convert??
+    return [seq.tolist() for seq in sequences]  # Convert numpy arrays to lists

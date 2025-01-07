@@ -32,7 +32,7 @@ def setup_logging():
     # Add the stream handler to the root logger
     logging.root.addHandler(stream_handler)
     # Set the logging level to INFO
-    logging.root.setLevel(logging.INFO)
+    logging.root.setLevel(logging.DEBUG)
 
 
 def parse_args() -> argparse.Namespace:
@@ -96,7 +96,7 @@ def post_data():
     with open("./.post_log.txt", "a") as file:
         file.write(f"{payload}\n")
     app.config["UT_RACE"].ingest_ping(json.loads(payload))
-    return "OK", 200
+    return str(app.config["UT_RACE"].runner.mile_mark), 200
 
 
 # Read in the config file.

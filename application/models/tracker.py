@@ -2,18 +2,9 @@
 
 
 import datetime
+from .utils import meters_to_feet
 
 GPS_FIX_MAP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
-
-
-def meters_to_feet(meters: float) -> float:
-    """
-    Convert meters to feet.
-
-    :param float meters: A distance in meters.
-    :return float: The distance in feet.
-    """
-    return meters * 3.280839895
 
 
 class Ping:

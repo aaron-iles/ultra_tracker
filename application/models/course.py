@@ -4,6 +4,7 @@
 import datetime
 import json
 import logging
+from functools import cache
 
 import numpy as np
 import requests
@@ -12,7 +13,7 @@ from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMap, CaltopoShape
 from .tracker import meters_to_feet
-from .utils import format_duration, get_gmaps_url, get_timezone
+from .utils import format_duration, get_gmaps_url, get_timezone, feet_to_meters, haversine_distance, detect_consecutive_sequences
 
 logger = logging.getLogger(__name__)
 
@@ -403,7 +404,7 @@ class Route(CaltopoShape):
 
     def __init__(self, feature_dict: dict, map_id: str, session: str):
         super().__init__(feature_dict, map_id, session)
-        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
+        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 75)
         logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
         logger.info(f"calculated elevations on map ID {map_id}")
@@ -431,3 +432,30 @@ class Route(CaltopoShape):
         :return float: The total elevation loss.
         """
         return self.losses[-1]
+
+    def get_elevation_at_mile_mark(self, mile_mark: float):
+        """
+        """
+        return self.elevations[np.where(self.distances == mile_mark)[0]].tolist()[0]
+
+    def get_point_at_mile_mark(self, mile_mark: float):
+        """
+        """
+        return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
+
+
+    @cache
+    def get_indices_within_radius(self, center_lat, center_lon, radius: int) -> tuple:
+        """
+        """
+        # Calculate distances from the center point for all points.
+        distances = np.array([haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points])
+        # Get indices of points within the radius.
+        indices_within_radius = np.where(distances <= radius)[0]
+        # Now get all of the segments of the route. This is used to detect loops, out-n-backs, and 
+        # intersections.
+        route_segments = detect_consecutive_sequences(indices_within_radius)
+        # Sort local indices by distance from center point.
+        sorted_local_indices = np.argsort(distances[indices_within_radius])
+        sorted_indices = indices_within_radius[sorted_local_indices]
+        return sorted_indices, len(route_segments) == 1
