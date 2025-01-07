@@ -3,9 +3,9 @@
 
 import datetime
 import logging
-import numpy as np
-
 from math import atan2, cos, radians, sin, sqrt
+
+import numpy as np
 import pytz
 from timezonefinder import TimezoneFinder
 
@@ -146,20 +146,19 @@ def haversine_distance(coord1: list, coord2: list) -> float:
 def detect_consecutive_sequences(integers: list) -> list:
     """
     Detects consecutive sequences of integers in a list of integers.
-    This function sorts the input integers and then identifies groups of consecutive integers 
-    by checking for breaks (gaps) in the sequence. It returns a list of lists, where each inner 
+    This function sorts the input integers and then identifies groups of consecutive integers
+    by checking for breaks (gaps) in the sequence. It returns a list of lists, where each inner
     list contains a sequence of consecutive integers.
 
     :param integers: A list or array of integers representing the integers to be checked.
     :type integers: list or ndarray
-    :return list: A list of lists, where each inner list contains consecutive integers from 
-             the input list, sorted in ascending order.
+    :return list: A list of lists, where each inner list contains consecutive integers from the
+    input list, sorted in ascending order.
     """
     sorted_integers = np.sort(integers)
     diffs = np.diff(sorted_integers)
-    break_points = np.where(diffs > 1)[0] + 1  # Identify where the break occurs (diff > 1)
-    
+    # Identify where the break occurs (diff > 1)
+    break_points = np.where(diffs > 1)[0] + 1
     # Add the start and end integers of the split sequences
     sequences = np.split(sorted_integers, break_points)
-    # TODO need to convert??
-    return [seq.tolist() for seq in sequences]  # Convert numpy arrays to lists
+    return [seq.tolist() for seq in sequences]

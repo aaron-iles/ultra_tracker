@@ -8,7 +8,6 @@ import sys
 
 import yaml
 from flask import Flask, render_template, request
-
 from models.caltopo import CaltopoMap, CaltopoSession
 from models.course import Course
 from models.race import Race, Runner
@@ -16,12 +15,13 @@ from models.race import Race, Runner
 app = Flask(__name__)
 
 
-def setup_logging():
+def setup_logging(verbose: bool = False):
     """
     Configures the logging module to output log messages to stdout. This function sets up a stream
     handler to log messages to stdout with the specified logging format. It adds the stream handler
-    to the root logger and sets the logging level to INFO.
+    to the root logger and sets the logging level.
 
+    :param bool verbose: True if the application should be run verbosely and False otherwise.
     :return None:
     """
     # Define the logging format
@@ -31,8 +31,8 @@ def setup_logging():
     stream_handler.setFormatter(logging.Formatter(log_format))
     # Add the stream handler to the root logger
     logging.root.addHandler(stream_handler)
-    # Set the logging level to INFO
-    logging.root.setLevel(logging.DEBUG)
+    # Set the logging level.
+    logging.root.setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,6 +48,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "-c", required=True, type=str, dest="config", help="The config file for the event."
     )
+    p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()
 
 
@@ -96,14 +97,14 @@ def post_data():
     with open("./.post_log.txt", "a") as file:
         file.write(f"{payload}\n")
     app.config["UT_RACE"].ingest_ping(json.loads(payload))
-    return str(app.config["UT_RACE"].runner.mile_mark), 200
+    return "OK", 200
 
 
 # Read in the config file.
 args = parse_args()
 # TODO: Need to validate values and keys.
 config_data = get_config_data(args.config)
-setup_logging()
+setup_logging(args.verbose)
 logger = logging.getLogger(__name__)
 # Create the objects to manage the race.
 caltopo_session = CaltopoSession(config_data["caltopo_credential_id"], config_data["caltopo_key"])

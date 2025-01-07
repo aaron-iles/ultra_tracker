@@ -17,8 +17,8 @@ from .utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
     format_duration,
-    kph_to_min_per_mi,
     haversine_distance,
+    kph_to_min_per_mi,
 )
 
 logger = logging.getLogger(__name__)
@@ -311,7 +311,6 @@ class Runner:
         """
         return self.started and not self.finished
 
-
     def calculate_mile_mark(self, route, latlon: list) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
@@ -326,17 +325,23 @@ class Runner:
         :return tuple: The most probable mile mark and the coordinates of that mile mark on the
         course.
         """
-        # Get the closest point to the runner regardless of how far it is.
+        # This step right here has been found to result in better estimates. Rather than performing
+        # the math based on the actual location of the runner, we "snap to" the closest point on the
+        # course and THEN perform the math. This helps account for satellite reception issues,
+        # course redirections, and incorrectly drawn maps.
+        # Get the closest 1 point to the latlon.
         _, matched_indices = route.kdtree.query(latlon, k=1)
         latlon = route.points[matched_indices]
 
-        # First, grab all of the points within 100 feet. This returns the points in order from 
+        # First, grab all of the points within 100 feet. This returns the points in order from
         # closest to furthest.
-        indices_within_radius, are_consecutive = route.get_indices_within_radius(latlon[0], latlon[1], 100)
+        indices_within_radius, are_consecutive = route.get_indices_within_radius(
+            latlon[0], latlon[1], 100
+        )
         logger.debug(f"found {len(indices_within_radius)} points within 100 ft of {latlon}")
         logger.debug(f"points are consecutive? {are_consecutive}")
 
-        # Case 1: When there are course points close to the ping and they are all consecutive, 
+        # Case 1: When there are course points close to the ping and they are all consecutive,
         # the true location is the closest course point to the ping. This is the easiest case.
         if len(indices_within_radius) > 0 and are_consecutive:
             mile_mark = route.distances[indices_within_radius[0]]
@@ -348,19 +353,18 @@ class Runner:
         # the runner must be either on an out and back, loop, or intersection. This is trickier.
         elif len(indices_within_radius) > 0 and not are_consecutive:
             mile_marks = [route.distances[i] for i in indices_within_radius]
-            mile_mark = calculate_most_probable_mile_mark(mile_marks, self.elapsed_time.total_seconds() / 60, self.average_pace)
+            mile_mark = calculate_most_probable_mile_mark(
+                mile_marks, self.elapsed_time.total_seconds() / 60, self.average_pace
+            )
             coords = route.get_point_at_mile_mark(mile_mark)
             elevation = route.get_elevation_at_mile_mark(mile_mark)
             return mile_mark, coords, elevation
 
-        # Case 3: The ping came from somewhere more than 100 ft off course. In this case, find the
-        # closest course point to the ping and call the function recursively. This ensures that we 
-        # fall into case 1 or 2.
-        else: 
-            # Get the closest point to the runner regardless of how far it is.
-            _, matched_indices = route.kdtree.query(latlon, k=1)
-            point = route.points[matched_indices]
-            return self.calculate_mile_mark(route, point)
+        # Case 3: This should only occur if the latlon is more than 100 ft from the closest course
+        # point. This is impossible because above we "snapped to" the closest course point.
+        else:
+            logger.warning(f"unable to find mile mark given point {latlon}")
+            return 0, [0, 0], 0
 
     def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
         """
@@ -389,7 +393,9 @@ class Runner:
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         self.elapsed_time = ping.timestamp - start_time
         last_mile_mark = self.mile_mark
-        self.mile_mark, coords, self.elevation = self.calculate_mile_mark(route, self.last_ping.latlon)
+        self.mile_mark, coords, self.elevation = self.calculate_mile_mark(
+            route, self.last_ping.latlon
+        )
         # If the runner is seen to move backward by more than 1/10th of a mile, print a warning.
         # Sometimes this is valid, but it may indicate the previous or current mile mark estimates
         # are wrong. Movements of less than 1/10th of a mile can be ignored since they could be

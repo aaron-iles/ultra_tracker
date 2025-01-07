@@ -13,7 +13,14 @@ from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMap, CaltopoShape
 from .tracker import meters_to_feet
-from .utils import format_duration, get_gmaps_url, get_timezone, feet_to_meters, haversine_distance, detect_consecutive_sequences
+from .utils import (
+    detect_consecutive_sequences,
+    feet_to_meters,
+    format_duration,
+    get_gmaps_url,
+    get_timezone,
+    haversine_distance,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -433,26 +440,44 @@ class Route(CaltopoShape):
         """
         return self.losses[-1]
 
-    def get_elevation_at_mile_mark(self, mile_mark: float):
+    def get_elevation_at_mile_mark(self, mile_mark: float) -> float:
         """
+        Given a mile mark this will return the corresponding elevation.
+
+        :param float mile_mark: A mile mark along the course.
+        :return float: The elevation at the course's mile mark.
         """
         return self.elevations[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
-    def get_point_at_mile_mark(self, mile_mark: float):
+    def get_point_at_mile_mark(self, mile_mark: float) -> np.array:
         """
+        Given a mile mark this will return the lat lon point at that location.
+
+        :param float mile_mark: A mile mark along the course.
+        :return np.array: A lat/lon coordinate.
         """
         return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
-
     @cache
-    def get_indices_within_radius(self, center_lat, center_lon, radius: int) -> tuple:
+    def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
         """
+        Given a center point and radius in feet, finds the indices of the route points inside said
+        radius.
+
+        :param float center_lat: The latitude of the center point.
+        :param float center_lon: The longitude of the center point.
+        :param int radius: The radius in feet to search from the center point for points in the
+        route.
+        :return tuple: An array of indices of the route ordered from closest to furthest as well as
+        a bool indicating whether or not the indices are consecutive.
         """
         # Calculate distances from the center point for all points.
-        distances = np.array([haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points])
+        distances = np.array(
+            [haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points]
+        )
         # Get indices of points within the radius.
         indices_within_radius = np.where(distances <= radius)[0]
-        # Now get all of the segments of the route. This is used to detect loops, out-n-backs, and 
+        # Now get all of the segments of the route. This is used to detect loops, out-n-backs, and
         # intersections.
         route_segments = detect_consecutive_sequences(indices_within_radius)
         # Sort local indices by distance from center point.
