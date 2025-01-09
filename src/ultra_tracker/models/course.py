@@ -12,7 +12,7 @@ from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMap, CaltopoShape
-from .utils import (
+from ..utils import (
     detect_consecutive_sequences,
     format_duration,
     meters_to_feet,
@@ -28,10 +28,10 @@ def interpolate_and_filter_points(
     coordinates: np.array, min_interval_dist: float, max_interval_dist: float
 ):
     """
-    Interpolate points between the given coordinates and filter points based on the distance 
+    Interpolate points between the given coordinates and filter points based on the distance
     criteria.
 
-    :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point 
+    :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point
     with latitude and longitude coordinates.
     :param float min_interval_dist: The minimum distance allowed (in feet) between two consecutive
     points. If the distance between two points is less than this value, the point will be removed.
@@ -39,7 +39,7 @@ def interpolate_and_filter_points(
     the distance between two points is greater than this value, additional points will be
     interpolated to meet the specified interval.
 
-    :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude 
+    :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude
     coordinates.
     """
     interpolated_points = np.empty((0, 2), dtype=float)

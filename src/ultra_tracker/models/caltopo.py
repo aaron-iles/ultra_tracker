@@ -10,7 +10,7 @@ import uuid
 
 import requests
 
-from .utils import get_gmaps_url
+from ..utils import get_gmaps_url
 
 logger = logging.getLogger(__name__)
 

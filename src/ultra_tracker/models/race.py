@@ -13,7 +13,7 @@ from scipy.stats import norm
 from .caltopo import CaltopoMarker
 from .course import Route
 from .tracker import Ping
-from .utils import (
+from ..utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
     format_duration,
@@ -170,7 +170,7 @@ class Race:
                 data = json.load(f)
                 self.runner.average_pace = data.get("average_pace", 10)
                 self.runner.pings = data.get("pings", 0)
-                ping = Ping(data.get("last_ping", {}), self.course.timezone)
+                ping = Ping(data.get("last_ping", {}))
                 self.runner.check_in(ping, self.start_time, self.course.route)
                 self.course.update_course_elements(self.runner)
                 logger.info(f"restore success: {self.runner.last_ping}")
@@ -186,7 +186,7 @@ class Race:
         :return None:
         """
         self.last_ping_raw = ping_data
-        ping = Ping(ping_data, self.course.timezone)
+        ping = Ping(ping_data)
         logger.info(ping)
         if ping.gps_fix == 0 or ping.latlon == [0, 0]:
             logger.info("ping does not contain GPS coordinates, skipping")
@@ -226,7 +226,7 @@ class Runner:
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
         self.estimated_finish_time = datetime.timedelta(0)
         self.finished = False
-        self.last_ping = Ping({}, pytz.timezone("Etc/GMT"))
+        self.last_ping = Ping({})
         self.low_battery = False
         self.marker, self.estimate_marker = self.extract_marker(
             marker_name, caltopo_map, default_start_location

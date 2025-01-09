@@ -1,0 +1,2 @@
+[console_scripts]
+mypackage = ultra_tracker.server:main
