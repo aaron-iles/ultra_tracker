@@ -8,9 +8,9 @@ import sys
 
 import yaml
 from flask import Flask, render_template, request
-from models.caltopo import CaltopoMap, CaltopoSession
-from models.course import Course
-from models.race import Race, Runner
+from .models.caltopo import CaltopoMap, CaltopoSession
+from .models.course import Course
+from .models.race import Race, Runner
 
 app = Flask(__name__)
 
@@ -47,6 +47,9 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "-c", required=True, type=str, dest="config", help="The config file for the event."
+    )
+    p.add_argument(
+        "-d", required=False, default="/app/data", type=str, dest="data_dir", help="The directory in which to store data."
     )
     p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()
@@ -94,7 +97,7 @@ def post_data():
     if not content_length:
         return "Content-Length header is missing or zero", 411
     payload = request.get_data(as_text=True)
-    with open("./.post_log.txt", "a") as file:
+    with open(f"{app.config['UT_DATA_DIR']}/post_log.txt", "a") as file:
         file.write(f"{payload}\n")
     app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200
@@ -125,13 +128,14 @@ race = Race(
     course.timezone.localize(
         datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
     ),
-    ".data_store.json",
+    f"{args.data_dir}/data_store.json",
     course,
     runner,
 )
 logger.info("created race object...")
 app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
 app.config["UT_RACE"] = race
+app.config["UT_DATA_DIR"] = args.data_dir
 
 
 if __name__ == "__main__":
