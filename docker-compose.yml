@@ -14,4 +14,4 @@ services:
     network_mode: bridge
     # TODO
     volumes:
-      - '/ultra-tracker/ultra_tracker/application:/app'
+      - '/ultra-tracker/ultra_tracker:/app'

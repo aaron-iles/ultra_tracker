@@ -13,5 +13,8 @@ RUN useradd -ms /bin/bash uwsgi
 
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
+COPY src/ultra_tracker/ /usr/lib/python3.13/ultra_tracker/
+
 # Set the entry point and default command for the container
 CMD ["./docker-entrypoint.sh"]
+
