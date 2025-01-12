@@ -79,12 +79,16 @@ def test_find_elevations(short_2d_points_array_various_elevations):
         elevations, np.array([1755.249343825, 3.780463716217651, 28738.682053815093])
     )
 
-#def test_cumulative_altitude_changes():
-#    cum_changes = course.cumulative_altitude_changes(np.array([1,3,5,7]))
-#    assert cum_changes == (np.array([0, 2, 4, 6]), np.array([0, 0, 0, 0]))
-#
-#    cum_changes = course.cumulative_altitude_changes(np.array([7,5,3,1]))
-#    assert cum_changes == (np.array([0, 0,0,0]), np.array([0, 2,4,6]))
-#
-#    cum_changes = course.cumulative_altitude_changes(np.array([5, 11, 19, 4, 7, 12, 3, 1]))
-#    assert cum_changes == (np.array([0, 0,0,0]), np.array([0, 2,4,6]))
+
+def test_cumulative_altitude_changes():
+    cum_changes = course.cumulative_altitude_changes(np.array([1, 3, 5, 7]))
+    np.testing.assert_array_equal(cum_changes[0], np.array([0, 2, 4, 6]))
+    np.testing.assert_array_equal(cum_changes[1], np.array([0, 0, 0, 0]))
+
+    cum_changes = course.cumulative_altitude_changes(np.array([7, 5, 3, 1]))
+    np.testing.assert_array_equal(cum_changes[0], np.array([0, 0, 0, 0]))
+    np.testing.assert_array_equal(cum_changes[1], np.array([0, 2, 4, 6]))
+
+    cum_changes = course.cumulative_altitude_changes(np.array([5, 11, 19, 4, 7, 12, 3, 1]))
+    np.testing.assert_array_equal(cum_changes[0], np.array([0, 6, 14, 14, 17, 22, 22, 22]))
+    np.testing.assert_array_equal(cum_changes[1], np.array([0, 0, 0, 15, 15, 15, 24, 26]))
