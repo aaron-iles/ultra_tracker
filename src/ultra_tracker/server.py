@@ -49,7 +49,12 @@ def parse_args() -> argparse.Namespace:
         "-c", required=True, type=str, dest="config", help="The config file for the event."
     )
     p.add_argument(
-        "-d", required=False, default="/app/data", type=str, dest="data_dir", help="The directory in which to store data."
+        "-d",
+        required=False,
+        default="/app/data",
+        type=str,
+        dest="data_dir",
+        help="The directory in which to store data.",
     )
     p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()

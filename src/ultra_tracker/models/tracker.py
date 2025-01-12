@@ -43,7 +43,9 @@ class Ping:
         self.speed = self._event.get("point", {}).get("speed", 0.0)
         self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
-        self.timestamp = self.extract_timestamp(self._event.get("timeStamp", 0), get_timezone([self.latitude, self.longitude]))
+        self.timestamp = self.extract_timestamp(
+            self._event.get("timeStamp", 0), get_timezone([self.latitude, self.longitude])
+        )
 
     @property
     def latlon(self) -> list:

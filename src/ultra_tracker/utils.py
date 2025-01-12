@@ -14,7 +14,6 @@ from lxml import etree
 logger = logging.getLogger(__name__)
 
 
-
 def export_to_gpx(coordinates: np.ndarray, filename: str) -> None:
     """
     Export a NumPy array of coordinates to a GPX file.
@@ -142,7 +141,7 @@ def feet_to_meters(feet: float) -> float:
 
 def haversine_distance(coord1: list, coord2: list) -> float:
     """
-    Calculate the Haversine distance between two points specified by their latitude and longitude 
+    Calculate the Haversine distance between two points specified by their latitude and longitude
     coordinates.
 
     :param list coord1: Latitude and longitude coordinates of the first point in the format

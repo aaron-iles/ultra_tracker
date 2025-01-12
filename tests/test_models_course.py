@@ -5,6 +5,8 @@ from ultra_tracker.models import course
 import numpy as np
 import pytest
 
+#from .fixtures import caltopo_map
+
 
 @pytest.fixture
 def short_2d_points_array_far():
@@ -41,6 +43,7 @@ def short_2d_points_array_various_elevations():
             [27.98881, 86.92545],
         ]
     )
+
 
 
 def test_interpolate_and_filter_points_far_interpolation_tight(short_2d_points_array_far):
@@ -92,3 +95,7 @@ def test_cumulative_altitude_changes():
     cum_changes = course.cumulative_altitude_changes(np.array([5, 11, 19, 4, 7, 12, 3, 1]))
     np.testing.assert_array_equal(cum_changes[0], np.array([0, 6, 14, 14, 17, 22, 22, 22]))
     np.testing.assert_array_equal(cum_changes[1], np.array([0, 0, 0, 15, 15, 15, 24, 26]))
+
+
+#def test_course_creation(caltopo_map):
+#    course.Course(caltopo_map, [], "Test")

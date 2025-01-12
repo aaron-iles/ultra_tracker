@@ -47,16 +47,20 @@ class CaltopoSession:
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"GET {url_endpoint}\n{expires}\n"
-        params = {}
-        params["id"] = self.credential_id
-        params["expires"] = expires
-        params["signature"] = self._get_token(data)
-        return requests.get(
+        params = {
+            "id": self.credential_id,
+            "expires": expires,
+            "signature": self._get_token(data),
+        }
+        r = requests.get(
             f"{self.url_prefix}{url_endpoint}",
             data=params,
             verify=True,
             timeout=60,
         )
+        with open('/app/data/responses', 'a') as f:
+            f.write('\n\n' + url_endpoint + '    ' + str(r.json()))
+        return r
 
     def post(self, url_endpoint: str, payload: dict) -> requests.Response:
         """
@@ -68,17 +72,21 @@ class CaltopoSession:
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"POST {url_endpoint}\n{expires}\n{json.dumps(payload)}"
-        params = {}
-        params["id"] = self.credential_id
-        params["expires"] = expires
-        params["signature"] = self._get_token(data)
-        params["json"] = json.dumps(payload)
-        return requests.post(
+        params = {
+            "id": self.credential_id,
+            "expires": expires,
+            "signature": self._get_token(data),
+            "json": json.dumps(payload),
+        }
+        r = requests.post(
             f"{self.url_prefix}{url_endpoint}",
             data=params,
             verify=True,
             timeout=60,
         )
+        with open('/app/data/responses', 'a') as f:
+            f.write('\n\n' + url_endpoint + '    ' + str(payload) + '    ' + str(r.json()))
+        return r
 
     def delete(self, url_endpoint: str) -> requests.Response:
         """
