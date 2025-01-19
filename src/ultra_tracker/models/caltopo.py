@@ -52,15 +52,12 @@ class CaltopoSession:
             "expires": expires,
             "signature": self._get_token(data),
         }
-        r = requests.get(
+        return requests.get(
             f"{self.url_prefix}{url_endpoint}",
             data=params,
             verify=True,
             timeout=60,
         )
-        with open('/app/data/responses', 'a') as f:
-            f.write('\n\n' + url_endpoint + '    ' + str(r.json()))
-        return r
 
     def post(self, url_endpoint: str, payload: dict) -> requests.Response:
         """
@@ -78,15 +75,12 @@ class CaltopoSession:
             "signature": self._get_token(data),
             "json": json.dumps(payload),
         }
-        r = requests.post(
+        return requests.post(
             f"{self.url_prefix}{url_endpoint}",
             data=params,
             verify=True,
             timeout=60,
         )
-        with open('/app/data/responses', 'a') as f:
-            f.write('\n\n' + url_endpoint + '    ' + str(payload) + '    ' + str(r.json()))
-        return r
 
     def delete(self, url_endpoint: str) -> requests.Response:
         """

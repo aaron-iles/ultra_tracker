@@ -213,7 +213,7 @@ class Course:
             try:
                 aso.gmaps_url = title_to_marker[aso.name].gmaps_url
             except KeyError as err:
-                raise KeyError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
+                raise LookupError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
         # Since the start and finish aren't markers on the map, we do them separately.
         aid_station_objects[0].gmaps_url = get_gmaps_url(self.route.points[0])
         aid_station_objects[-1].gmaps_url = get_gmaps_url(self.route.points[-1])
