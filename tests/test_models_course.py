@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 
-from ultra_tracker.models import course
 import numpy as np
-import pytz
 import pytest
-
+import pytz
 from ultra_tracker_fixtures import *
+
+from ultra_tracker.models import course
 
 
 @pytest.fixture
@@ -97,19 +97,15 @@ def test_cumulative_altitude_changes():
     np.testing.assert_array_equal(cum_changes[1], np.array([0, 0, 0, 15, 15, 15, 24, 26]))
 
 
-def test_course_creation_timezone(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def test_course_creation_timezone(course_01):
     assert course_01.timezone == pytz.timezone("America/New_York")
 
 
-def test_course_creation_course_elements(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
-    print(course_01.course_elements)
+def test_course_creation_course_elements(course_01, aid_stations_map_01):
     assert len(course_01.course_elements) == (len(aid_stations_map_01) + 2) * 2 - 1
 
 
-def test_course_creation_route(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def test_course_creation_route(course_01):
     assert bool(course_01.route)
 
 
@@ -124,27 +120,35 @@ def test_course_creation_route_not_found(caltopo_map_01, aid_stations_map_01):
         course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Non-existent Route")
 
 
-def test_route_gain(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def test_route_gain(course_01):
     assert course_01.route.gain == np.float64(1140.5008234795741)
 
 
-def test_route_loss(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def test_route_loss(course_01):
     assert course_01.route.loss == np.float64(1194.7701806399723)
 
 
-def test_route_get_elevation_at_mile_mark(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def test_route_get_elevation_at_mile_mark(course_01):
     assert (
         course_01.route.get_elevation_at_mile_mark(course_01.route.distances[100])
         == 479.00262467000005
     )
 
 
-def test_route_get_point_at_mile_mark(caltopo_map_01, aid_stations_map_01):
-    course_01 = course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def test_route_get_point_at_mile_mark(course_01):
     np.testing.assert_array_equal(
         course_01.route.get_point_at_mile_mark(course_01.route.distances[100]),
         np.array([39.26911502211737, -76.73395001678226]),
     )
+
+
+def test_route_get_indices_within_radius_overlap(course_01):
+    result = course_01.route.get_indices_within_radius(39.27470, -76.72012, 100)
+    np.testing.assert_array_equal(result[0], np.array([30, 13, 14, 29]))
+    assert result[1] == False
+
+
+def test_route_get_indices_within_radius_no_overlap(course_01):
+    result = course_01.route.get_indices_within_radius(39.27407, -76.72289, 100)
+    np.testing.assert_array_equal(result[0], np.array([38]))
+    assert result[1] == True

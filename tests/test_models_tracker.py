@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 
-from ultra_tracker.models import tracker
-import pytz
-import pytest
 import datetime
+
+import pytest
+import pytz
+
+from ultra_tracker.models import tracker
 
 
 @pytest.fixture

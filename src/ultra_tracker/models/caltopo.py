@@ -137,6 +137,8 @@ class CaltopoMap:
         :reutrn None:
         """
         map_data = self.get(f"/api/v1/map/{self.map_id}/since/0")
+        with open('/proj/ultra_tracker/tests/test_data/02/map_data.json', 'w') as f:
+            f.write(json.dumps(map_data))
         try:
             features = map_data["result"]["state"]["features"]
         except KeyError:
