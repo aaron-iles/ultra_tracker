@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 import pytz
 from ultra_tracker_fixtures import *
+from test_race_01 import caltopo_map_01, aid_stations_map_01, course_01, race_01_path
 
 from ultra_tracker.models import course
 
