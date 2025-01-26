@@ -103,3 +103,17 @@ releases:
     fragments:
     - release.yml
     release_date: '2024-11-27'
+  4.0.0:
+    changes:
+      major_changes:
+      - Refactors entire package structure to create formal Python package inside
+        Docker container
+      - Refactors mile mark calculations significantly to better handle different
+        situations
+      minor_changes:
+      - Adds unit test framework including whole race tests
+      release_summary: Improves mile mark calculations, adds unit tests, formalizes
+        Python package
+    fragments:
+    - summary.yml
+    release_date: '2025-01-26'
