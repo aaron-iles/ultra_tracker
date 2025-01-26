@@ -20,15 +20,17 @@ Ultra Tracker is a specialized tool designed for tracking a runner's progress th
 - ```docker```
 - ```docker-compose```
 - ```git```
+- ```python3```
 
 To get started with Ultra Tracker, follow these steps:
 
-1. **Clone the Repository:** Clone the Ultra Tracker repository to your local machine using the following command:
+1. **Clone the Repository:** Place your cloned repo in any directory on your hosting server. For sake of example, this readme will use `/ultra_tracker`.
    ```bash
+   mkdir /ultra_tracker
+   pushd /ultra_tracker
    git clone https://github.com/aaron-iles/ultra_tracker.git
    ```
-   Place your cloned repo in any directory on your hosting server.
-2. **Set up a course in Caltopo:** Create a map in Caltopo and set the privacy to either `Public` or `URL` (recommened). Add the course route as a line and give it whatever name you wish. Add the aid stations as markers and name them how you would like. Lastly, add a marker for yourself that will act as the "tracker" and name it as you wish. (This will be changing in the future).
+2. **Set up a course in Caltopo:** Create a map in Caltopo and set the privacy to either `Public` or `URL` (recommened). Add the course route as a line and give it whatever name you wish. Add the aid stations as markers and name them how you would like. Lastly, create a folder of any name and add all of these map features to it.
 3. **Configure your Garmin inReach account:** This requires a professional account with Garmin as noted above. Log into Garmin Explore and navigate to the IPC section. This should be under Settings > Portal Connect. (https://explore.garmin.com/IPC).
    - Enable "Outbound Settings" and set the outbound URL to the publicly reachable URL of your server on which you will be running the tracker.
    - Set "Outbound Message Version" to "JSON_V3"
@@ -36,9 +38,9 @@ To get started with Ultra Tracker, follow these steps:
    - Generate a secure auth token and type it into the "Authorization Token" field.
 4. **Create the persistent volume:** From the project root directory,
    ```bash
-   mkdir data/
+   mkdir /ultra_tracker/data/
    ```
-4. **Create a race config:** Create a file at ```$project_root/data/race_config.yml``` and populate it with the following:
+4. **Create a race config:** Create a file at ```/ultra_tracker/data/race_config.yml``` and populate it with the following:
    ```yaml
    race_name: My Race
    start_time: '2024-04-06T07:00:00'
@@ -55,7 +57,7 @@ To get started with Ultra Tracker, follow these steps:
        mile_mark: 14.2
    ```
    - ```race_name```: This is the human-friendly name of the race/event. 
-   - ```start_time```: This is the start time of the race. The format must be ```YYYY-mm-ddTHH:MM:SS```.
+   - ```start_time```: This is the start time of the race. The format must be `YYYY-mm-ddTHH:MM:SS`.
    - ```garmin_api_token```: This is the token you created in step 3 above.
    - ```caltopo_map_id```: The is the map ID of the map you created in step 2 above (see the URL of the map in your browser).
    - ```caltopo_credential_id```: This is the tricky one to obtain. See the instructions down below on managing Caltopo credentials.
@@ -63,7 +65,7 @@ To get started with Ultra Tracker, follow these steps:
    - ```tracker_marker_name```: This is the literal name of the marker that represents the runner on the map. This was created in step 2 above.
    - ```route_name```: The literal name of the line in Caltopo that represents the route.
    - ```aid_stations```: This is a list of dictionaries representing the aid stations on the map. For each aid station you must have the ```name``` and ```mile_mark```.
-5. **Build the application:** From the project root directory, run ```tox``` to build the application.
+5. **Build the application:** From the project root directory, run `tox` to build the application.
 6. **Start the applictaion:** From the project root directory, start the application!
   ```bash
   docker compose up

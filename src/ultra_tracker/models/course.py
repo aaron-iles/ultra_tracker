@@ -138,9 +138,6 @@ def find_elevations(points: np.array) -> list:
     reversed_points = points[:, ::-1].tolist()
     data = {"geometry": {"type": "LineString", "coordinates": reversed_points}}
     response = requests.post(url, headers=headers, data={"json": json.dumps(data)}, timeout=60)
-    # XXX
-    #with open('/app/data/elevation_data.json', 'w') as f:
-    #    f.write(json.dumps(response.json()))
     if response.ok:
         try:
             new_data = np.array(response.json()["result"])[:, 2]
