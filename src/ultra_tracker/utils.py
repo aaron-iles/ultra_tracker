@@ -104,7 +104,7 @@ def get_timezone(latlon: list):
     tf = TimezoneFinder()
     timezone_str = tf.timezone_at(lat=latlon[0], lng=latlon[1])
     if timezone_str:
-        logger.info(f"determined {latlon} to be in timezone {timezone_str}")
+        logger.debug(f"determined {latlon} to be in timezone {timezone_str}")
         return pytz.timezone(timezone_str)
     return None
 
