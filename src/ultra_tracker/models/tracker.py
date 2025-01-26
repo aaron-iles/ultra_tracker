@@ -3,17 +3,9 @@
 
 import datetime
 
+from ..utils import meters_to_feet, get_timezone
+
 GPS_FIX_MAP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
-
-
-def meters_to_feet(meters: float) -> float:
-    """
-    Convert meters to feet.
-
-    :param float meters: A distance in meters.
-    :return float: The distance in feet.
-    """
-    return meters * 3.280839895
 
 
 class Ping:
@@ -39,7 +31,7 @@ class Ping:
         "interval_change",
     }
 
-    def __init__(self, ping_data: dict, timezone):
+    def __init__(self, ping_data: dict):
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
         self.gps_fix = GPS_FIX_MAP.get(self._event.get("point", {}).get("gpsFix"))
@@ -51,7 +43,9 @@ class Ping:
         self.speed = self._event.get("point", {}).get("speed", 0.0)
         self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
-        self.timestamp = self.extract_timestamp(timezone)
+        self.timestamp = self.extract_timestamp(
+            self._event.get("timeStamp", 0), get_timezone([self.latitude, self.longitude])
+        )
 
     @property
     def latlon(self) -> list:
@@ -80,17 +74,19 @@ class Ping:
         """
         return [self.latitude, self.longitude, self.altitude]
 
-    def extract_timestamp(self, timezone):
+    @staticmethod
+    def extract_timestamp(timestamp: int or float, timezone) -> datetime.datetime:
         """
         Extracts the timestamp from the event.
 
+        :param int or float timestamp: The unix timestamp.
+        :param timezone: A pytz timezone object in which to normalize the timestamp.
         :return datetime.datetime: A datetime object representing the timestamp.
         """
-        ts = self._event.get("timeStamp", 0)
         try:
-            return datetime.datetime.fromtimestamp(ts, timezone)
+            return datetime.datetime.fromtimestamp(timestamp, timezone)
         except ValueError:
-            return datetime.datetime.fromtimestamp(ts // 1000, timezone)
+            return datetime.datetime.fromtimestamp(timestamp // 1000, timezone)
 
     def __str__(self):
         return f"PING {self.timestamp} | {self.heading}° | {self.latlon}"

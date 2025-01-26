@@ -4,6 +4,7 @@
 import datetime
 import json
 import logging
+from functools import cache
 
 import numpy as np
 import requests
@@ -11,8 +12,14 @@ from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
 from .caltopo import CaltopoMap, CaltopoShape
-from .tracker import meters_to_feet
-from .utils import format_duration, get_gmaps_url, get_timezone
+from ..utils import (
+    detect_consecutive_sequences,
+    format_duration,
+    meters_to_feet,
+    get_gmaps_url,
+    get_timezone,
+    haversine_distance,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,17 +28,19 @@ def interpolate_and_filter_points(
     coordinates: np.array, min_interval_dist: float, max_interval_dist: float
 ):
     """
-    Interpolate points between the given coordinates and filter points based on the distance criteria.
+    Interpolate points between the given coordinates and filter points based on the distance
+    criteria.
 
-    :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point with
-    latitude and longitude coordinates.
+    :param numpy.ndarray coordinates: An array of shape (n, 2) where each row represents a point
+    with latitude and longitude coordinates.
     :param float min_interval_dist: The minimum distance allowed (in feet) between two consecutive
     points. If the distance between two points is less than this value, the point will be removed.
     :param float max_interval_dist: The maximum distance allowed between two consecutive points. If
     the distance between two points is greater than this value, additional points will be
     interpolated to meet the specified interval.
 
-    :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude coordinates.
+    :return numpy.ndarray: An array of filtered and interpolated points with latitude and longitude
+    coordinates.
     """
     interpolated_points = np.empty((0, 2), dtype=float)
     interpolated_points = np.vstack([interpolated_points, [coordinates[0, 0], coordinates[0, 1]]])
@@ -51,7 +60,7 @@ def interpolate_and_filter_points(
             # Skip adding this point if it's too close to the previous one
             continue
         # Check if interpolation or removal is needed
-        elif distance_between_points > max_interval_dist:
+        if distance_between_points > max_interval_dist:
             # Calculate the number of intervals needed
             num_intervals = int(distance_between_points / max_interval_dist)
             # Calculate the step size for latitude and longitude
@@ -128,7 +137,7 @@ def find_elevations(points: np.array) -> list:
     }
     reversed_points = points[:, ::-1].tolist()
     data = {"geometry": {"type": "LineString", "coordinates": reversed_points}}
-    response = requests.post(url, headers=headers, data={"json": json.dumps(data)})
+    response = requests.post(url, headers=headers, data={"json": json.dumps(data)}, timeout=60)
     if response.ok:
         try:
             new_data = np.array(response.json()["result"])[:, 2]
@@ -137,7 +146,7 @@ def find_elevations(points: np.array) -> list:
             # Apply the function to the array
             return vectorized_function(new_data)
         except (json.JSONDecodeError, KeyError):
-            return
+            return []
 
 
 def cumulative_altitude_changes(altitudes: np.array) -> tuple:
@@ -204,7 +213,7 @@ class Course:
             try:
                 aso.gmaps_url = title_to_marker[aso.name].gmaps_url
             except KeyError as err:
-                raise KeyError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
+                raise LookupError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
         # Since the start and finish aren't markers on the map, we do them separately.
         aid_station_objects[0].gmaps_url = get_gmaps_url(self.route.points[0])
         aid_station_objects[-1].gmaps_url = get_gmaps_url(self.route.points[-1])
@@ -340,6 +349,7 @@ class AidStation(CourseElement):
         super().__init__(name, mile_mark)
         self.gmaps_url = ""
         self.comments = comments
+        self.display_name = f"{name} (mile {mile_mark})"
 
 
 class Leg(CourseElement):
@@ -403,7 +413,7 @@ class Route(CaltopoShape):
 
     def __init__(self, feature_dict: dict, map_id: str, session: str):
         super().__init__(feature_dict, map_id, session)
-        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 100)
+        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 75)
         logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
         logger.info(f"calculated elevations on map ID {map_id}")
@@ -431,3 +441,48 @@ class Route(CaltopoShape):
         :return float: The total elevation loss.
         """
         return self.losses[-1]
+
+    def get_elevation_at_mile_mark(self, mile_mark: float) -> float:
+        """
+        Given a mile mark this will return the corresponding elevation.
+
+        :param float mile_mark: A mile mark along the course.
+        :return float: The elevation at the course's mile mark.
+        """
+        return self.elevations[np.where(self.distances == mile_mark)[0]].tolist()[0]
+
+    def get_point_at_mile_mark(self, mile_mark: float) -> np.array:
+        """
+        Given a mile mark this will return the lat lon point at that location.
+
+        :param float mile_mark: A mile mark along the course.
+        :return np.array: A lat/lon coordinate.
+        """
+        return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
+
+    @cache
+    def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
+        """
+        Given a center point and radius in feet, finds the indices of the route points inside said
+        radius.
+
+        :param float center_lat: The latitude of the center point.
+        :param float center_lon: The longitude of the center point.
+        :param int radius: The radius in feet to search from the center point for points in the
+        route.
+        :return tuple: An array of indices of the route ordered from closest to furthest as well as
+        a bool indicating whether or not the indices are consecutive.
+        """
+        # Calculate distances from the center point for all points.
+        distances = np.array(
+            [haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points]
+        )
+        # Get indices of points within the radius.
+        indices_within_radius = np.where(distances <= radius)[0]
+        # Now get all of the segments of the route. This is used to detect loops, out-n-backs, and
+        # intersections.
+        route_segments = detect_consecutive_sequences(indices_within_radius)
+        # Sort local indices by distance from center point.
+        sorted_local_indices = np.argsort(distances[indices_within_radius])
+        sorted_indices = indices_within_radius[sorted_local_indices]
+        return sorted_indices, len(route_segments) == 1

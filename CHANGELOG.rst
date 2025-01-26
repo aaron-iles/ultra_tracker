@@ -4,6 +4,25 @@ Project Release Notes
 
 .. contents:: Topics
 
+v4.0.0
+======
+
+Release Summary
+---------------
+
+Improves mile mark calculations, adds unit tests, formalizes Python package
+
+Major Changes
+-------------
+
+- Refactors entire package structure to create formal Python package inside Docker container
+- Refactors mile mark calculations significantly to better handle different situations
+
+Minor Changes
+-------------
+
+- Adds unit test framework including whole race tests
+
 v3.0.1
 ======
 

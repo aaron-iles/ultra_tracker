@@ -10,7 +10,7 @@ import uuid
 
 import requests
 
-from .utils import get_gmaps_url
+from ..utils import get_gmaps_url
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +47,11 @@ class CaltopoSession:
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"GET {url_endpoint}\n{expires}\n"
-        params = {}
-        params["id"] = self.credential_id
-        params["expires"] = expires
-        params["signature"] = self._get_token(data)
+        params = {
+            "id": self.credential_id,
+            "expires": expires,
+            "signature": self._get_token(data),
+        }
         return requests.get(
             f"{self.url_prefix}{url_endpoint}",
             data=params,
@@ -68,11 +69,12 @@ class CaltopoSession:
         """
         expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"POST {url_endpoint}\n{expires}\n{json.dumps(payload)}"
-        params = {}
-        params["id"] = self.credential_id
-        params["expires"] = expires
-        params["signature"] = self._get_token(data)
-        params["json"] = json.dumps(payload)
+        params = {
+            "id": self.credential_id,
+            "expires": expires,
+            "signature": self._get_token(data),
+            "json": json.dumps(payload),
+        }
         return requests.post(
             f"{self.url_prefix}{url_endpoint}",
             data=params,
