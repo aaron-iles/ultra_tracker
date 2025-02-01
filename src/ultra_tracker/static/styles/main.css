@@ -1,135 +1,91 @@
-.nav-wrapper {
+/* Navigation Bar */
+nav {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%; 
+  z-index: 1000; 
   background-color: #081839;
-  padding-left: 10px;
-  padding-right: 10px;
+}
+
+.nav-wrapper {
+  background-color: #263238; /* Material dark grey background */
+  padding: 0 5px;
 }
 
 #nav-mobile {
   list-style: none;
   display: flex;
   justify-content: flex-start;
+  margin: 0;
   align-items: center;
-  margin: 0; /* Reset margin to remove default margin */
-  padding: 0; /* Reset padding to remove default padding */
+  margin: 0;
+  padding: 0;
 }
 
 #nav-mobile li {
   list-style-type: none;
-  margin-right: 10px;
-  font-size: 55px; /* Increase font size for better readability */
+  margin-right: 8px;
+  font-size: 20px;
 }
 
 .tab-link {
   color: white;
   text-decoration: none;
   font-size: 18px;
+  padding: 10px 12px;
+  transition: background-color 0.3s, color 0.3s; /* Smooth transitions */
 }
 
-/* Responsive font size */
-@media (max-width: 768px) {
-  .tab-link {
-    font-size: 18px;
-  }
+.tab-link:hover,
+.tab-link.active {
+  background-color: #546E7A; /* Hover & active state background */
+  border-radius: 4px;
 }
 
-@media (max-width: 480px) {
-  .tab-link {
-    font-size: 16px;
-  }
-}
-
+/* Page Header */
 .page-header {
-  color: #081839;
+  color: #263238;
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* Tables */
+.stats-table, .course-table {
+  width: 100%;
+  table-layout: fixed; 
 }
 
 .stats-table th,
-.stats-table td {
-  padding: 10px;
-  text-align: left;
-  font-size: 18px;
-  background-color: white;
-  color: black;
-}
-
-.stats-table th {
-  background-color: #081839;
-  color: white;
-}
-
 .course-table th,
+.stats-table td,
 .course-table td {
-  padding: 10px;
+  padding: 15px;
   text-align: left;
-  font-size: 14px;
   background-color: white;
   color: black;
+  font-size: 16px;
+  border-bottom: 1px solid #ddd;
 }
 
+.stats-table th,
 .course-table th {
-  background-color: #081839;
+  background-color: #37474F; /* Dark material grey */
   color: white;
+  font-size: 16px;
 }
 
-
-
-.tab-content {
-    display: none;
-}
-.tab-content.active {
-    display: block;
-}
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-}
-#map {
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box; /* Include padding in height calculation */
-    overflow: hidden;
-}
-#map iframe {
-    width: 100%;
-    height: 100%;
-    border: none; /* Remove border around iframe */
-}
-nav {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000; /* Ensure the nav is on top of other elements */
-}
-/* Style for active tab */
-.tab-link.active {
-    font-weight: bold; /* Change font weight */
-    color: white; /* Change font color */
+.stats-table td,
+.course-table td {
+  background-color: white;
 }
 
-/* Style for tab highlight */
-.tab-link.active::after {
-    content: ''; /* Add a pseudo-element for the highlight */
-    display: block;
-    width: 100%;
-    height: 4px; /* Height of the highlight */
-    background-color: #23ce00; /* Color of the highlight */
-}
-/* CSS to remove underline from links */
-nav ul li a {
-  text-decoration: none;
-}
-nav ul li a {
-  font-size: 20px;
-}
-
-/* Style for accordion */
+/* Accordion */
 .accordion {
-    width: 100%;
+  width: 100%;
 }
 
 .accordion-item {
-  font-size: 16px;
   margin-bottom: 10px;
 }
 
@@ -137,19 +93,67 @@ nav ul li a {
   width: 100%;
   text-align: left;
   font-weight: bold;
-  font-size: 16px;
+  background-color: #ECEFF1;
+  color: #37474F;
+  border: none;
+  padding: 10px;
+  transition: background-color 0.3s;
+}
+
+.accordion-button:hover {
+  background-color: #CFD8DC;
 }
 
 .accordion-body {
   padding: 10px;
 }
 
-.accordion-item .accordion-button.not-completed-item {
-  background-color: #B0BEC5;
-  color: #37474F; 
+.accordion-item .completed-item {
+  background-color: #FFFFFF;
+  color: #000000;
 }
 
-.accordion-item .accordion-button.completed-item {
-  background-color: #FFFFFF; 
-  color: #000000; 
+.accordion-item .not-completed-item {
+  background-color: #B0BEC5;
+  color: #37474F;
+}
+
+/* Map */
+#map {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#map iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Active Tab Indicator */
+.tab-link.active::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 4px;
+  background-color: #42A5F5; /* Light blue for material accent */
+  border-radius: 2px;
+}
+
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding-top: 80px; /* This creates space for the dropdown */
+}
+
+.tab-content.active {
+    display: block; /* Show active tab content */
 }

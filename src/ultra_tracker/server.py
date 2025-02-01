@@ -6,6 +6,7 @@ import json
 import logging
 import sys
 
+
 import yaml
 from flask import Flask, render_template, request
 from .models.caltopo import CaltopoMap, CaltopoSession
