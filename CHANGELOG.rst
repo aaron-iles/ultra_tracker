@@ -4,6 +4,19 @@ Project Release Notes
 
 .. contents:: Topics
 
+v4.1.0
+======
+
+Release Summary
+---------------
+
+Makes general UI improvements
+
+Minor Changes
+-------------
+
+- Refreshes the UI for better readability
+
 v4.0.0
 ======
 

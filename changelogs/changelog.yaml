@@ -117,3 +117,11 @@ releases:
     fragments:
     - summary.yml
     release_date: '2025-01-26'
+  4.1.0:
+    changes:
+      minor_changes:
+      - Refreshes the UI for better readability
+      release_summary: Makes general UI improvements
+    fragments:
+    - design.yml
+    release_date: '2025-01-31'
