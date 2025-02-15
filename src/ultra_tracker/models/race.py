@@ -252,11 +252,12 @@ class Runner:
         )
         estimate_marker = caltopo_map.get_or_create_marker(
             f"{marker_name} (estimated)",
-            "Live Tracking",
+            "Backend",
             "0.5",
-            "a:4",
+            "point",
             "FFFFFF",
             default_start_location,
+            False,
         )
         return true_marker, estimate_marker
 

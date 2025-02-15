@@ -188,15 +188,17 @@ class CaltopoMap:
         logger.info(f"authentication test passed for map ID {self.map_id}")
         return True
 
-    def get_or_create_folder(self, title: str):
+    def get_or_create_folder(self, title: str, show_labels: bool = True):
         """
         Gets a folder from the map. If it does not exist, the folder is created.
 
         :param str title: The title of the folder.
+        :param bool show_labels: True if the labels of items in the folders should be shown by
+        default and False otherwise.
         :return CaltopoFolder: The folder object.
         """
         folder_feature_dict = {
-            "properties": {"title": title, "visible": True, "labelVisible": True},
+            "properties": {"title": title, "visible": True, "labelVisible": show_labels},
             "id": None,
         }
         new_folder = CaltopoFolder(folder_feature_dict, self.map_id, self.session)
@@ -220,6 +222,7 @@ class CaltopoMap:
         marker_symbol: str,
         marker_color: str,
         coordinates: list,
+        folder_show_labels: bool = True,
     ):
         """
         Gets a marker from the map or creates it if it doesn't already exist.
@@ -230,9 +233,11 @@ class CaltopoMap:
         :param str marker_symbol: The symbol to use for the marker.
         :param str marker_color: The color to assign the marker.
         :param list coordinates: The coordinates to assign the marker.
+        :param bool folder_show_labels: True if the labels of items in the folders should be shown
+        by default and False otherwise.
         :return CaltopoMarker: The marker.
         """
-        folder = self.get_or_create_folder(folder_title)
+        folder = self.get_or_create_folder(folder_title, folder_show_labels)
 
         marker_feature_dict = {
             "type": "Feature",
@@ -386,6 +391,8 @@ class CaltopoFolder(CaltopoFeature):
 
     def __init__(self, feature_dict: dict, map_id: str, session: CaltopoSession):
         super().__init__(feature_dict, map_id, session)
+        self.label_visible = feature_dict.get("labelVisible", True)
+        self.visible = feature_dict.get("visible", True)
 
     @property
     def as_json(self) -> dict:
@@ -395,6 +402,10 @@ class CaltopoFolder(CaltopoFeature):
         :return dict: A dict representation of the folder object.
         """
         return {
-            "properties": {"title": self.title, "visible": True, "labelVisible": True},
+            "properties": {
+                "title": self.title,
+                "visible": self.visible,
+                "labelVisible": self.label_visible,
+            },
             "id": self.id,
         }
