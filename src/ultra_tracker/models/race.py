@@ -172,7 +172,7 @@ class Race:
                 self.runner.pings = data.get("pings", 0)
                 ping = Ping(data.get("last_ping", {}))
                 self.runner.check_in(ping, self.start_time, self.course.route)
-                self.course.update_course_elements(self.runner)
+                self.course.update_course_elements(self.runner, self.start_time)
                 logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
@@ -204,7 +204,7 @@ class Race:
             logger.info("runner already finished; ignoring ping")
             return
         self.runner.check_in(ping, self.start_time, self.course.route)
-        self.course.update_course_elements(self.runner)
+        self.course.update_course_elements(self.runner, self.start_time)
         self.save()
 
 

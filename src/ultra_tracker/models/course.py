@@ -261,7 +261,7 @@ class Course:
                 return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session)
         raise LookupError(f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}")
 
-    def update_course_elements(self, runner) -> None:
+    def update_course_elements(self, runner, start_time: datetime.datetime) -> None:
         """
         Loops over each course element (leg or aid station) to allow it to get updated with the
         latest information from the runner.
@@ -271,7 +271,7 @@ class Course:
         """
         # TODO: Deprecate this in favor of calculating these for any runner upon request.
         for ce in self.course_elements:
-            ce.refresh(runner)
+            ce.refresh(runner, start_time)
 
 
 class CourseElement:
@@ -299,7 +299,7 @@ class CourseElement:
             return False
         return self.mile_mark < other.mile_mark
 
-    def refresh(self, runner) -> None:
+    def refresh(self, runner, start_time: datetime.datetime) -> None:
         """
         Updates the object with the latest ETA of the runner and the boolean to indicate if the
         runner has already passed.
@@ -307,6 +307,10 @@ class CourseElement:
         :param Runner runner: A runner object.
         :return None:
         """
+        # The start location needs to be handled differently.
+        if self.mile_mark == 0 and type(self) == AidStation:
+            self.estimated_arrival_time = start_time
+            return
         # TODO: Deprecate this in favor of methods that allow any runner to ask for an ETA, etc.
         miles_to_start = self.mile_mark - runner.mile_mark
         miles_to_end = self.end_mile_mark - runner.mile_mark
@@ -314,6 +318,7 @@ class CourseElement:
             # The runner has already passed this course element.
             # TODO: This only works for a single runner using this application.
             self.is_passed = True
+            # TODO put the actual arrival time here if possible.
             return
         # It may be necessary to set this back to False if the tracker momentarily thought the
         # runner passed the aid (and changed the bool above) but then corrected itself.
@@ -390,14 +395,14 @@ class Leg(CourseElement):
         """
         return format_duration(self.estimated_duration)
 
-    def refresh(self, runner) -> None:
+    def refresh(self, runner, start_time: datetime.datetime) -> None:
         """
         Refreshes the estimated duration of the leg based on the runner's average pace.
 
         :param Runner runner: The runner in the race.
         :return None:
         """
-        super().refresh(runner)
+        super().refresh(runner, start_time)
         # TODO This should be calculated based on moving pace and exclude stoppage time.
         self.estimated_duration = datetime.timedelta(minutes=self.distance * runner.average_pace)
         return
