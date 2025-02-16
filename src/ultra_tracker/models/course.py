@@ -267,6 +267,7 @@ class Course:
         latest information from the runner.
 
         :param Runner runner: The runner of the race.
+        :param datetime.datetime start_time: The start time of the race.
         :return None:
         """
         # TODO: Deprecate this in favor of calculating these for any runner upon request.
@@ -305,6 +306,7 @@ class CourseElement:
         runner has already passed.
 
         :param Runner runner: A runner object.
+        :param datetime.datetime start_time: The start time of the race.
         :return None:
         """
         # The start location needs to be handled differently.
@@ -400,6 +402,7 @@ class Leg(CourseElement):
         Refreshes the estimated duration of the leg based on the runner's average pace.
 
         :param Runner runner: The runner in the race.
+        :param datetime.datetime start_time: The start time of the race.
         :return None:
         """
         super().refresh(runner, start_time)
