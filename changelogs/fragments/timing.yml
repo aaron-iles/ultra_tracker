@@ -1,0 +1,4 @@
+---
+minor_changes:
+  - Updates the start location to show an ETA of the race start time
+  - Changes estimated runner marker to be less intrusive
