@@ -150,6 +150,7 @@ class Race:
             },
         }
 
+    # TODO need to save off entrance and exit time for course elements
     def save(self) -> None:
         """
         Saves the race stats to a file.
@@ -187,7 +188,7 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
-        logger.info(ping)
+        logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0, 0]:
             logger.info("ping does not contain GPS coordinates, skipping")
             self.runner.pings += 1
@@ -204,6 +205,7 @@ class Race:
             logger.info("runner already finished; ignoring ping")
             return
         self.runner.check_in(ping, self.start_time, self.course.route)
+        # TODO detect entrance/exit here?
         self.course.update_course_elements(self.runner, self.start_time)
         self.save()
 
@@ -221,6 +223,7 @@ class Runner:
     def __init__(self, caltopo_map, marker_name: str, default_start_location: list = [0, 0]):
         self.average_pace = 10
         self.current_pace = 10
+        self.average_moving_pace = 10
         self.elapsed_time = datetime.timedelta(0)
         self.elevation = 0
         self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
@@ -430,4 +433,4 @@ class Runner:
         logger.info(self)
 
     def __str__(self):
-        return f"RUNNER {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.average_pace)} ({format_duration(self.elapsed_time)})"
+        return f"runner {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.average_pace)} ({format_duration(self.elapsed_time)})"

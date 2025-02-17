@@ -270,7 +270,6 @@ class Course:
         :param datetime.datetime start_time: The start time of the race.
         :return None:
         """
-        # TODO: Deprecate this in favor of calculating these for any runner upon request.
         for ce in self.course_elements:
             ce.refresh(runner, start_time)
 
@@ -289,16 +288,61 @@ class CourseElement:
         self.display_name = name
         self.mile_mark = mile_mark
         self.end_mile_mark = mile_mark
+        self.entrance_time = datetime.datetime.fromtimestamp(0)
+        self.exit_time = datetime.datetime.fromtimestamp(0)
         self.is_passed = False
         self.distance_to = 0
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.associated_caltopo_marker = None
+
+    @property
+    def transit_time(self) -> datetime.timedelta:
+        """
+        The amount of time the runner spent on or at the course element.
+
+        :return datetime.timedelta: The timedelta spent in transit.
+        """
+        return self.exit_time - self.entrance_time
 
     def __lt__(self, other):
         # Since legs and aid stations share the same mile mark, ensure that the leg comes after.
         if isinstance(other, Leg) and self.mile_mark == other.mile_mark:
             return False
         return self.mile_mark < other.mile_mark
+
+    def detect_entrance_time(self, runner) -> None:
+        """
+        Detects when the runner has entered the course element. If the runner is within 0.11 miles
+        or past the course element, the runner's entrance time is recorded.
+
+        :param Runner runner: The runner of the race.
+        :return None:
+        """
+        # The entrance time was already detected and set by an earlier ping.
+        if self.entrance_time != datetime.datetime.fromtimestamp(0):
+            return
+        if self.mile_mark - runner.mile_mark <= 0.11:
+            self.entrance_time = runner.last_ping.timestamp
+            logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
+            return
+        # It could be necessary to reset this.
+        self.entrace_time = datetime.datetime.fromtimestamp(0)
+
+    def detect_exit_time(self, runner) -> None:
+        """
+        """
+        # The exit time was already detected and set by an earlier ping.
+        if self.exit_time != datetime.datetime.fromtimestamp(0):
+            return
+        if runner.mile_mark - self.end_mile_mark > 0.11:
+            self.exit_time = runner.last_ping.timestamp
+            logger.info(f"runner exited {self.display_name} at {self.exit_time}")
+            return
+        # It could be necessary to reset this.
+        self.exit_time = datetime.datetime.fromtimestamp(0)
+
+
+
 
     def refresh(self, runner, start_time: datetime.datetime) -> None:
         """
@@ -316,15 +360,18 @@ class CourseElement:
         if self.mile_mark == 0 and type(self) == AidStation:
             self.estimated_arrival_time = start_time
             self.is_passed = runner.started
+            self.entrance_time = start_time
+            self.exit_time = start_time
             return
-        # TODO: Deprecate this in favor of methods that allow any runner to ask for an ETA, etc.
+
+        self.detect_entrance_time(runner)
+        self.detect_exit_time(runner)
+
         miles_to_start = self.mile_mark - runner.mile_mark
         miles_to_end = self.end_mile_mark - runner.mile_mark
         if miles_to_start < 0 and miles_to_end < 0:
             # The runner has already passed this course element.
-            # TODO: This only works for a single runner using this application.
             self.is_passed = True
-            # TODO put the actual arrival time here if possible.
             return
         # It may be necessary to set this back to False if the tracker momentarily thought the
         # runner passed the aid (and changed the bool above) but then corrected itself.
@@ -348,6 +395,10 @@ class CourseElement:
         return runner.last_ping.timestamp + minutes_to_me
 
 
+
+
+
+
 class AidStation(CourseElement):
     """
     A special course element that represents an aid station on the route.
@@ -361,6 +412,30 @@ class AidStation(CourseElement):
         self.gmaps_url = ""
         self.comments = comments
         self.display_name = f"{name} (mile {mile_mark})"
+
+    # TODO is this needed?
+    @property
+    def stoppage_time(self) -> datetime.timedelta:
+        """
+        The amount of time spent stopped at this aid station.
+
+        :return datetime.timedelta: The stoppage time.
+        """
+        return self.transit_time
+
+
+
+    def is_transiting(self, runner) -> bool:
+        """
+        Returns True if the runner is at the aid station and False otherwise.
+
+        :param Runner runner: The runner of the race.
+        :return bool: True if the runner is transiting the aid station.
+        """
+        if runner.finished or not runner.started:
+            return False
+        return abs(runner.mile_mark - self.mile_mark) <= 0.11
+
 
 
 class Leg(CourseElement):
@@ -390,7 +465,7 @@ class Leg(CourseElement):
         self.end_mile_mark = end_mile_mark
         self.gain = gain
         self.loss = loss
-        self.estimated_duration = datetime.timedelta(0)
+        self.estimated_duration = datetime.timedelta(0) # TODO
 
     @property
     def estimated_duration_str(self) -> str:
@@ -413,6 +488,18 @@ class Leg(CourseElement):
         # TODO This should be calculated based on moving pace and exclude stoppage time.
         self.estimated_duration = datetime.timedelta(minutes=self.distance * runner.average_pace)
         return
+
+
+    def is_transiting(self, runner) -> bool:
+        """
+        """
+        if runner.finished or not runner.started:
+            return False
+        miles_to_start = self.mile_mark - runner.mile_mark
+        miles_to_end = self.end_mile_mark - runner.mile_mark
+        # The runner is transiting the leg if they are not within 100 yds of the start or finish of
+        # the leg.
+        return miles_to_start < -0.11 and miles_to_end > 0.11
 
     def __len__(self) -> float:
         return self.distance

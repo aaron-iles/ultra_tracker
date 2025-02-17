@@ -87,6 +87,8 @@
                   <th>gain</th>
                   <th>loss</th>
                   <th>estimated duration</th>
+                  <th>start time</th>
+                  <th>finish time</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,6 +97,8 @@
                   <td style="background-color:#FFC0CB">{{ course_element.gain | d(0) | int }} feet</td>
                   <td style="background-color:#90EE90">{{ course_element.loss | d(0) | int }} feet</td>
                   <td>{{ course_element.estimated_duration_str }}</td>
+                  <td>{{ course_element.entrance_time.strftime("%m/%d %H:%M") }}</td>
+                  <td>{{ course_element.exit_time.strftime("%m/%d %H:%M") }}</td>
                 </tr>
               </tbody>
             {% endif %}
@@ -104,6 +108,8 @@
                   <th>mile mark</th>
                   <th>eta</th>
                   <th>navigation</th>
+                  <th>arrival time</th>
+                  <th>departure time</th>
                   <th>comments</th>
                 </tr>
               </thead>
@@ -115,6 +121,8 @@
                     <a href="{{course_element.gmaps_url}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
                     alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;"></a>
                   </td>
+                  <td>{{ course_element.entrance_time.strftime("%m/%d %H:%M") }}</td>
+                  <td>{{ course_element.exit_time.strftime("%m/%d %H:%M") }}</td>
                   <td>{{ course_element.comments }}</td>
                 </tr>
               </tbody>
