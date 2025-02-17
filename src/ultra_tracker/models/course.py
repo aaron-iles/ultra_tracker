@@ -309,9 +309,13 @@ class CourseElement:
         :param datetime.datetime start_time: The start time of the race.
         :return None:
         """
+        if runner.finished:
+            self.is_passed = True
+            return
         # The start location needs to be handled differently.
         if self.mile_mark == 0 and type(self) == AidStation:
             self.estimated_arrival_time = start_time
+            self.is_passed = runner.started
             return
         # TODO: Deprecate this in favor of methods that allow any runner to ask for an ETA, etc.
         miles_to_start = self.mile_mark - runner.mile_mark

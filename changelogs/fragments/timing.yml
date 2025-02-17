@@ -2,3 +2,5 @@
 minor_changes:
   - Updates the start location to show an ETA of the race start time
   - Changes estimated runner marker to be less intrusive
+bugfixes:
+  - Greys out the last leg and finish location when the runner finishes the race
