@@ -291,7 +291,6 @@ class CourseElement:
         self.entrance_time = datetime.datetime.fromtimestamp(0)
         self.exit_time = datetime.datetime.fromtimestamp(0)
         self.is_passed = False
-        self.distance_to = 0
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
         self.associated_caltopo_marker = None
 
@@ -340,6 +339,9 @@ class CourseElement:
             return
         # It could be necessary to reset this.
         self.exit_time = datetime.datetime.fromtimestamp(0)
+
+
+    #def detect_passage(self, runner)
 
 
 
@@ -437,6 +439,39 @@ class AidStation(CourseElement):
         return abs(runner.mile_mark - self.mile_mark) <= 0.11
 
 
+    def detect_exit_time(self, runner) -> None:
+        """
+        """
+        # The exit time was already detected and set by an earlier ping.
+        if self.exit_time != datetime.datetime.fromtimestamp(0):
+            return
+        if runner.mile_mark - self.end_mile_mark > 0.11:
+            self.exit_time = runner.last_ping.timestamp
+            logger.info(f"runner exited {self.display_name} at {self.exit_time}")
+            return
+        # It could be necessary to reset this.
+        self.exit_time = datetime.datetime.fromtimestamp(0)
+
+    def detect_entrance_time(self, runner) -> None:
+        """
+        Detects when the runner has entered the course element. If the runner is within 0.11 miles
+        or past the course element, the runner's entrance time is recorded.
+
+        :param Runner runner: The runner of the race.
+        :return None:
+        """
+        # The entrance time was already detected and set by an earlier ping.
+        if self.entrance_time != datetime.datetime.fromtimestamp(0):
+            return
+        if self.mile_mark - runner.mile_mark <= 0.11:
+            self.entrance_time = runner.last_ping.timestamp
+            logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
+            return
+        # It could be necessary to reset this.
+        self.entrace_time = datetime.datetime.fromtimestamp(0)
+
+
+
 
 class Leg(CourseElement):
     """
@@ -500,6 +535,39 @@ class Leg(CourseElement):
         # The runner is transiting the leg if they are not within 100 yds of the start or finish of
         # the leg.
         return miles_to_start < -0.11 and miles_to_end > 0.11
+
+    def detect_entrace_time(self, runner) -> None:
+        """
+        """
+        # The exit time was already detected and set by an earlier ping.
+        if self.exit_time != datetime.datetime.fromtimestamp(0):
+            return
+        if runner.mile_mark - self.end_mile_mark > 0.11:
+            self.exit_time = runner.last_ping.timestamp
+            logger.info(f"runner exited {self.display_name} at {self.exit_time}")
+            return
+        # It could be necessary to reset this.
+        self.exit_time = datetime.datetime.fromtimestamp(0)
+
+
+    def detect_exit_time(self, runner) -> None:
+        """
+        Detects when the runner has entered the course element. If the runner is within 0.11 miles
+        or past the course element, the runner's entrance time is recorded.
+
+        :param Runner runner: The runner of the race.
+        :return None:
+        """
+        # The entrance time was already detected and set by an earlier ping.
+        if self.entrance_time != datetime.datetime.fromtimestamp(0):
+            return
+        if self.mile_mark - runner.mile_mark <= 0.11:
+            self.entrance_time = runner.last_ping.timestamp
+            logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
+            return
+        # It could be necessary to reset this.
+        self.entrace_time = datetime.datetime.fromtimestamp(0)
+
 
     def __len__(self) -> float:
         return self.distance
