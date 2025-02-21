@@ -270,8 +270,12 @@ class Course:
         :param datetime.datetime start_time: The start time of the race.
         :return None:
         """
+        # TODO the course knows the sequence of the course elements so it knows A before B before C
+        # ... So maybe here is where we need to detect the passing of one element and the arrival at
+        # another.
         for ce in self.course_elements:
             ce.refresh(runner, start_time)
+
 
 
 class CourseElement:
@@ -309,6 +313,7 @@ class CourseElement:
             return False
         return self.mile_mark < other.mile_mark
 
+
     def detect_entrance_time(self, runner) -> None:
         """
         Detects when the runner has entered the course element. If the runner is within 0.11 miles
@@ -317,15 +322,28 @@ class CourseElement:
         :param Runner runner: The runner of the race.
         :return None:
         """
-        # The entrance time was already detected and set by an earlier ping.
+        # The entrance time was already detected and set by an earlier ping. Stop here.
         if self.entrance_time != datetime.datetime.fromtimestamp(0):
             return
-        if self.mile_mark - runner.mile_mark <= 0.11:
+        # If the entrance time was never set and the runner is transiting, then use this as the
+        # runner's entrance time.
+        if is_transiting(runner):
             self.entrance_time = runner.last_ping.timestamp
             logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
             return
+        # If the runner never entered and they are not currently transiting, check if they have not
+        # yet arrived first.
+        if self.mile_mark - runner.mile_mark > 0.11:
+            return
+        # Otherwise, they may have passed the course element without ever pinging inside it.
+        if self.mile_mark - runner.mile_mark < -0.11:
+            self.entrance_time = runner.
+
+
+        # TODO: there is an edge case: what if the runner never pings while transiting?
         # It could be necessary to reset this.
         self.entrace_time = datetime.datetime.fromtimestamp(0)
+
 
     def detect_exit_time(self, runner) -> None:
         """
@@ -341,7 +359,6 @@ class CourseElement:
         self.exit_time = datetime.datetime.fromtimestamp(0)
 
 
-    #def detect_passage(self, runner)
 
 
 
@@ -439,38 +456,6 @@ class AidStation(CourseElement):
         return abs(runner.mile_mark - self.mile_mark) <= 0.11
 
 
-    def detect_exit_time(self, runner) -> None:
-        """
-        """
-        # The exit time was already detected and set by an earlier ping.
-        if self.exit_time != datetime.datetime.fromtimestamp(0):
-            return
-        if runner.mile_mark - self.end_mile_mark > 0.11:
-            self.exit_time = runner.last_ping.timestamp
-            logger.info(f"runner exited {self.display_name} at {self.exit_time}")
-            return
-        # It could be necessary to reset this.
-        self.exit_time = datetime.datetime.fromtimestamp(0)
-
-    def detect_entrance_time(self, runner) -> None:
-        """
-        Detects when the runner has entered the course element. If the runner is within 0.11 miles
-        or past the course element, the runner's entrance time is recorded.
-
-        :param Runner runner: The runner of the race.
-        :return None:
-        """
-        # The entrance time was already detected and set by an earlier ping.
-        if self.entrance_time != datetime.datetime.fromtimestamp(0):
-            return
-        if self.mile_mark - runner.mile_mark <= 0.11:
-            self.entrance_time = runner.last_ping.timestamp
-            logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
-            return
-        # It could be necessary to reset this.
-        self.entrace_time = datetime.datetime.fromtimestamp(0)
-
-
 
 
 class Leg(CourseElement):
@@ -535,38 +520,6 @@ class Leg(CourseElement):
         # The runner is transiting the leg if they are not within 100 yds of the start or finish of
         # the leg.
         return miles_to_start < -0.11 and miles_to_end > 0.11
-
-    def detect_entrace_time(self, runner) -> None:
-        """
-        """
-        # The exit time was already detected and set by an earlier ping.
-        if self.exit_time != datetime.datetime.fromtimestamp(0):
-            return
-        if runner.mile_mark - self.end_mile_mark > 0.11:
-            self.exit_time = runner.last_ping.timestamp
-            logger.info(f"runner exited {self.display_name} at {self.exit_time}")
-            return
-        # It could be necessary to reset this.
-        self.exit_time = datetime.datetime.fromtimestamp(0)
-
-
-    def detect_exit_time(self, runner) -> None:
-        """
-        Detects when the runner has entered the course element. If the runner is within 0.11 miles
-        or past the course element, the runner's entrance time is recorded.
-
-        :param Runner runner: The runner of the race.
-        :return None:
-        """
-        # The entrance time was already detected and set by an earlier ping.
-        if self.entrance_time != datetime.datetime.fromtimestamp(0):
-            return
-        if self.mile_mark - runner.mile_mark <= 0.11:
-            self.entrance_time = runner.last_ping.timestamp
-            logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
-            return
-        # It could be necessary to reset this.
-        self.entrace_time = datetime.datetime.fromtimestamp(0)
 
 
     def __len__(self) -> float:
