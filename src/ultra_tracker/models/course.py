@@ -273,6 +273,7 @@ class Course:
         # TODO the course knows the sequence of the course elements so it knows A before B before C
         # ... So maybe here is where we need to detect the passing of one element and the arrival at
         # another.
+        # TODO departure time for a leg and arrival time at the next aid should be the same
         for ce in self.course_elements:
             ce.refresh(runner, start_time)
 
@@ -292,10 +293,11 @@ class CourseElement:
         self.display_name = name
         self.mile_mark = mile_mark
         self.end_mile_mark = mile_mark
-        self.entrance_time = datetime.datetime.fromtimestamp(0)
-        self.exit_time = datetime.datetime.fromtimestamp(0)
+        self.arrival_time = datetime.datetime.fromtimestamp(0)
+        self.departure_time = datetime.datetime.fromtimestamp(0)
         self.is_passed = False
         self.estimated_arrival_time = datetime.datetime.fromtimestamp(0)
+        self.estimated_departure_time = datetime.datetime.fromtimestamp(0)
         self.associated_caltopo_marker = None
 
     @property
@@ -305,7 +307,9 @@ class CourseElement:
 
         :return datetime.timedelta: The timedelta spent in transit.
         """
-        return self.exit_time - self.entrance_time
+        if (self.departure_time != datetime.datetime.fromtimestamp(0)) and (self.arrival_time != datetime.datetime.fromtimestamp(0)):
+            return self.departure_time - self.arrival_time
+        return datetime.timedelta(0)
 
     def __lt__(self, other):
         # Since legs and aid stations share the same mile mark, ensure that the leg comes after.
@@ -314,49 +318,35 @@ class CourseElement:
         return self.mile_mark < other.mile_mark
 
 
-    def detect_entrance_time(self, runner) -> None:
+    def detect_arrival_time(self, runner) -> None:
         """
         Detects when the runner has entered the course element. If the runner is within 0.11 miles
-        or past the course element, the runner's entrance time is recorded.
+        or past the course element, the runner's arrival time is recorded.
 
         :param Runner runner: The runner of the race.
         :return None:
         """
-        # The entrance time was already detected and set by an earlier ping. Stop here.
-        if self.entrance_time != datetime.datetime.fromtimestamp(0):
+        # The arrival time was already detected and set by an earlier ping. Stop here.
+        if self.arrival_time != datetime.datetime.fromtimestamp(0):
             return
-        # If the entrance time was never set and the runner is transiting, then use this as the
-        # runner's entrance time.
-        if is_transiting(runner):
-            self.entrance_time = runner.last_ping.timestamp
-            logger.info(f"runner entered {self.display_name} at {self.entrance_time}")
+        # If the arrival time was never set and the runner is transiting or if the runner passed
+        # the course element without ever pinging inside it, set the arrival time as the ETA.
+        if self.is_transiting(runner) or self.runner_has_arrived(runner):
+            self.arrival_time = self.estimated_arrival_time
+            logger.info(f"runner entered {self.display_name} at {self.arrival_time}")
             return
-        # If the runner never entered and they are not currently transiting, check if they have not
-        # yet arrived first.
-        if self.mile_mark - runner.mile_mark > 0.11:
-            return
-        # Otherwise, they may have passed the course element without ever pinging inside it.
-        if self.mile_mark - runner.mile_mark < -0.11:
-            self.entrance_time = runner.
 
 
-        # TODO: there is an edge case: what if the runner never pings while transiting?
-        # It could be necessary to reset this.
-        self.entrace_time = datetime.datetime.fromtimestamp(0)
-
-
-    def detect_exit_time(self, runner) -> None:
+    def detect_departure_time(self, runner) -> None:
         """
         """
         # The exit time was already detected and set by an earlier ping.
-        if self.exit_time != datetime.datetime.fromtimestamp(0):
+        if self.departure_time != datetime.datetime.fromtimestamp(0):
             return
-        if runner.mile_mark - self.end_mile_mark > 0.11:
-            self.exit_time = runner.last_ping.timestamp
-            logger.info(f"runner exited {self.display_name} at {self.exit_time}")
+        if not self.is_transiting(runner) and self.runner_has_departed(runner):
+            self.departure_time = self.estimated_departure_time # TODO will this work?
+            logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
-        # It could be necessary to reset this.
-        self.exit_time = datetime.datetime.fromtimestamp(0)
 
 
 
@@ -379,24 +369,30 @@ class CourseElement:
         if self.mile_mark == 0 and type(self) == AidStation:
             self.estimated_arrival_time = start_time
             self.is_passed = runner.started
-            self.entrance_time = start_time
-            self.exit_time = start_time
+            self.arrival_time = start_time
+            self.departure_time = start_time
             return
 
-        self.detect_entrance_time(runner)
-        self.detect_exit_time(runner)
+        # TODO how will we reset arrival and exit times?
+        self.detect_arrival_time(runner)
+        self.detect_departure_time(runner)
+
+        if self.runner_has_departed(runner):
+            self.is_passed = True
+            return
+
+        # TODO calculate ETA ETD
+
 
         miles_to_start = self.mile_mark - runner.mile_mark
         miles_to_end = self.end_mile_mark - runner.mile_mark
-        if miles_to_start < 0 and miles_to_end < 0:
-            # The runner has already passed this course element.
-            self.is_passed = True
-            return
         # It may be necessary to set this back to False if the tracker momentarily thought the
         # runner passed the aid (and changed the bool above) but then corrected itself.
         self.is_passed = False
         minutes_to_start = datetime.timedelta(minutes=miles_to_start * runner.average_pace)
+        minutes_to_end = datetime.timedelta(minutes=miles_to_end * runner.average_pace)
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_start
+        self.estimated_departure_time = runner.last_ping.timestamp + minutes_to_end
 
     def get_eta(self, runner) -> datetime.datetime:
         """
@@ -412,6 +408,13 @@ class CourseElement:
             return
         minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
         return runner.last_ping.timestamp + minutes_to_me
+
+    def runner_has_arrived(self, runner):
+        return runner.mile_mark - self.mile_mark > -0.11
+
+    def runner_has_departed(self, runner):
+        return self.end_mile_mark - runner.mile_mark < -0.11
+    # TODO departing a leg and departing an aid are not the same.
 
 
 
@@ -519,7 +522,7 @@ class Leg(CourseElement):
         miles_to_end = self.end_mile_mark - runner.mile_mark
         # The runner is transiting the leg if they are not within 100 yds of the start or finish of
         # the leg.
-        return miles_to_start < -0.11 and miles_to_end > 0.11
+        return miles_to_start <= -0.11 and miles_to_end >= 0.11
 
 
     def __len__(self) -> float:
