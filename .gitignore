@@ -7,3 +7,5 @@ race_config.yml
 .data_store.json
 .post_log.txt
 .tox
+build/
+dist/

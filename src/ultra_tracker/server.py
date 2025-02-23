@@ -12,8 +12,23 @@ from flask import Flask, render_template, request
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
+from .utils import format_duration
 
 app = Flask(__name__)
+
+
+@app.template_filter("format_duration")
+def format_duration_filter(duration):
+    return format_duration(duration)
+
+
+@app.template_filter("format_time")
+def format_time(time_obj: datetime.datetime) ->str:
+    """
+    """
+    if time_obj == datetime.datetime.fromtimestamp(0):
+        return "--/-- --:--"
+    return time_obj.strftime("%m/%d %H:%M")
 
 
 def setup_logging(verbose: bool = False):
@@ -56,6 +71,13 @@ def parse_args() -> argparse.Namespace:
         type=str,
         dest="data_dir",
         help="The directory in which to store data.",
+    )
+    p.add_argument(
+        "--disable-marker-updates",
+        required=False,
+        action="store_true",
+        dest="disable_marker_updates",
+        help="Disables updating the marker location in Caltopo. Primarily used for testing.",
     )
     p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()
@@ -126,7 +148,16 @@ if not caltopo_map.test_authentication():
 logger.info("authentication test passed...")
 course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
 logger.info("created course object...")
-runner = Runner(caltopo_map, config_data["runner_name"], list(course.route.start_location))
+runner = Runner(
+    caltopo_map,
+    config_data["runner_name"],
+    list(course.route.start_location),
+    course.timezone.localize(
+        datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
+    ),
+    course.route.length,
+    not args.disable_marker_updates,
+)
 logger.info("created runner object...")
 race = Race(
     config_data["race_name"],

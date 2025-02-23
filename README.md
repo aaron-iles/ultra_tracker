@@ -65,7 +65,7 @@ To get started with Ultra Tracker, follow these steps:
    - ```tracker_marker_name```: This is the literal name of the marker that represents the runner on the map. This was created in step 2 above.
    - ```route_name```: The literal name of the line in Caltopo that represents the route.
    - ```aid_stations```: This is a list of dictionaries representing the aid stations on the map. For each aid station you must have the ```name``` and ```mile_mark```.
-5. **Build the application:** From the project root directory, run `tox` to build the application.
+5. **Build the application:** From the project root directory, run `python3 -m build --wheel` to build the application.
 6. **Start the applictaion:** From the project root directory, start the application!
   ```bash
   docker compose up

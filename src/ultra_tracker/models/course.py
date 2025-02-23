@@ -183,6 +183,16 @@ class Course:
         self.course_elements = self.get_course_elements(aid_stations, caltopo_map)
         self.timezone = get_timezone(self.route.start_location)
 
+
+    @property
+    def total_stoppage_time(self) -> datetime.timedelta:
+        """
+        Sums stoppage time across all aid stations.
+
+        :return datetime.timedelta: The sum of all stoppage times.
+        """
+        return sum([ce.stoppage_time for ce in self.course_elements if isinstance(ce, AidStation)], datetime.timedelta(0))
+
     def get_course_elements(self, aid_stations: list, caltopo_map: CaltopoMap) -> list:
         """
         Searches the provided list of aid stations and route to generate all `AidStation` and `Leg`
@@ -278,7 +288,6 @@ class Course:
             ce.refresh(runner, start_time)
 
 
-
 class CourseElement:
     """
     An abstract representation of an element of the course. This can be a waypoint, aid station,
@@ -307,16 +316,28 @@ class CourseElement:
 
         :return datetime.timedelta: The timedelta spent in transit.
         """
-        if (self.departure_time != datetime.datetime.fromtimestamp(0)) and (self.arrival_time != datetime.datetime.fromtimestamp(0)):
+        if (self.departure_time != datetime.datetime.fromtimestamp(0)) and (
+            self.arrival_time != datetime.datetime.fromtimestamp(0)
+        ):
             return self.departure_time - self.arrival_time
         return datetime.timedelta(0)
+
+    def is_transiting(self, runner) -> bool:
+        """
+        Returns True if the runner is at the aid station and False otherwise.
+
+        :param Runner runner: The runner of the race.
+        :return bool: True if the runner is transiting the aid station.
+        """
+        if runner.finished or not runner.started:
+            return False
+        return self.runner_has_arrived(runner) and not self.runner_has_departed(runner)
 
     def __lt__(self, other):
         # Since legs and aid stations share the same mile mark, ensure that the leg comes after.
         if isinstance(other, Leg) and self.mile_mark == other.mile_mark:
             return False
         return self.mile_mark < other.mile_mark
-
 
     def detect_arrival_time(self, runner) -> None:
         """
@@ -331,27 +352,26 @@ class CourseElement:
             return
         # If the arrival time was never set and the runner is transiting or if the runner passed
         # the course element without ever pinging inside it, set the arrival time as the ETA.
-        if self.is_transiting(runner) or self.runner_has_arrived(runner):
+        if self.is_transiting(runner) or (
+            self.runner_has_arrived(runner) and self.runner_has_departed(runner)
+        ):
+            # TODO estimate is sometimes worse than actual
             self.arrival_time = self.estimated_arrival_time
             logger.info(f"runner entered {self.display_name} at {self.arrival_time}")
             return
 
-
     def detect_departure_time(self, runner) -> None:
-        """
-        """
+        """ """
         # The exit time was already detected and set by an earlier ping.
         if self.departure_time != datetime.datetime.fromtimestamp(0):
             return
         if not self.is_transiting(runner) and self.runner_has_departed(runner):
-            self.departure_time = self.estimated_departure_time # TODO will this work?
+            # TODO this isn't good enough
+            self.departure_time = self.estimated_departure_time  # TODO will this work?
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 
-
-
-
-
+    # TODO departing a leg and departing an aid are not the same.
 
     def refresh(self, runner, start_time: datetime.datetime) -> None:
         """
@@ -383,42 +403,16 @@ class CourseElement:
 
         # TODO calculate ETA ETD
 
-
         miles_to_start = self.mile_mark - runner.mile_mark
         miles_to_end = self.end_mile_mark - runner.mile_mark
         # It may be necessary to set this back to False if the tracker momentarily thought the
         # runner passed the aid (and changed the bool above) but then corrected itself.
         self.is_passed = False
-        minutes_to_start = datetime.timedelta(minutes=miles_to_start * runner.average_pace)
-        minutes_to_end = datetime.timedelta(minutes=miles_to_end * runner.average_pace)
+        minutes_to_start = datetime.timedelta(minutes=miles_to_start * runner.average_moving_pace)
+        minutes_to_end = datetime.timedelta(minutes=miles_to_end * runner.average_moving_pace)
+        # TODO ETA should include moving time + stoppage time
         self.estimated_arrival_time = runner.last_ping.timestamp + minutes_to_start
         self.estimated_departure_time = runner.last_ping.timestamp + minutes_to_end
-
-    def get_eta(self, runner) -> datetime.datetime:
-        """
-        Given a `Runner`, calculates the ETA of the runner to the mile mark. If the runner has
-        already passed the mile mark, this function returns None.
-
-        :param Runner runner: A runner in the race.
-        :return datetime.datetime: The time and date of the runner's ETA.
-        """
-        miles_to_me = self.mile_mark - runner.mile_mark
-        if miles_to_me < 0:
-            # The runner has already passed this aid station.
-            return
-        minutes_to_me = datetime.timedelta(minutes=miles_to_me * runner.average_pace)
-        return runner.last_ping.timestamp + minutes_to_me
-
-    def runner_has_arrived(self, runner):
-        return runner.mile_mark - self.mile_mark > -0.11
-
-    def runner_has_departed(self, runner):
-        return self.end_mile_mark - runner.mile_mark < -0.11
-    # TODO departing a leg and departing an aid are not the same.
-
-
-
-
 
 
 class AidStation(CourseElement):
@@ -445,20 +439,18 @@ class AidStation(CourseElement):
         """
         return self.transit_time
 
-
-
-    def is_transiting(self, runner) -> bool:
+    def runner_has_arrived(self, runner):
         """
-        Returns True if the runner is at the aid station and False otherwise.
-
-        :param Runner runner: The runner of the race.
-        :return bool: True if the runner is transiting the aid station.
+        A runner has arrived at an aid station if they are either at, past, or 0.11 or less miles
+        away from the aid station.
         """
-        if runner.finished or not runner.started:
-            return False
-        return abs(runner.mile_mark - self.mile_mark) <= 0.11
+        return runner.mile_mark - self.mile_mark >= -0.11
 
-
+    def runner_has_departed(self, runner):
+        """
+        A runner has departed an aid station if they are at least 0.11 miles past it.
+        """
+        return runner.mile_mark - self.end_mile_mark > 0.11
 
 
 class Leg(CourseElement):
@@ -488,16 +480,7 @@ class Leg(CourseElement):
         self.end_mile_mark = end_mile_mark
         self.gain = gain
         self.loss = loss
-        self.estimated_duration = datetime.timedelta(0) # TODO
-
-    @property
-    def estimated_duration_str(self) -> str:
-        """
-        The pretty string representation of the estimated duration.
-
-        :return str: A human-friendly representation of the duration.
-        """
-        return format_duration(self.estimated_duration)
+        self.estimated_duration = datetime.timedelta(0)  # TODO
 
     def refresh(self, runner, start_time: datetime.datetime) -> None:
         """
@@ -509,21 +492,22 @@ class Leg(CourseElement):
         """
         super().refresh(runner, start_time)
         # TODO This should be calculated based on moving pace and exclude stoppage time.
-        self.estimated_duration = datetime.timedelta(minutes=self.distance * runner.average_pace)
+        self.estimated_duration = datetime.timedelta(
+            minutes=self.distance * runner.average_moving_pace
+        )
         return
 
-
-    def is_transiting(self, runner) -> bool:
+    def runner_has_arrived(self, runner):
         """
+        A runner has arrived at a leg if they are more than 0.11 miles into the leg.
         """
-        if runner.finished or not runner.started:
-            return False
-        miles_to_start = self.mile_mark - runner.mile_mark
-        miles_to_end = self.end_mile_mark - runner.mile_mark
-        # The runner is transiting the leg if they are not within 100 yds of the start or finish of
-        # the leg.
-        return miles_to_start <= -0.11 and miles_to_end >= 0.11
+        return runner.mile_mark - self.mile_mark > 0.11
 
+    def runner_has_departed(self, runner):
+        """
+        A runner has departed a leg if they have 0.11 miles or fewer to go.
+        """
+        return self.end_mile_mark - runner.mile_mark <= 0.11
 
     def __len__(self) -> float:
         return self.distance
