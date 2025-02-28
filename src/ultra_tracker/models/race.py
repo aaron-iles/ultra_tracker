@@ -210,8 +210,6 @@ class Race:
             logger.info("runner already finished; ignoring ping")
             return
         self.runner.check_in(ping, self.course.route)
-        self.course.update_course_elements(self.runner, self.start_time)
-        self.runner.stoppage_time = self.course.total_stoppage_time
         self.save()
 
 
@@ -231,8 +229,7 @@ class Runner:
         caltopo_map,
         marker_name: str,
         default_start_location: list,
-        race_start_time,
-        route_length,
+        race,
         marker_updating,
     ):
         self.current_pace = 10
@@ -245,9 +242,7 @@ class Runner:
         self.marker_updating = marker_updating
         self.mile_mark = 0
         self.pings = 0
-        self.race_start_time = race_start_time
-        self.route_length = route_length
-        self.stoppage_time = datetime.timedelta(0)
+        self.race = race
         self.track_interval = 300
 
     @property
@@ -259,7 +254,7 @@ class Runner:
         """
         if not self.started:
             return 10.0
-        return    (self.moving_time.total_seconds() / 60.0) / self.mile_mark
+        return (self.moving_time.total_seconds() / 60.0) / self.mile_mark
 
     @property
     def average_overall_pace(self) -> float:
@@ -272,14 +267,14 @@ class Runner:
             return 10.0
         return (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark
 
-   # @property
-   # def stoppage_time(self) -> datetime.timedelta:
-   #     """
-   #     The amount of time the runner has spent stopped at aid stations.
+    @property
+    def stoppage_time(self) -> datetime.timedelta:
+        """
+        The amount of time the runner has spent stopped at aid stations.
 
-   #     :return datetime.timedelta: The runner's stoppage time.
-   #     """
-   #     return self._stoppage_time
+        :return datetime.timedelta: The runner's stoppage time.
+        """
+        return sum([ce.stoppage_time for ce in self.race.course.course_elements if isinstance(ce, AidStation)], datetime.timedelta(0))
 
     @property
     def elapsed_time(self) -> datetime.timedelta:
@@ -290,7 +285,7 @@ class Runner:
         """
         if not self.started:
             return datetime.timedelta(0)
-        return self.last_ping.timestamp - self.race_start_time
+        return self.last_ping.timestamp - self.race.start_time
 
     @property
     def moving_time(self) -> datetime.timedelta:
@@ -319,7 +314,7 @@ class Runner:
         """
         if not self.started:
             return False
-        return abs(self.route_length - self.mile_mark) < 0.11
+        return abs(self.race.course.route.length - self.mile_mark) < 0.11
 
     @property
     def in_progress(self) -> bool:
@@ -348,7 +343,7 @@ class Runner:
     def estimated_finish_date(self):
         if not self.started:
             return datetime.datetime.fromtimestamp(0)
-        return self.race_start_time + self.estimated_finish_time
+        return self.race.start_time + self.estimated_finish_time
 
 
     # TODO these need to be based off moving pace and stoppage time differently
@@ -356,7 +351,8 @@ class Runner:
     def estimated_finish_time(self):
         if not self.started:
             return datetime.timedelta(0)
-        return datetime.timedelta( minutes=self.average_overall_pace * self.route_length)
+        #return datetime.timedelta( minutes=self.average_overall_pace * self.race.course.route.length)
+        return self.race.course.course_elements[-1].estimated_arrival_time - self.race.start_time
 
 
 
@@ -463,16 +459,6 @@ class Runner:
 
 
 
-        #self.stoppage_time  # TODO
-        #self.moving_time = self.elapsed_time - self.stoppage_time
-        #self.average_overall_pace = self.calculate_average_overall_pace()
-        #self.average_moving_pace = self.calculate_average_moving_pace()
-
-
-
-
-
-
         if not self.in_progress:
             logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
@@ -487,6 +473,8 @@ class Runner:
             CaltopoMarker.update(self.estimate_marker)
             CaltopoMarker.update(self.marker)
         logger.info(self)
+        # Now update the course elements.
+        self.race.course.update_course_elements(self)
 
 
 

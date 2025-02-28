@@ -131,6 +131,13 @@ def post_data():
     return "OK", 200
 
 
+# TODO do race restoration here using pickle
+
+
+
+
+
+
 # Read in the config file.
 args = parse_args()
 # TODO: Need to validate values and keys.
@@ -152,10 +159,7 @@ runner = Runner(
     caltopo_map,
     config_data["runner_name"],
     list(course.route.start_location),
-    course.timezone.localize(
-        datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
-    ),
-    course.route.length,
+    None,
     not args.disable_marker_updates,
 )
 logger.info("created runner object...")
@@ -169,6 +173,7 @@ race = Race(
     course,
     runner,
 )
+runner.race = race
 logger.info("created race object...")
 app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
 app.config["UT_RACE"] = race
