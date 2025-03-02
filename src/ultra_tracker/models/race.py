@@ -171,7 +171,7 @@ class Race:
                 self.runner.average_overall_pace = data.get("average_overall_pace", 10)
                 self.runner.pings = data.get("pings", 0)
                 ping = Ping(data.get("last_ping", {}))
-                self.runner.check_in(ping, self.start_time, self.course.route)
+                self.runner.check_in(ping)
                 self.course.update_course_elements(self.runner, self.start_time)
                 logger.info(f"restore success: {self.runner.last_ping}")
         else:
@@ -203,7 +203,7 @@ class Race:
         if self.runner.finished:
             logger.info("runner already finished; ignoring ping")
             return
-        self.runner.check_in(ping, self.course.route)
+        self.runner.check_in(ping)
         self.save()
 
 
@@ -432,13 +432,12 @@ class Runner:
         logger.warning(f"unable to find mile mark given point {latlon}")
         return 0, [0, 0], 0
 
-    def check_in(self, ping: Ping, route: Route) -> None:
+    def check_in(self, ping: Ping) -> None:
         """
         This method is called when a runner pings. This will update all of the runner's statistics
         as well as update the map.
 
         :param Ping ping: The runner's ping payload object.
-        :param Route route: The route of the race.
         :return None:
         """
         last_timestamp = self.last_ping.timestamp
@@ -458,7 +457,7 @@ class Runner:
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         last_mile_mark = self.mile_mark
         self.mile_mark, coords, self.elevation = self.calculate_mile_mark(
-            route, self.last_ping.latlon
+            self.race.route, self.last_ping.latlon
         )
         # If the runner is seen to move backward by more than 1/10th of a mile, print a warning.
         # Sometimes this is valid, but it may indicate the previous or current mile mark estimates
