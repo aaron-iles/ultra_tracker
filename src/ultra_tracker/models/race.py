@@ -372,7 +372,7 @@ class Runner:
             return datetime.timedelta(0)
         return self.race.course.course_elements[-1].estimated_arrival_time - self.race.start_time
 
-    def calculate_mile_mark(self, route, latlon: list) -> tuple:
+    def calculate_mile_mark(self, route, latlon: list, average_overall_pace) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
         and pace. This will grab the 100 closest points on the course to the runner's ping and
@@ -418,7 +418,7 @@ class Runner:
         if len(indices_within_radius) > 0 and not are_consecutive:
             mile_marks = [route.distances[i] for i in indices_within_radius]
             mile_mark = calculate_most_probable_mile_mark(
-                mile_marks, self.elapsed_time.total_seconds() / 60, self.average_overall_pace
+                mile_marks, self.elapsed_time.total_seconds() / 60, average_overall_pace
             )
             coords = route.get_point_at_mile_mark(mile_mark)
             elevation = route.get_elevation_at_mile_mark(mile_mark)
@@ -452,12 +452,22 @@ class Runner:
                 f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}"
             )
             return
+
+        # TODO need to send stuff to calc mile mark before props
+
+
+
+
+
+
+
+        last_overall_pace = self.average_overall_pace
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         last_mile_mark = self.mile_mark
         self.mile_mark, coords, self.elevation = self.calculate_mile_mark(
-            self.race.route, self.last_ping.latlon
+            self.race.course.route, self.last_ping.latlon, last_overall_pace
         )
         # If the runner is seen to move backward by more than 1/10th of a mile, print a warning.
         # Sometimes this is valid, but it may indicate the previous or current mile mark estimates
