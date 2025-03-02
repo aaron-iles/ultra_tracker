@@ -10,9 +10,6 @@ import numpy as np
 import pytz
 from scipy.stats import norm
 
-from .caltopo import CaltopoMarker
-from .course import Route, AidStation
-from .tracker import Ping
 from ..utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
@@ -20,6 +17,9 @@ from ..utils import (
     haversine_distance,
     kph_to_min_per_mi,
 )
+from .caltopo import CaltopoMarker
+from .course import AidStation, Route
+from .tracker import Ping
 
 logger = logging.getLogger(__name__)
 
@@ -85,21 +85,6 @@ class Race:
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
-    def stats(self) -> dict:
-        """
-        The race statistics to be saved.
-
-        :return dict: The race stats for saving including ping count, runner's pace, and last ping
-        data.
-        """
-        # TODO this needs more data
-        return {
-            "average_overall_pace": self.runner.average_overall_pace,
-            "pings": self.runner.pings,
-            "last_ping": self.last_ping_raw,
-        }
-
-    @property
     def html_stats(self) -> dict:
         """
         Returns generic runner and race stats to be used for a webpage.
@@ -112,8 +97,12 @@ class Race:
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
             "runner_name": self.runner.marker.title,
-            "average_overall_pace": convert_decimal_pace_to_pretty_format(self.runner.average_overall_pace),
-            "average_moving_pace": convert_decimal_pace_to_pretty_format(self.runner.average_moving_pace),
+            "average_overall_pace": convert_decimal_pace_to_pretty_format(
+                self.runner.average_overall_pace
+            ),
+            "average_moving_pace": convert_decimal_pace_to_pretty_format(
+                self.runner.average_moving_pace
+            ),
             "altitude": format_distance(self.runner.last_ping.altitude, True),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
@@ -161,8 +150,14 @@ class Race:
 
         :return None:
         """
+        stats = {
+            "average_overall_pace": self.runner.average_overall_pace,
+            "pings": self.runner.pings,
+            "last_ping": self.last_ping_raw,
+        }
+
         with open(self.data_store, "w") as f:
-            f.write(json.dumps(self.stats))
+            f.write(json.dumps(stats))
 
     def restore(self) -> None:
         """
@@ -274,7 +269,25 @@ class Runner:
 
         :return datetime.timedelta: The runner's stoppage time.
         """
-        return sum([ce.stoppage_time for ce in self.race.course.course_elements if isinstance(ce, AidStation)], datetime.timedelta(0))
+        return sum(
+            [
+                ce.stoppage_time
+                for ce in self.race.course.course_elements
+                if isinstance(ce, AidStation)
+            ],
+            datetime.timedelta(0),
+        )
+
+    @property
+    def average_stoppage_time(self) -> datetime.timedelta:
+        """
+
+        :return datetime.timedelta: The runner's stoppage time.
+        """
+        num_stops = sum(1 for station in self.race.course.aid_stations if station.is_passed)
+        if num_stops == 0:
+            return datetime.timedelta(0)
+        return self.stoppage_time / num_stops
 
     @property
     def elapsed_time(self) -> datetime.timedelta:
@@ -338,23 +351,27 @@ class Runner:
             )
         )
 
-    # TODO these need to be based off moving pace and stoppage time differently
     @property
-    def estimated_finish_date(self):
+    def estimated_finish_date(self) -> datetime.datetime:
+        """
+        Gets the estimated finish date and time of the runner's race.
+
+        :return datetime.datetime: The date/time of the estimated finish.
+        """
         if not self.started:
             return datetime.datetime.fromtimestamp(0)
         return self.race.start_time + self.estimated_finish_time
 
-
-    # TODO these need to be based off moving pace and stoppage time differently
     @property
-    def estimated_finish_time(self):
+    def estimated_finish_time(self) -> datetime.timedelta:
+        """
+        The estimated finish clock time for the runner.
+
+        :return datetime.timedelta: The estimated hours/minutes/seconds for the runner to finish.
+        """
         if not self.started:
             return datetime.timedelta(0)
-        #return datetime.timedelta( minutes=self.average_overall_pace * self.race.course.route.length)
         return self.race.course.course_elements[-1].estimated_arrival_time - self.race.start_time
-
-
 
     def calculate_mile_mark(self, route, latlon: list) -> tuple:
         """
@@ -416,7 +433,7 @@ class Runner:
         logger.warning(f"unable to find mile mark given point {latlon}")
         return 0, [0, 0], 0
 
-    def check_in(self, ping: Ping,  route: Route) -> None:
+    def check_in(self, ping: Ping, route: Route) -> None:
         """
         This method is called when a runner pings. This will update all of the runner's statistics
         as well as update the map.
@@ -451,14 +468,6 @@ class Runner:
         if (self.mile_mark - last_mile_mark) < -0.1:
             logger.warning(f"runner has moved backward from {last_mile_mark} to {self.mile_mark}")
 
-        # TODO we have a chicken and egg situation. course elements require moving pace, but moving
-        # pace requires stoppage time. stoppage time requires course elements
-
-
-
-
-
-
         if not self.in_progress:
             logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
@@ -475,11 +484,6 @@ class Runner:
         logger.info(self)
         # Now update the course elements.
         self.race.course.update_course_elements(self)
-
-
-
-
-
 
     def extract_marker(self, marker_name: str, caltopo_map, default_start_location: list) -> tuple:
         """

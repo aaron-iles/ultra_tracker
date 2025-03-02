@@ -6,9 +6,9 @@ import json
 import logging
 import sys
 
-
 import yaml
 from flask import Flask, render_template, request
+
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
@@ -23,9 +23,8 @@ def format_duration_filter(duration):
 
 
 @app.template_filter("format_time")
-def format_time(time_obj: datetime.datetime) ->str:
-    """
-    """
+def format_time(time_obj: datetime.datetime) -> str:
+    """ """
     if time_obj == datetime.datetime.fromtimestamp(0):
         return "--/-- --:--"
     return time_obj.strftime("%m/%d %H:%M")
@@ -132,10 +131,6 @@ def post_data():
 
 
 # TODO do race restoration here using pickle
-
-
-
-
 
 
 # Read in the config file.
