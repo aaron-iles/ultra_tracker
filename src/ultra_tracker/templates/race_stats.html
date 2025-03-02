@@ -95,6 +95,7 @@
                   <th>estimated duration</th>
                   <th>approx. start time</th>
                   <th>approx. finish time</th>
+                  <th>approx. duration</th>
                 </tr>
               </thead>
               <tbody>
@@ -105,6 +106,7 @@
                   <td>{{ course_element.estimated_duration | format_duration }}</td>
                   <td>{{ course_element.arrival_time | format_time }}</td>
                   <td>{{ course_element.departure_time | format_time }}</td>
+                  <td>{{ course_element.transit_time | format_duration }}</td>
                 </tr>
               </tbody>
             {% endif %}
@@ -112,8 +114,8 @@
               <thead>
                 <tr>
                   <th>mile mark</th>
-                  <th>eta</th>
                   <th>navigation</th>
+                  <th>eta</th>
                   <th>approx. arrival time</th>
                   <th>approx. departure time</th>
                   <th>approx. stoppage time</th>
@@ -123,11 +125,11 @@
               <tbody>
                 <tr>
                   <td>{{ course_element.mile_mark }}</td>
-                  <td>{{ course_element.estimated_arrival_time | format_time }}</td>
                   <td>
                     <a href="{{course_element.gmaps_url}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
                     alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;"></a>
                   </td>
+                  <td>{{ course_element.estimated_arrival_time | format_time }}</td>
                   <td>{{ course_element.arrival_time | format_time }}</td>
                   <td>{{ course_element.departure_time | format_time }}</td>
                   <td>{{ course_element.stoppage_time | format_duration }}</td>

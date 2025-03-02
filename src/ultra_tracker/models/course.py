@@ -13,7 +13,6 @@ from scipy.spatial import KDTree
 
 from ..utils import (
     detect_consecutive_sequences,
-    format_duration,
     get_gmaps_url,
     get_timezone,
     haversine_distance,
@@ -147,6 +146,7 @@ def find_elevations(points: np.array) -> list:
             return vectorized_function(new_data)
         except (json.JSONDecodeError, KeyError):
             return []
+    return []
 
 
 def cumulative_altitude_changes(altitudes: np.array) -> tuple:
@@ -189,8 +189,8 @@ class Course:
 
     def get_course_elements(self, aid_stations: list, caltopo_map: CaltopoMap) -> list:
         """
-        Generates a list of `CourseElement` objects (AidStations and Legs) from the given aid stations
-        and route data, alternating between `AidStation` and `Leg`.
+        Generates a list of `CourseElement` objects (AidStations and Legs) from the given aid
+        stations and route data, alternating between `AidStation` and `Leg`.
 
         :param list aid_stations: A list of dicts of aid station names and mile marks.
         :param CaltopoMap caltopo_map: A CaltopoMap object.
@@ -261,98 +261,6 @@ class Course:
                 elem.next_aid = course_elements[i + 1]
 
         return course_elements
-
-    #    def get_course_elements(self, aid_stations: list, caltopo_map: CaltopoMap) -> list:
-    #        """
-    #        Searches the provided list of aid stations and route to generate all `AidStation` and `Leg`
-    #        objects.
-    #
-    #        :param list aid_stations: A list of dicts of aid station names and mile marks.
-    #        :param CaltopoMap caltopo_map: A CaltopoMap object.
-    #        :return list: A list of `CourseElement` objects alternating between `AidStation` and `Leg`.
-    #        """
-    #        # First create each of the AidStation objects. This also includes the start and finish even
-    #        # though they are not technically aid stations.
-    #        aid_station_objects = sorted(
-    #            [
-    #                AidStation(asi["name"], asi["mile_mark"], asi.get("comments", ""))
-    #                for asi in [
-    #                    {"name": "Start", "mile_mark": 0},
-    #                    {"name": "Finish", "mile_mark": round(self.route.length, 1)},
-    #                ]
-    #                + aid_stations
-    #            ]
-    #        )
-    #
-    #        # Map each marker's title to the object.
-    #        title_to_marker = {marker.title: marker for marker in caltopo_map.markers}
-    #        # Now take each marker and get the Google Maps URL associated with it. We do this by finding
-    #        # the marker in the list of markers parsed from Caltopo and associating them based on name.
-    #        for aso in aid_station_objects[1:-1]:
-    #            try:
-    #                aso.gmaps_url = title_to_marker[aso.name].gmaps_url
-    #            except KeyError as err:
-    #                raise LookupError(f"aid station '{err.args[0]}' not found in {caltopo_map.markers}")
-    #        # Since the start and finish aren't markers on the map, we do them separately.
-    #        aid_station_objects[0].gmaps_url = get_gmaps_url(self.route.points[0])
-    #        aid_station_objects[-1].gmaps_url = get_gmaps_url(self.route.points[-1])
-    #
-    #        leg_objects = []
-    #        prev_aid = aid_station_objects[0]
-    #        prev_gain = 0
-    #        prev_loss = 0
-    #        for aso in aid_station_objects[1:]:
-    #            # This is the index in the big array of where the aid station lies. It calculates
-    #            # the closest mile mark to the reported mile mark and gets the index in that array.
-    #            aso_index = np.argmin(np.abs(self.route.distances - aso.mile_mark))
-    #
-    #            total_gain_at_aso = self.route.gains[aso_index]
-    #            total_loss_at_aso = self.route.losses[aso_index]
-    #            distance_to_aso = aso.mile_mark - prev_aid.mile_mark
-    #            gain_to_aso = total_gain_at_aso - prev_gain
-    #            loss_to_aso = total_loss_at_aso - prev_loss
-    #            prev_gain = total_gain_at_aso
-    #            prev_loss = total_loss_at_aso
-    #
-    #            leg_objects.append(
-    #                Leg(
-    #                    f"{prev_aid.name} ➤ {aso.name}",
-    #                    prev_aid.mile_mark,
-    #                    aso.mile_mark,
-    #                    distance_to_aso,
-    #                    gain_to_aso,
-    #                    loss_to_aso,
-    #                )
-    #            )
-    #            prev_aid = aso
-    #        course_elements = sorted(aid_station_objects + leg_objects)
-    #
-    #        # TODO clean up this whole function.
-    #        # Loop through the list of course elements and set previous/next references
-    #        for i in range(1, len(course_elements) - 1):
-    #            current = course_elements[i]
-    #            previous = course_elements[i - 1]
-    #            next_elem = course_elements[i + 1]
-    #
-    #            if isinstance(current, Leg):
-    #                # Current is a Leg, set the previous AidStation and next AidStation
-    #                current.previous_aid = previous  # Previous element is the starting AidStation
-    #                current.next_aid = next_elem  # Next element is the ending AidStation
-    #            elif isinstance(current, AidStation):
-    #                # Current is an AidStation, set the previous Leg and next Leg
-    #                current.previous_leg = (
-    #                    previous  # Previous element is the leg arriving at this aid station
-    #                )
-    #                current.next_leg = (
-    #                    next_elem  # Next element is the leg departing from this aid station
-    #                )
-    #
-    #        # Special cases for start and finish aid stations
-    #        course_elements[0].next_leg = course_elements[1]  # Start AidStation links to the first leg
-    #        course_elements[-1].previous_leg = course_elements[
-    #            -2
-    #        ]  # Finish AidStation links to the last leg
-    #        return course_elements
 
     def extract_route(self, route_name: str, caltopo_map):
         """
@@ -464,7 +372,7 @@ class CourseElement:
             self.is_passed = True
             return
         # The start location needs to be handled differently.
-        if self.mile_mark == 0 and type(self) == AidStation:
+        if self.mile_mark == 0 and isinstance(self, AidStation):
             self.estimated_arrival_time = runner.race.start_time
             self.is_passed = runner.started
             self.arrival_time = runner.race.start_time

@@ -7,7 +7,6 @@ import logging
 import os
 
 import numpy as np
-import pytz
 from scipy.stats import norm
 
 from ..utils import (
@@ -511,4 +510,7 @@ class Runner:
         return true_marker, estimate_marker
 
     def __str__(self):
-        return f"runner {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.average_overall_pace)} ({format_duration(self.elapsed_time)})"
+        overall_pace = convert_decimal_pace_to_pretty_format(self.average_overall_pace)
+        moving_pace = convert_decimal_pace_to_pretty_format(self.average_moving_pace)
+        clock = format_duration(self.elapsed_time)
+        return f"runner {round(self.mile_mark, 2)} mi @ {overall_pace}/{moving_pace} ({clock})"
