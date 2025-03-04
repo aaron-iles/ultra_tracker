@@ -184,7 +184,12 @@ class Course:
         self.timezone = get_timezone(self.route.start_location)
 
     @property
-    def aid_stations(self):
+    def aid_stations(self) -> list:
+        """
+        The AidStation objects of this course.
+
+        :return list: The list of only this course's aid stations.
+        """
         return list(filter(lambda ce: isinstance(ce, AidStation), self.course_elements))
 
     def get_course_elements(self, aid_stations: list, caltopo_map: CaltopoMap) -> list:
@@ -381,6 +386,7 @@ class CourseElement:
 
         if self.runner_has_departed(runner):
             self.is_passed = True
+            self.estimated_duration = self.transit_time
             return
         self.estimated_duration = self.estimate_transit_time(runner)
 

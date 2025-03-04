@@ -150,9 +150,17 @@ class Race:
         :return None:
         """
         stats = {
-            "average_overall_pace": self.runner.average_overall_pace,
+            "mile_mark": self.runner.mile_mark,
             "pings": self.runner.pings,
             "last_ping": self.last_ping_raw,
+            "aid_stations": [
+                {
+                    "name": ce.name,
+                    "arrival_time": ce.arrival_time.isoformat(),
+                    "departure_time": ce.departure_time.isoformat(),
+                }
+                for ce in self.course.aid_stations
+            ],
         }
 
         with open(self.data_store, "w") as f:
@@ -167,12 +175,22 @@ class Race:
         if os.path.exists(self.data_store):
             with open(self.data_store, "r") as f:
                 data = json.load(f)
-                # TODO this needs to change
-                self.runner.average_overall_pace = data.get("average_overall_pace", 10)
-                self.runner.pings = data.get("pings", 0)
+                self.runner.race = self
+                self.runner.mile_mark = data.get("mile_mark", 0)
+                # Subtract 1 because we are about to check in with this same ping below.
+                self.runner.pings = data.get("pings", 1) - 1
                 ping = Ping(data.get("last_ping", {}))
+                self.runner.last_ping = ping
+                # TODO leg estimated duration is not set.
+                for idx, aid_station in enumerate(data.get("aid_stations", [])):
+                    arrival_time = datetime.datetime.fromisoformat(aid_station["arrival_time"])
+                    departure_time = datetime.datetime.fromisoformat(aid_station["departure_time"])
+                    self.course.aid_stations[idx].arrival_time = arrival_time
+                    self.course.aid_stations[idx].estimated_arrival_time = arrival_time
+                    self.course.aid_stations[idx].departure_time = departure_time
+                    self.course.aid_stations[idx].estimated_departure_time = departure_time
+
                 self.runner.check_in(ping)
-                self.course.update_course_elements(self.runner, self.start_time)
                 logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
@@ -452,15 +470,9 @@ class Runner:
                 f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}"
             )
             return
-
-        # TODO need to send stuff to calc mile mark before props
-
-
-
-
-
-
-
+        # We must grab the overall average before setting the self.last_ping because that will
+        # change the elapsed time and by extension the pace. This will mess up the mileage
+        # calculation.
         last_overall_pace = self.average_overall_pace
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
