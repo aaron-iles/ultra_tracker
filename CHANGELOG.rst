@@ -4,6 +4,45 @@ Project Release Notes
 
 .. contents:: Topics
 
+v5.0.0
+======
+
+Release Summary
+---------------
+
+Overhauls the backend to include approximate arrival times, departure times, stoppage time, and more. Refreshes the UI with minor tweaks and fixes some minor bugs.
+
+Major Changes
+-------------
+
+- Adds approximate arrival times for aid stations and legs
+- Adds approximate departure times for aid stations and legs
+- Adds approximate duration for legs
+- Adds approximate stoppage time for aid stations
+- Overhauls the ETA and pace calculations to treat stoppage time and moving time separately
+
+Minor Changes
+-------------
+
+- Adds ``aid_stations`` property to ``Course`` object
+- Adds new argument to disable marker updates for faster debugging
+- Adds new jinja filters for ``format_time`` and ``format_duration``
+- Changes estimated runner marker to be less intrusive
+- Updates the start location to show an ETA of the race start time
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- Changes the format of the JSON serialized save file
+- Changes the race restoration method expected input
+- Decouples the runner's attributes from the check-in process
+- Overhauls the race/runner relationship
+
+Bugfixes
+--------
+
+- Greys out the last leg and finish location when the runner finishes the race
+
 v4.1.0
 ======
 

@@ -18,13 +18,24 @@ app = Flask(__name__)
 
 
 @app.template_filter("format_duration")
-def format_duration_filter(duration):
+def format_duration_filter(duration: datetime.timedelta) -> str:
+    """
+    Formats a datetime.timedelta object to a human-friendly format.
+
+    :param datetime.timedelta duration: The timedelta object to be formatted.
+    :return str: The timedelta object as a presentable string.
+    """
     return format_duration(duration)
 
 
 @app.template_filter("format_time")
-def format_time(time_obj: datetime.datetime) -> str:
-    """ """
+def format_time_filter(time_obj: datetime.datetime) -> str:
+    """
+    Formats a datetime.datetime object to a human-friendly format.
+
+    :param datetime.datetime time_obj: The datetime object to be formatted.
+    :return str: The human-friendly formatted time object.
+    """
     if time_obj == datetime.datetime.fromtimestamp(0):
         return "--/-- --:--"
     return time_obj.strftime("%m/%d %H:%M")
@@ -128,9 +139,6 @@ def post_data():
         file.write(f"{payload}\n")
     app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200
-
-
-# TODO do race restoration here using pickle
 
 
 # Read in the config file.
