@@ -6,14 +6,39 @@ import json
 import logging
 import sys
 
-
 import yaml
 from flask import Flask, render_template, request
+
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
+from .utils import format_duration
 
 app = Flask(__name__)
+
+
+@app.template_filter("format_duration")
+def format_duration_filter(duration: datetime.timedelta) -> str:
+    """
+    Formats a datetime.timedelta object to a human-friendly format.
+
+    :param datetime.timedelta duration: The timedelta object to be formatted.
+    :return str: The timedelta object as a presentable string.
+    """
+    return format_duration(duration)
+
+
+@app.template_filter("format_time")
+def format_time_filter(time_obj: datetime.datetime) -> str:
+    """
+    Formats a datetime.datetime object to a human-friendly format.
+
+    :param datetime.datetime time_obj: The datetime object to be formatted.
+    :return str: The human-friendly formatted time object.
+    """
+    if time_obj == datetime.datetime.fromtimestamp(0):
+        return "--/-- --:--"
+    return time_obj.strftime("%m/%d %H:%M")
 
 
 def setup_logging(verbose: bool = False):
@@ -56,6 +81,13 @@ def parse_args() -> argparse.Namespace:
         type=str,
         dest="data_dir",
         help="The directory in which to store data.",
+    )
+    p.add_argument(
+        "--disable-marker-updates",
+        required=False,
+        action="store_true",
+        dest="disable_marker_updates",
+        help="Disables updating the marker location in Caltopo. Primarily used for testing.",
     )
     p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()
@@ -126,7 +158,13 @@ if not caltopo_map.test_authentication():
 logger.info("authentication test passed...")
 course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
 logger.info("created course object...")
-runner = Runner(caltopo_map, config_data["runner_name"], list(course.route.start_location))
+runner = Runner(
+    caltopo_map,
+    config_data["runner_name"],
+    list(course.route.start_location),
+    None,
+    not args.disable_marker_updates,
+)
 logger.info("created runner object...")
 race = Race(
     config_data["race_name"],
@@ -138,6 +176,7 @@ race = Race(
     course,
     runner,
 )
+runner.race = race
 logger.info("created race object...")
 app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
 app.config["UT_RACE"] = race

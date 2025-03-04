@@ -1,0 +1,10 @@
+[MESSAGES CONTROL]
+disable=
+    logging-fstring-interpolation,
+    too-many-instance-attributes,
+    missing-module-docstring,
+    too-many-arguments,
+    too-many-locals,
+    too-many-positional-arguments,
+    c-extension-no-member,
+    too-few-public-methods,

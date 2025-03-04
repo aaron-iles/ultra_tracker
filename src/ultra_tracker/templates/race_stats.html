@@ -42,9 +42,12 @@
           <th>start time</th>
           <th>last update</th>
           <th>elapsed time</th>
+          <th>moving time</th>
+          <th>stoppage time</th>
           <th>mile mark</th>
           <th>altitude</th>
-          <th>average pace</th>
+          <th>average overall pace</th>
+          <th>average moving pace</th>
           <th>current pace</th>
           <th>est finish date</th>
           <th>est finish time</th>
@@ -53,14 +56,17 @@
       </thead>
       <tbody>
         <tr>
-          <td>{{ start_time }}</td>
-          <td>{{ last_update }}</td>
+          <td>{{ start_time | format_time }}</td>
+          <td>{{ last_update | format_time }}</td>
           <td>{{ elapsed_time }}</td>
+          <td>{{ moving_time }}</td>
+          <td>{{ stoppage_time }}</td>
           <td>{{ mile_mark }}</td>
           <td>{{ altitude }}</td>
-          <td>{{ avg_pace }}</td>
+          <td>{{ average_overall_pace }}</td>
+          <td>{{ average_moving_pace }}</td>
           <td>{{ current_pace }}</td>
-          <td>{{ est_finish_date }}</td>
+          <td>{{ est_finish_date | format_time }}</td>
           <td>{{ est_finish_time }}</td>
           <td style="background-color:{{ deviation_background_color}}">{{ course_deviation }}</td>
         </tr>
@@ -87,6 +93,9 @@
                   <th>gain</th>
                   <th>loss</th>
                   <th>estimated duration</th>
+                  <th>approx. start time</th>
+                  <th>approx. finish time</th>
+                  <th>approx. duration</th>
                 </tr>
               </thead>
               <tbody>
@@ -94,7 +103,10 @@
                   <td>{{ course_element.distance | round(1) }} miles</td>
                   <td style="background-color:#FFC0CB">{{ course_element.gain | d(0) | int }} feet</td>
                   <td style="background-color:#90EE90">{{ course_element.loss | d(0) | int }} feet</td>
-                  <td>{{ course_element.estimated_duration_str }}</td>
+                  <td>{{ course_element.estimated_duration | format_duration }}</td>
+                  <td>{{ course_element.arrival_time | format_time }}</td>
+                  <td>{{ course_element.departure_time | format_time }}</td>
+                  <td>{{ course_element.transit_time | format_duration }}</td>
                 </tr>
               </tbody>
             {% endif %}
@@ -102,19 +114,25 @@
               <thead>
                 <tr>
                   <th>mile mark</th>
-                  <th>eta</th>
                   <th>navigation</th>
+                  <th>eta</th>
+                  <th>approx. arrival time</th>
+                  <th>approx. departure time</th>
+                  <th>approx. stoppage time</th>
                   <th>comments</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>{{ course_element.mile_mark }}</td>
-                  <td>{{ course_element.estimated_arrival_time.strftime("%m/%d %H:%M") }}</td>
                   <td>
                     <a href="{{course_element.gmaps_url}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
                     alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;"></a>
                   </td>
+                  <td>{{ course_element.estimated_arrival_time | format_time }}</td>
+                  <td>{{ course_element.arrival_time | format_time }}</td>
+                  <td>{{ course_element.departure_time | format_time }}</td>
+                  <td>{{ course_element.stoppage_time | format_duration }}</td>
                   <td>{{ course_element.comments }}</td>
                 </tr>
               </tbody>

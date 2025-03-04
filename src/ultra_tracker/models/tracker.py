@@ -3,7 +3,7 @@
 
 import datetime
 
-from ..utils import meters_to_feet, get_timezone
+from ..utils import get_timezone, meters_to_feet
 
 GPS_FIX_MAP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
 

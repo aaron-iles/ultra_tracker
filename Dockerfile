@@ -6,10 +6,10 @@ VOLUME /app
 
 COPY docker-entrypoint.sh requirements.txt uwsgi.ini /app/
 
-COPY .tox/.pkg/dist/ultra_tracker-*.tar.gz /tmp/
+COPY dist/ultra_tracker-*.whl /tmp/
 
 RUN useradd -ms /bin/bash uwsgi
 
-RUN python3 -m pip install --no-cache-dir -r requirements.txt /tmp/ultra_tracker-*.tar.gz
+RUN python3 -m pip install --no-cache-dir -r requirements.txt /tmp/ultra_tracker-*.whl
 
 CMD ["/app/docker-entrypoint.sh"]

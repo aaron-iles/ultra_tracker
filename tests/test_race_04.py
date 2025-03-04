@@ -62,7 +62,7 @@ def runner_04(caltopo_map_04, race_04_path, requests_mock):
             f"https://caltopo.com/api/v1/map/04/Marker/{marker_id}",
             json={"result": {}, "status": "ok"},
         )
-    return race.Runner(caltopo_map_04, "Runner")
+    return race.Runner(caltopo_map_04, "Runner", [0,0], None, False)
 
 
 @pytest.fixture
@@ -104,6 +104,7 @@ def race_04_expected_mile_marks(race_04_path):
 
 def test_race_04_full(race_04, race_04_post_log, race_04_expected_mile_marks):
     mile_mark_progression = []
+    race_04.runner.race = race_04
     for ping_data in race_04_post_log:
         race_04.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_04.runner.mile_mark, 2)))

@@ -7,12 +7,8 @@ import logging
 import os
 
 import numpy as np
-import pytz
 from scipy.stats import norm
 
-from .caltopo import CaltopoMarker
-from .course import Route
-from .tracker import Ping
 from ..utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
@@ -20,12 +16,15 @@ from ..utils import (
     haversine_distance,
     kph_to_min_per_mi,
 )
+from .caltopo import CaltopoMarker
+from .course import AidStation, Route
+from .tracker import Ping
 
 logger = logging.getLogger(__name__)
 
 
 def calculate_most_probable_mile_mark(
-    mile_marks: list, elapsed_time: float, average_pace: float
+    mile_marks: list, elapsed_time: float, average_overall_pace: float
 ) -> float:
     """
     Given a list of mile marks, calculates the most likely mile mark given the average pace and
@@ -33,18 +32,18 @@ def calculate_most_probable_mile_mark(
 
     :param list mile_marks: A list of mile markers to test.
     :param float elapsed_time: The elapsed time in minutes.
-    :param float average_pace: The average pace in minutes per mile.
+    :param float average_overall_pace: The average pace in minutes per mile.
     :return float: One of the mile marks from the provided list.
     """
     # Constants
-    if not average_pace:
+    if not average_overall_pace:
         average_speed = 1 / 10
     else:
-        average_speed = 1 / average_pace  # Speed in miles per minute
+        average_speed = 1 / average_overall_pace  # Speed in miles per minute
     # Calculate expected distance based on elapsed time and average speed
     expected_distance = elapsed_time * average_speed
     # Calculate standard deviation based on average pace
-    standard_deviation = average_pace / 3  # Adjust for variability in pace
+    standard_deviation = average_overall_pace / 3  # Adjust for variability in pace
     # Calculate probabilities for each mile mark
     probabilities = norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
     # Find the mile mark with the highest probability
@@ -85,20 +84,6 @@ class Race:
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
-    def stats(self) -> dict:
-        """
-        The race statistics to be saved.
-
-        :return dict: The race stats for saving including ping count, runner's pace, and last ping
-        data.
-        """
-        return {
-            "average_pace": self.runner.average_pace,
-            "pings": self.runner.pings,
-            "last_ping": self.last_ping_raw,
-        }
-
-    @property
     def html_stats(self) -> dict:
         """
         Returns generic runner and race stats to be used for a webpage.
@@ -111,15 +96,22 @@ class Race:
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
             "runner_name": self.runner.marker.title,
-            "avg_pace": convert_decimal_pace_to_pretty_format(self.runner.average_pace),
+            "average_overall_pace": convert_decimal_pace_to_pretty_format(
+                self.runner.average_overall_pace
+            ),
+            "average_moving_pace": convert_decimal_pace_to_pretty_format(
+                self.runner.average_moving_pace
+            ),
             "altitude": format_distance(self.runner.last_ping.altitude, True),
             "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
-            "last_update": self.runner.last_ping.timestamp.strftime("%m/%d %H:%M"),
-            "est_finish_date": self.runner.estimated_finish_date.strftime("%m/%d %H:%M"),
+            "stoppage_time": format_duration(self.runner.stoppage_time),
+            "moving_time": format_duration(self.runner.moving_time),
+            "last_update": self.runner.last_ping.timestamp,
+            "est_finish_date": self.runner.estimated_finish_date,
             "est_finish_time": format_duration(self.runner.estimated_finish_time),
-            "start_time": self.start_time.strftime("%m/%d %H:%M"),
+            "start_time": self.start_time,
             "map_url": self.map_url,
             "course_elements": self.course.course_elements,
             "course_deviation": format_distance(self.runner.course_deviation),
@@ -150,14 +142,29 @@ class Race:
             },
         }
 
+    # TODO need to save off entrance and exit time for course elements
     def save(self) -> None:
         """
         Saves the race stats to a file.
 
         :return None:
         """
+        stats = {
+            "mile_mark": self.runner.mile_mark,
+            "pings": self.runner.pings,
+            "last_ping": self.last_ping_raw,
+            "aid_stations": [
+                {
+                    "name": ce.name,
+                    "arrival_time": ce.arrival_time.isoformat(),
+                    "departure_time": ce.departure_time.isoformat(),
+                }
+                for ce in self.course.aid_stations
+            ],
+        }
+
         with open(self.data_store, "w") as f:
-            f.write(json.dumps(self.stats))
+            f.write(json.dumps(stats))
 
     def restore(self) -> None:
         """
@@ -168,11 +175,22 @@ class Race:
         if os.path.exists(self.data_store):
             with open(self.data_store, "r") as f:
                 data = json.load(f)
-                self.runner.average_pace = data.get("average_pace", 10)
-                self.runner.pings = data.get("pings", 0)
+                self.runner.race = self
+                self.runner.mile_mark = data.get("mile_mark", 0)
+                # Subtract 1 because we are about to check in with this same ping below.
+                self.runner.pings = data.get("pings", 1) - 1
                 ping = Ping(data.get("last_ping", {}))
-                self.runner.check_in(ping, self.start_time, self.course.route)
-                self.course.update_course_elements(self.runner, self.start_time)
+                self.runner.last_ping = ping
+                # TODO leg estimated duration is not set.
+                for idx, aid_station in enumerate(data.get("aid_stations", [])):
+                    arrival_time = datetime.datetime.fromisoformat(aid_station["arrival_time"])
+                    departure_time = datetime.datetime.fromisoformat(aid_station["departure_time"])
+                    self.course.aid_stations[idx].arrival_time = arrival_time
+                    self.course.aid_stations[idx].estimated_arrival_time = arrival_time
+                    self.course.aid_stations[idx].departure_time = departure_time
+                    self.course.aid_stations[idx].estimated_departure_time = departure_time
+
+                self.runner.check_in(ping)
                 logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
@@ -187,7 +205,7 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
-        logger.info(ping)
+        logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0, 0]:
             logger.info("ping does not contain GPS coordinates, skipping")
             self.runner.pings += 1
@@ -203,8 +221,7 @@ class Race:
         if self.runner.finished:
             logger.info("runner already finished; ignoring ping")
             return
-        self.runner.check_in(ping, self.start_time, self.course.route)
-        self.course.update_course_elements(self.runner, self.start_time)
+        self.runner.check_in(ping)
         self.save()
 
 
@@ -216,68 +233,127 @@ class Runner:
     :param str marker_name: The name of the marker representing the runner.
     :param list default_start_location: The lat/lon coordinates of where to place the runner marker
     if not found before race start.
+    :param datetime.datetime start_time: The race start time.
     """
 
-    def __init__(self, caltopo_map, marker_name: str, default_start_location: list = [0, 0]):
-        self.average_pace = 10
+    def __init__(
+        self,
+        caltopo_map,
+        marker_name: str,
+        default_start_location: list,
+        race,
+        marker_updating,
+    ):
         self.current_pace = 10
-        self.elapsed_time = datetime.timedelta(0)
         self.elevation = 0
-        self.estimated_finish_date = datetime.datetime.fromtimestamp(0)
-        self.estimated_finish_time = datetime.timedelta(0)
-        self.finished = False
         self.last_ping = Ping({})
         self.low_battery = False
         self.marker, self.estimate_marker = self.extract_marker(
             marker_name, caltopo_map, default_start_location
         )
+        self.marker_updating = marker_updating
         self.mile_mark = 0
         self.pings = 0
-        self.started = False
+        self.race = race
         self.track_interval = 300
 
-    def extract_marker(self, marker_name: str, caltopo_map, default_start_location: list) -> tuple:
+    @property
+    def average_moving_pace(self) -> float:
         """
-        Given a marker name, extracts the marker from the map object to associate with the runner.
-        This also includes the estimate marker for troubleshooting.
+        Calculates the average moving pace of the runner.
 
-        :param str marker_name: The marker name or title.
-        :param CaltopoMap caltopo_map: The map object containing the markers.
-        :param list default_start_location: The lat/lon coordinates of where to place the runner
-        marker if not found before race start.
-        :return tuple: The marker representing the runner and the runner's estimated location.
-        """
-        true_marker = caltopo_map.get_or_create_marker(
-            marker_name, "Live Tracking", "1", "a:4", "A200FF", default_start_location
-        )
-        estimate_marker = caltopo_map.get_or_create_marker(
-            f"{marker_name} (estimated)",
-            "Backend",
-            "0.5",
-            "point",
-            "FFFFFF",
-            default_start_location,
-            False,
-        )
-        return true_marker, estimate_marker
-
-    def calculate_pace(self) -> float:
-        """
-        Calculates the average pace of the runner.
         :return float: The pace in minutes per mile.
         """
-        return (
-            (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark if self.mile_mark else 10.0
+        if not self.started:
+            return 10.0
+        return (self.moving_time.total_seconds() / 60.0) / self.mile_mark
+
+    @property
+    def average_overall_pace(self) -> float:
+        """
+        Calculates the average pace of the runner.
+
+        :return float: The pace in minutes per mile.
+        """
+        if not self.started:
+            return 10.0
+        return (self.elapsed_time.total_seconds() / 60.0) / self.mile_mark
+
+    @property
+    def stoppage_time(self) -> datetime.timedelta:
+        """
+        The amount of time the runner has spent stopped at aid stations.
+
+        :return datetime.timedelta: The runner's stoppage time.
+        """
+        return sum(
+            [
+                ce.stoppage_time
+                for ce in self.race.course.course_elements
+                if isinstance(ce, AidStation)
+            ],
+            datetime.timedelta(0),
         )
 
-    def check_if_started(self) -> None:
+    @property
+    def average_stoppage_time(self) -> datetime.timedelta:
+        """
+
+        :return datetime.timedelta: The runner's stoppage time.
+        """
+        num_stops = sum(1 for station in self.race.course.aid_stations if station.is_passed)
+        if num_stops == 0:
+            return datetime.timedelta(0)
+        return self.stoppage_time / num_stops
+
+    @property
+    def elapsed_time(self) -> datetime.timedelta:
+        """
+        The amount of time the runner has spent in the race since it started.
+
+        :return datetime.timedelta: The runner's overall time.
+        """
+        if not self.started:
+            return datetime.timedelta(0)
+        return self.last_ping.timestamp - self.race.start_time
+
+    @property
+    def moving_time(self) -> datetime.timedelta:
+        """
+        The amount of time the runner has spent moving through the race.
+
+        :return datetime.timedelta: The runner's moving time.
+        """
+        return self.elapsed_time - self.stoppage_time
+
+    @property
+    def started(self) -> bool:
         """
         Checks if the runner has started the race yet or not. This can only be triggered if the
-        race is ongoing and the runner has progressed more than 100 yards down the course.
+        race is ongoing and the runner has progressed more than 200 yards down the course.
+        """
+        return self.mile_mark > 0.11
+
+    @property
+    def finished(self) -> None:
+        """
+        Checks if the runner has finished the race. This will trigger if the runner is within 100
+        yards of the finish line.
 
         :return None:
         """
-        self.started = self.mile_mark > 0.11
+        if not self.started:
+            return False
+        return abs(self.race.course.route.length - self.mile_mark) < 0.11
+
+    @property
+    def in_progress(self) -> bool:
+        """
+        Returns a bool to indicate if the runner is still on the course
+
+        :return bool: True if the runner is still on the course and False otherwise.
+        """
+        return self.started and not self.finished
 
     @property
     def course_deviation(self) -> float:
@@ -292,27 +368,29 @@ class Runner:
             )
         )
 
-    def check_if_finished(self, route) -> None:
+    @property
+    def estimated_finish_date(self) -> datetime.datetime:
         """
-        Checks if the runner has finished the race. This will trigger if the runner is within 100
-        yards of the finish line.
+        Gets the estimated finish date and time of the runner's race.
 
-        :return None:
+        :return datetime.datetime: The date/time of the estimated finish.
         """
         if not self.started:
-            self.finished = False
-        self.finished = abs(route.length - self.mile_mark) < 0.11
+            return datetime.datetime.fromtimestamp(0)
+        return self.race.start_time + self.estimated_finish_time
 
     @property
-    def in_progress(self) -> bool:
+    def estimated_finish_time(self) -> datetime.timedelta:
         """
-        Returns a bool to indicate if the runner is still on the course
+        The estimated finish clock time for the runner.
 
-        :return bool: True if the runner is still on the course and False otherwise.
+        :return datetime.timedelta: The estimated hours/minutes/seconds for the runner to finish.
         """
-        return self.started and not self.finished
+        if not self.started:
+            return datetime.timedelta(0)
+        return self.race.course.course_elements[-1].estimated_arrival_time - self.race.start_time
 
-    def calculate_mile_mark(self, route, latlon: list) -> tuple:
+    def calculate_mile_mark(self, route, latlon: list, average_overall_pace) -> tuple:
         """
         Calculates the most likely mile mark of the runner. This is based on the runner's location
         and pace. This will grab the 100 closest points on the course to the runner's ping and
@@ -358,7 +436,7 @@ class Runner:
         if len(indices_within_radius) > 0 and not are_consecutive:
             mile_marks = [route.distances[i] for i in indices_within_radius]
             mile_mark = calculate_most_probable_mile_mark(
-                mile_marks, self.elapsed_time.total_seconds() / 60, self.average_pace
+                mile_marks, self.elapsed_time.total_seconds() / 60, average_overall_pace
             )
             coords = route.get_point_at_mile_mark(mile_mark)
             elevation = route.get_elevation_at_mile_mark(mile_mark)
@@ -372,14 +450,12 @@ class Runner:
         logger.warning(f"unable to find mile mark given point {latlon}")
         return 0, [0, 0], 0
 
-    def check_in(self, ping: Ping, start_time: datetime.datetime, route: Route) -> None:
+    def check_in(self, ping: Ping) -> None:
         """
         This method is called when a runner pings. This will update all of the runner's statistics
         as well as update the map.
 
         :param Ping ping: The runner's ping payload object.
-        :param datetime.datetime start_time: The race start time.
-        :param Route route: The route of the race.
         :return None:
         """
         last_timestamp = self.last_ping.timestamp
@@ -394,13 +470,16 @@ class Runner:
                 f"incoming timestamp {ping.timestamp} older than last timestamp {last_timestamp}"
             )
             return
+        # We must grab the overall average before setting the self.last_ping because that will
+        # change the elapsed time and by extension the pace. This will mess up the mileage
+        # calculation.
+        last_overall_pace = self.average_overall_pace
         # At this point the race has started and this is a new ping.
         self.last_ping = ping
         self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
-        self.elapsed_time = ping.timestamp - start_time
         last_mile_mark = self.mile_mark
         self.mile_mark, coords, self.elevation = self.calculate_mile_mark(
-            route, self.last_ping.latlon
+            self.race.course.route, self.last_ping.latlon, last_overall_pace
         )
         # If the runner is seen to move backward by more than 1/10th of a mile, print a warning.
         # Sometimes this is valid, but it may indicate the previous or current mile mark estimates
@@ -408,26 +487,51 @@ class Runner:
         # seen frequently at aid stations.
         if (self.mile_mark - last_mile_mark) < -0.1:
             logger.warning(f"runner has moved backward from {last_mile_mark} to {self.mile_mark}")
-        self.average_pace = self.calculate_pace()
-        self.check_if_started()
+
         if not self.in_progress:
             logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
             return
-        self.estimated_finish_time = datetime.timedelta(minutes=self.average_pace * route.length)
-        self.estimated_finish_date = start_time + self.estimated_finish_time
-        # Now update the marker attributes.
-        self.marker.coordinates = ping.lonlat
-        self.marker.rotation = round(ping.heading)
-        # Update the estimate marker coordinates.
-        self.estimate_marker.coordinates = coords[::-1]
-        self.estimate_marker.rotation = round(ping.heading)
-        # Issue the POST to update the estimate marker.
-        CaltopoMarker.update(self.estimate_marker)
-        # Issue the POST to update the marker. This must be called this way to work with the uwsgi
-        # thread decorator.
-        CaltopoMarker.update(self.marker)
-        self.check_if_finished(route)
+
+        if self.marker_updating:
+            # Now update the marker attributes.
+            self.marker.coordinates = ping.lonlat
+            self.marker.rotation = round(ping.heading)
+            # Update the estimate marker coordinates.
+            self.estimate_marker.coordinates = coords[::-1]
+            self.estimate_marker.rotation = round(ping.heading)
+            CaltopoMarker.update(self.estimate_marker)
+            CaltopoMarker.update(self.marker)
         logger.info(self)
+        # Now update the course elements.
+        self.race.course.update_course_elements(self)
+
+    def extract_marker(self, marker_name: str, caltopo_map, default_start_location: list) -> tuple:
+        """
+        Given a marker name, extracts the marker from the map object to associate with the runner.
+        This also includes the estimate marker for troubleshooting.
+
+        :param str marker_name: The marker name or title.
+        :param CaltopoMap caltopo_map: The map object containing the markers.
+        :param list default_start_location: The lat/lon coordinates of where to place the runner
+        marker if not found before race start.
+        :return tuple: The marker representing the runner and the runner's estimated location.
+        """
+        true_marker = caltopo_map.get_or_create_marker(
+            marker_name, "Live Tracking", "1", "a:4", "A200FF", default_start_location
+        )
+        estimate_marker = caltopo_map.get_or_create_marker(
+            f"{marker_name} (estimated)",
+            "Backend",
+            "0.5",
+            "point",
+            "FFFFFF",
+            default_start_location,
+            False,
+        )
+        return true_marker, estimate_marker
 
     def __str__(self):
-        return f"RUNNER {round(self.mile_mark, 2)} mi @ {convert_decimal_pace_to_pretty_format(self.average_pace)} ({format_duration(self.elapsed_time)})"
+        overall_pace = convert_decimal_pace_to_pretty_format(self.average_overall_pace)
+        moving_pace = convert_decimal_pace_to_pretty_format(self.average_moving_pace)
+        clock = format_duration(self.elapsed_time)
+        return f"runner {round(self.mile_mark, 2)} mi @ {overall_pace}/{moving_pace} ({clock})"

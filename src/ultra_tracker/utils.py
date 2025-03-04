@@ -7,9 +7,8 @@ from math import atan2, cos, radians, sin, sqrt
 
 import numpy as np
 import pytz
-from timezonefinder import TimezoneFinder
 from lxml import etree
-
+from timezonefinder import TimezoneFinder
 
 logger = logging.getLogger(__name__)
 
