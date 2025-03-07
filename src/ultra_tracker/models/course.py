@@ -588,7 +588,12 @@ class AidStation(CourseElement):
             approx_time_traveled = datetime.timedelta(
                 minutes=dist_traveled * runner.average_moving_pace
             )
-            self.departure_time = runner.last_ping.timestamp - approx_time_traveled
+            # Do a safety check to ensure the departure time is not before the arrival time.
+            depart_time = runner.last_ping.timestamp - approx_time_traveled
+            if depart_time < self.arrival_time:
+                self.departure_time = self.arrival_time
+            else:
+                self.departure_time = depart_time
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 
