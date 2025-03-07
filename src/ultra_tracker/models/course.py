@@ -184,6 +184,18 @@ class Course:
         self.timezone = get_timezone(self.route.start_location)
 
     @property
+    def aid_stations_annotations(self) -> list:
+        """
+        Returns a list of dicts of the aid stations to use for elevation chart annotations
+
+        :return list: A list of simple dicts.
+        """
+        return [
+            {"name": ce.name, "x": ce.mile_mark, "y": float(ce.altitude)}
+            for ce in self.aid_stations[1:-1]
+        ]
+
+    @property
     def aid_stations(self) -> list:
         """
         The AidStation objects of this course.
@@ -204,10 +216,16 @@ class Course:
 
         # Create AidStation objects, including Start and Finish
         aid_station_objects = [
-            AidStation(asi["name"], asi["mile_mark"], asi.get("comments", ""))
+            AidStation(
+                asi["name"], asi["mile_mark"], asi.get("altitude", 0.0), asi.get("comments", "")
+            )
             for asi in [
-                {"name": "Start", "mile_mark": 0},
-                {"name": "Finish", "mile_mark": round(self.route.length, 1)},
+                {"name": "Start", "mile_mark": 0, "altitude": self.route.elevations[0]},
+                {
+                    "name": "Finish",
+                    "mile_mark": round(float(self.route.length), 1),
+                    "altitude": self.route.elevations[-1],
+                },
             ]
             + aid_stations
         ]
@@ -237,6 +255,7 @@ class Course:
             leg_distance = aid.mile_mark - prev_aid.mile_mark
             gain = self.route.gains[aid_idx] - prev_gain
             loss = self.route.losses[aid_idx] - prev_loss
+            aid.altitude = self.route.elevations[aid_idx]
             legs.append(
                 Leg(
                     f"{prev_aid.name} ➤ {aid.name}",
@@ -400,9 +419,16 @@ class AidStation(CourseElement):
     """
 
     def __init__(
-        self, name: str, mile_mark: float, comments: str = "", prev_leg=None, next_leg=None
+        self,
+        name: str,
+        mile_mark: float,
+        altitude: float = 0.0,
+        comments: str = "",
+        prev_leg=None,
+        next_leg=None,
     ):
         super().__init__(name, mile_mark)
+        self.altitude = altitude
         self.gmaps_url = ""
         self.comments = comments
         self.display_name = f"{name} (mile {mile_mark})"

@@ -114,6 +114,7 @@ class Race:
             "start_time": self.start_time,
             "map_url": self.map_url,
             "course_elements": self.course.course_elements,
+            "aid_station_annotations": self.course.aid_stations_annotations,
             "course_deviation": format_distance(self.runner.course_deviation),
             "deviation_background_color": (
                 "#90EE90"
