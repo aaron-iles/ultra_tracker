@@ -46,9 +46,7 @@
           <th>stoppage time</th>
           <th>mile mark</th>
           <th>altitude</th>
-          <th>average overall pace</th>
-          <th>average moving pace</th>
-          <th>current pace</th>
+          <th>avg pace (overall/moving)</th>
           <th>est finish date</th>
           <th>est finish time</th>
           <th>course deviation</th>
@@ -63,9 +61,8 @@
           <td>{{ stoppage_time }}</td>
           <td>{{ mile_mark }}</td>
           <td>{{ altitude }}</td>
-          <td>{{ average_overall_pace }}</td>
+          <td>{{ average_overall_pace }} / {{ average_moving_pace }}</td>
           <td>{{ average_moving_pace }}</td>
-          <td>{{ current_pace }}</td>
           <td>{{ est_finish_date | format_time }}</td>
           <td>{{ est_finish_time }}</td>
           <td style="background-color:{{ deviation_background_color}}">{{ course_deviation }}</td>

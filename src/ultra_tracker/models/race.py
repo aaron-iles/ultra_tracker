@@ -103,7 +103,6 @@ class Race:
                 self.runner.average_moving_pace
             ),
             "altitude": format_distance(self.runner.last_ping.altitude, True),
-            "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
             "stoppage_time": format_duration(self.runner.stoppage_time),
