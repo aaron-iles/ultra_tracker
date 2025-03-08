@@ -206,7 +206,7 @@ class Race:
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
         logger.debug(ping)
-        if ping.gps_fix == 0 or ping.latlon == [0, 0]:
+        if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")
             self.runner.pings += 1
             return

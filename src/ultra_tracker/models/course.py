@@ -568,7 +568,13 @@ class AidStation(CourseElement):
         if self.is_transiting(runner) or (
             self.runner_has_arrived(runner) and self.runner_has_departed(runner)
         ):
-            self.arrival_time = self.estimated_arrival_time
+            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(0):
+                self.arrival_time = self.estimated_arrival_time
+            # This is an edge case. If an aid is so close to the start that it never gets an ETA, we
+            # have to set something other than time 0.
+            else:
+                self.estimated_arrival_time = runner.last_ping.timestamp
+                self.arrival_time = self.estimated_arrival_time
             logger.info(f"runner entered {self.display_name} at {self.arrival_time}")
             return
 
