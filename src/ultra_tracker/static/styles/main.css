@@ -159,38 +159,9 @@ body, html {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 th {
   position: relative; /* ensures that children are positioned relative to the th */
 }
-
-
-
-
-
-
 
 
 /* Tooltip icon styling */
@@ -229,15 +200,14 @@ th {
   padding: 8px;
   border-radius: 4px;
   font-size: 0.85em;
-  white-space: nowrap;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Ensure long words break and wrap */
   bottom: 100%; /* Position above the element */
-  left: 50%;
-  transform: translateX(-15%);
+  left: 0%;
+  transform: translateX(-5%); /* Center the tooltip horizontally */
   width: max-content;
-  max-width: 500px; /* Limit the width */
+  overflow-wrap: break-word; /* Break long words */
 }
-
-
 
 /* Show the tooltip and arrow when hovered or tapped */
 .tooltip-icon:hover::before,
@@ -252,7 +222,7 @@ th {
 @media (max-width: 600px) {
   .tooltip-icon[data-tooltip]::before {
     left: 50%;
-    transform: translateX(-15%);
+    transform: translateX(-5%); /* Ensure it is centered on small screens */
     bottom: 100%; /* Move the tooltip above */
     top: auto; /* Override top positioning */
   }
@@ -262,14 +232,11 @@ th {
   }
 }
 
-
-
-
-
-
-
-
-
-
+/* Ensure tooltip stays within the screen width */
+@media (max-width: 600px) {
+  .tooltip-icon[data-tooltip]::before {
+    max-width: calc(100vw - 20px); /* Ensure the tooltip doesn't overflow the screen */
+  }
+}
 
 
