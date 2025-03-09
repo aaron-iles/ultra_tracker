@@ -1,0 +1,20 @@
+---
+start_time: '2024-12-30T15:30:00'
+garmin_api_token: XXXXXXXX
+caltopo_map_id: "01"
+caltopo_credential_id: XXXXXXXXXXXX
+caltopo_key: dGVzdGtleQ==
+runner_name: Runner
+route_name: Route 01
+race_name: Test Race 01
+aid_stations:
+  - name: 01 Aid
+    mile_mark: 0.35
+  - name: 02 Aid
+    mile_mark: 1.46
+  - name: 03 Aid
+    mile_mark: 9.8
+  - name: 04 Aid
+    mile_mark: 13.2
+  - name: 05 Aid
+    mile_mark: 13.7
