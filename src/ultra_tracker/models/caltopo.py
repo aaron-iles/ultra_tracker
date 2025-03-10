@@ -15,6 +15,15 @@ from ..utils import get_gmaps_url
 logger = logging.getLogger(__name__)
 
 
+def lookup_marker_by_name(marker_name: str, markers: list) -> list:
+    """ """
+    title_to_marker = {marker.title: marker for marker in markers}
+    marker = title_to_marker.get(marker_name)
+    if not marker:
+        raise LookupError(f"aid station <{aso['name']}> not found in {caltopo_map.markers}")
+    return marker
+
+
 class CaltopoSession:
     """
     A session object to use to issue GETs and POSTs to Caltopo.

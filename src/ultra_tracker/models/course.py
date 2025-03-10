@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import copy
 import datetime
 import json
 import logging
@@ -18,7 +19,7 @@ from ..utils import (
     haversine_distance,
     meters_to_feet,
 )
-from .caltopo import CaltopoMap, CaltopoShape
+from .caltopo import CaltopoMap, CaltopoShape, lookup_marker_by_name
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,67 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     return interpolated_path_data, cumulative_distances_array
 
 
+# TODO make this generic. no aid stations but rather dicts of mile mark and latlon
+def align_known_mile_marks(distances: np.array, points: np.array, known_mile_marks: dict):
+    modified_distances = copy.copy(distances)
+    num_points = len(modified_distances)
+
+    # Loop over each pair of consecutive aid stations
+    for i in range(len(known_mile_marks) - 1):
+        current_kmm = known_mile_marks[i]
+        next_kmm = known_mile_marks[i + 1]
+
+        # Find the closest point by both mileage and lat/lon to current aid station
+        start_idx = np.argmin(
+            [
+                np.abs(modified_distances[j] - current_kmm["mile_mark"])
+                + haversine_distance(points[j], current_kmm["coordinates"])
+                for j in range(num_points)
+            ]
+        )
+
+        # Find the closest point by both mileage and lat/lon to next aid station
+        end_idx = np.argmin(
+            [
+                np.abs(modified_distances[j] - next_kmm["mile_mark"])
+                + haversine_distance(points[j], next_kmm["coordinates"])
+                for j in range(num_points)
+            ]
+        )
+
+        # Get the distances and points between these indices (inclusive)
+        segment_distances = modified_distances[start_idx : end_idx + 1]
+        segment_points = points[start_idx : end_idx + 1]
+
+        # Linearly interpolate the distances between the aid station mile marks
+        adjusted_distances = np.linspace(
+            current_kmm["mile_mark"], next_kmm["mile_mark"], len(segment_distances)
+        )
+
+        # Update the route distances for this segment
+        modified_distances[start_idx : end_idx + 1] = adjusted_distances
+
+        # Optionally, store the corresponding closest point to each aid station
+        logger.info(f"found {current_kmm} to be closest to {points[start_idx]} ({distances[start_idx]})")
+        #current_kmm.closest_point = points[start_idx]
+        #current_kmm.closest_distance = race_distances[start_idx]
+        #next_kmm.closest_point = points[end_idx]
+        #next_kmm.closest_distance = race_distances[end_idx]
+
+    # Handle last aid station separately (if needed)
+    final_kmm = known_mile_marks[-1]
+    final_idx = np.argmin(
+        [
+            np.abs(modified_distances[j] - final_kmm['mile_mark'])
+            + haversine_distance(points[j], final_kmm['coordinates'])
+            for j in range(num_points)
+        ]
+    )
+    # final_kmm.closest_point = points[final_idx]
+    # final_kmm.closest_distance = race_distances[final_idx]
+    return modified_distances
+
+
 def find_elevations(points: np.array) -> list:
     """
     Given an array of 2D coordinates, this will append a third dimension to the coordinates
@@ -178,10 +240,42 @@ class Course:
     :param str route_name: The name of the route in the map.
     """
 
-    def __init__(self, caltopo_map, aid_stations: list, route_name: str):
+    def __init__(self, caltopo_map, aid_stations: list, route_name: str, route_distance: float):
+
         self.route = self.extract_route(route_name, caltopo_map)
+        aid_stations = self.get_aid_station_coordinates(aid_stations, caltopo_map, route_distance)
+        self.route._race_distances = align_known_mile_marks(
+            self.route.distances, self.route.points, aid_stations
+        )
+        # TODO these are the same but shouldnt be.
+        print(self.route._race_distances[-1], self.route._map_distances[-1])
         self.course_elements = self.get_course_elements(aid_stations, caltopo_map)
         self.timezone = get_timezone(self.route.start_location)
+
+    def get_aid_station_coordinates(
+        self, aid_stations: list, caltopo_map, route_distance: float
+    ) -> dict:
+        """ """
+        for aso in aid_stations:
+            aso["coordinates"] = lookup_marker_by_name(aso["name"], caltopo_map.markers).coordinates[::-1]
+        aid_stations.extend(
+            [
+                {
+                    "name": "Start",
+                    "mile_mark": 0.0,
+                    "coordinates": self.route.points[0],
+                    "altitude": self.route.elevations[0],
+                },
+                {
+                    "name": "Finish",
+                    "mile_mark": route_distance,
+                    "coordinates": self.route.points[-1],
+                    "altitude": self.route.elevations[-1],
+                },
+            ]
+        )
+        aid_stations.sort(key=lambda aso: aso["mile_mark"])
+        return aid_stations
 
     @property
     def aid_stations_annotations(self) -> list:
@@ -217,27 +311,19 @@ class Course:
         # Create AidStation objects, including Start and Finish
         aid_station_objects = [
             AidStation(
-                asi["name"], asi["mile_mark"], asi.get("altitude", 0.0), asi.get("comments", "")
+                asi["name"],
+                asi["mile_mark"],
+                asi.get("coordinates", [0.0, 0.0]),
+                asi.get("altitude", 0.0),
+                asi.get("comments", ""),
             )
-            for asi in [
-                {"name": "Start", "mile_mark": 0, "altitude": self.route.elevations[0]},
-                {
-                    "name": "Finish",
-                    "mile_mark": round(float(self.route.length), 1),
-                    "altitude": self.route.elevations[-1],
-                },
-            ]
-            + aid_stations
+            for asi in aid_stations
         ]
         aid_station_objects.sort(key=lambda aso: aso.mile_mark)
 
         # Map marker titles to aid stations and assign Google Maps URLs
-        title_to_marker = {marker.title: marker for marker in caltopo_map.markers}
         for aso in aid_station_objects[1:-1]:
-            marker = title_to_marker.get(aso.name)
-            if not marker:
-                raise LookupError(f"aid station '{aso.name}' not found in {caltopo_map.markers}")
-            aso.gmaps_url = marker.gmaps_url
+            aso.gmaps_url = lookup_marker_by_name(aso.name, caltopo_map.markers).gmaps_url
 
         # Assign Google Maps URLs for Start and Finish separately
         aid_station_objects[0].gmaps_url = get_gmaps_url(self.route.points[0])
@@ -422,6 +508,7 @@ class AidStation(CourseElement):
         self,
         name: str,
         mile_mark: float,
+        coordinates: list,
         altitude: float = 0.0,
         comments: str = "",
         prev_leg=None,
@@ -431,6 +518,7 @@ class AidStation(CourseElement):
         self.altitude = altitude
         self.gmaps_url = ""
         self.comments = comments
+        self.coordinates = coordinates
         self.display_name = f"{name} (mile {mile_mark})"
         self.previous_leg = prev_leg
         self.next_leg = next_leg
@@ -711,16 +799,26 @@ class Route(CaltopoShape):
 
     def __init__(self, feature_dict: dict, map_id: str, session: str):
         super().__init__(feature_dict, map_id, session)
-        self.points, self.distances = transform_path([[y, x] for x, y in self.coordinates], 5, 75)
+        self.points, self._map_distances = transform_path(
+            [[y, x] for x, y in self.coordinates], 5, 75
+        )
+        self._race_distances = np.array([])
         logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
         logger.info(f"calculated elevations on map ID {map_id}")
         self.gains, self.losses = cumulative_altitude_changes(self.elevations)
         logger.info(f"calculated cumulative elevation changes on map ID {map_id}")
-        self.length = self.distances[-1]
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]
         self.kdtree = KDTree(self.points)
+
+    @property
+    def length(self) -> float:
+        return self.distances[-1]
+
+    @property
+    def distances(self) -> np.array:
+        return self._race_distances if self._race_distances.size > 0 else self._map_distances
 
     @property
     def gain(self) -> float:

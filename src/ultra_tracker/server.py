@@ -156,7 +156,12 @@ logger.info("performing authentication test...")
 if not caltopo_map.test_authentication():
     exit(1)
 logger.info("authentication test passed...")
-course = Course(caltopo_map, config_data["aid_stations"], config_data["route_name"])
+course = Course(
+    caltopo_map,
+    config_data["aid_stations"],
+    config_data["route_name"],
+    config_data["route_distance"],
+)
 logger.info("created course object...")
 runner = Runner(
     caltopo_map,
