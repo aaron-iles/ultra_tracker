@@ -142,7 +142,6 @@ class Race:
             },
         }
 
-    # TODO need to save off entrance and exit time for course elements
     def save(self) -> None:
         """
         Saves the race stats to a file.

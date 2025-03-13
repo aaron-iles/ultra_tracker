@@ -120,64 +120,76 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     return interpolated_path_data, cumulative_distances_array
 
 
-# TODO make this generic. no aid stations but rather dicts of mile mark and latlon
-def align_known_mile_marks(distances: np.array, points: np.array, known_mile_marks: dict):
-    modified_distances = copy.copy(distances)
-    num_points = len(modified_distances)
+def find_closest_index(
+    mile_mark: float, coordinates: list, distances: np.array, points: np.array
+) -> int:
+    """
+    Finds the nearest index in the list of coordinates/distances to the provided mile mark and
+    coordinates. Both values have equal weight in this minimization problem.
 
-    # Loop over each pair of consecutive aid stations
+    :param float mile_mark: The targeted mile mark. This is used to filter out points that are
+    close to the given coordinates but at far different mile marks.
+    :param list coordinates: A pair of lat/lon coordinates.
+    :param np.array distances: A numpy array of cumulative mile marks.
+    :param np.array points: A numpy array of coordinates that map to the given distances.
+    :return int: The index in the large arrays that is closest to the given mile mark and
+    coordinates.
+    """
+    if len(points) != len(distances):
+        raise ValueError("the points and distances arrays must be of equal length")
+    return np.argmin(
+        [
+            np.abs(distances[j] - mile_mark) + haversine_distance(points[j], coordinates)
+            for j in range(len(distances))
+        ]
+    )
+
+
+def align_known_mile_marks(
+    distances: np.array, points: np.array, known_mile_marks: dict
+) -> np.array:
+    """
+    This function stretches or squeezes the provided distances so they line up with the known mile
+    marks provided. Each segment of the distances array will be stretched or squeezed the same
+    amount (depending on the starting/ending point), but not necessarily the same amount as other
+    segments. The resulting array will be of the same length, but whose values line up with the
+    known mile marks.
+
+    :param np.array distances: An array of distances to be modified.
+    :param np.array points: An array of lat/lon points corresponding to the distances array.
+    :param dict known_mile_marks: A dict of known mile marks and their corresponding coordinates
+    to be used as the source of truth.
+    """
+    modified_distances = copy.copy(distances)
+
+    # Loop over each pair of consecutive known mile marks.
     for i in range(len(known_mile_marks) - 1):
         current_kmm = known_mile_marks[i]
         next_kmm = known_mile_marks[i + 1]
 
-        # Find the closest point by both mileage and lat/lon to current aid station
-        start_idx = np.argmin(
-            [
-                np.abs(modified_distances[j] - current_kmm["mile_mark"])
-                + haversine_distance(points[j], current_kmm["coordinates"])
-                for j in range(num_points)
-            ]
+        logger.debug(f"aligning from {current_kmm['name']} to {next_kmm['name']}")
+        # Find the closest point by both mileage and lat/lon to current kmm.
+        start_idx = find_closest_index(
+            current_kmm["mile_mark"], current_kmm["coordinates"], modified_distances, points
         )
-
-        # Find the closest point by both mileage and lat/lon to next aid station
-        end_idx = np.argmin(
-            [
-                np.abs(modified_distances[j] - next_kmm["mile_mark"])
-                + haversine_distance(points[j], next_kmm["coordinates"])
-                for j in range(num_points)
-            ]
+        # Find the closest point by both mileage and lat/lon to next kmm.
+        end_idx = find_closest_index(
+            next_kmm["mile_mark"], next_kmm["coordinates"], modified_distances, points
         )
-
-        # Get the distances and points between these indices (inclusive)
         segment_distances = modified_distances[start_idx : end_idx + 1]
-        segment_points = points[start_idx : end_idx + 1]
-
-        # Linearly interpolate the distances between the aid station mile marks
+        # Linearly interpolate the distances between the kmms. This is only valid if the distances
+        # have been sufficiently smoothed out so the points are roughly equidistant.
         adjusted_distances = np.linspace(
             current_kmm["mile_mark"], next_kmm["mile_mark"], len(segment_distances)
         )
-
         # Update the route distances for this segment
         modified_distances[start_idx : end_idx + 1] = adjusted_distances
+        logger.debug(
+            f"found {current_kmm['name']} to be closest to {points[start_idx]} ({distances[start_idx]})"
+        )
 
-        # Optionally, store the corresponding closest point to each aid station
-        logger.info(f"found {current_kmm} to be closest to {points[start_idx]} ({distances[start_idx]})")
-        #current_kmm.closest_point = points[start_idx]
-        #current_kmm.closest_distance = race_distances[start_idx]
-        #next_kmm.closest_point = points[end_idx]
-        #next_kmm.closest_distance = race_distances[end_idx]
-
-    # Handle last aid station separately (if needed)
-    final_kmm = known_mile_marks[-1]
-    final_idx = np.argmin(
-        [
-            np.abs(modified_distances[j] - final_kmm['mile_mark'])
-            + haversine_distance(points[j], final_kmm['coordinates'])
-            for j in range(num_points)
-        ]
-    )
-    # final_kmm.closest_point = points[final_idx]
-    # final_kmm.closest_distance = race_distances[final_idx]
+    # The very last point needs to be handled differently.
+    modified_distances[-1] = known_mile_marks[-1]["mile_mark"]
     return modified_distances
 
 
@@ -244,20 +256,29 @@ class Course:
 
         self.route = self.extract_route(route_name, caltopo_map)
         aid_stations = self.get_aid_station_coordinates(aid_stations, caltopo_map, route_distance)
+        # Stretch or squeeze the route so it lines up with the official mile marks.
         self.route._race_distances = align_known_mile_marks(
             self.route.distances, self.route.points, aid_stations
         )
-        # TODO these are the same but shouldnt be.
-        print(self.route._race_distances[-1], self.route._map_distances[-1])
         self.course_elements = self.get_course_elements(aid_stations, caltopo_map)
         self.timezone = get_timezone(self.route.start_location)
 
     def get_aid_station_coordinates(
-        self, aid_stations: list, caltopo_map, route_distance: float
+        self, aid_stations: list, caltopo_map: CaltopoMap, route_distance: float
     ) -> dict:
-        """ """
+        """
+        Given a list of aid station dicts, this will attempt to map them to their corresponding
+        markers and consequently their coordinates.
+
+        :param list aid_stations: A list of aid station dicts.
+        :param CaltopoMap caltopo_map: The map object that has marker and other objects attached.
+        :param float route_distance: The official route distance.
+        :return dict: The updated aid station dict with the coordinates added.
+        """
         for aso in aid_stations:
-            aso["coordinates"] = lookup_marker_by_name(aso["name"], caltopo_map.markers).coordinates[::-1]
+            aso["coordinates"] = lookup_marker_by_name(
+                aso["name"], caltopo_map.markers
+            ).coordinates[::-1]
         aid_stations.extend(
             [
                 {
@@ -280,7 +301,7 @@ class Course:
     @property
     def aid_stations_annotations(self) -> list:
         """
-        Returns a list of dicts of the aid stations to use for elevation chart annotations
+        Returns a list of dicts of the aid stations to use for elevation chart annotations.
 
         :return list: A list of simple dicts.
         """
@@ -369,7 +390,6 @@ class Course:
             elif isinstance(elem, Leg):
                 elem.previous_aid = course_elements[i - 1]
                 elem.next_aid = course_elements[i + 1]
-
         return course_elements
 
     def extract_route(self, route_name: str, caltopo_map):
@@ -800,7 +820,7 @@ class Route(CaltopoShape):
     def __init__(self, feature_dict: dict, map_id: str, session: str):
         super().__init__(feature_dict, map_id, session)
         self.points, self._map_distances = transform_path(
-            [[y, x] for x, y in self.coordinates], 5, 75
+            [[y, x] for x, y in self.coordinates], 10, 25
         )
         self._race_distances = np.array([])
         logger.info(f"created route object from map ID {map_id}")

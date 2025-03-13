@@ -38,7 +38,7 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
     """
     if time_obj == datetime.datetime.fromtimestamp(0):
         return "--/-- --:--"
-    return time_obj.strftime("%m/%d %H:%M")
+    return time_obj.strftime("%-m/%-d %-I:%M %p")
 
 
 def setup_logging(verbose: bool = False):

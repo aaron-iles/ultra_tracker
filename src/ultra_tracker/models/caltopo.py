@@ -15,8 +15,14 @@ from ..utils import get_gmaps_url
 logger = logging.getLogger(__name__)
 
 
-def lookup_marker_by_name(marker_name: str, markers: list) -> list:
-    """ """
+def lookup_marker_by_name(marker_name: str, markers: set) -> object:
+    """
+    Given a marker name, attempts to find the marker in the list of markers.
+
+    :param str marker_name: The name (officially "title") of the marker.
+    :param set markers: A set of marker objects.
+    :return Marker: A marker object (if found).
+    """
     title_to_marker = {marker.title: marker for marker in markers}
     marker = title_to_marker.get(marker_name)
     if not marker:

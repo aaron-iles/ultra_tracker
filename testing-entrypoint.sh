@@ -4,4 +4,4 @@
 # container.
 
 #uwsgi uwsgi.ini --honour-stdin --pyargv '-c data/race_config.yml -d data/ --disable-marker-updates'
-uwsgi uwsgi.ini --honour-stdin --pyargv '-c data/race_config.yml -d data/'
+uwsgi uwsgi.ini --honour-stdin --pyargv '-c data/race_config.yml -d data/ -v'
