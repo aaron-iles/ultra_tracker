@@ -6,6 +6,7 @@ caltopo_credential_id: XXXXXXXXXXXX
 caltopo_key: dGVzdGtleQ==
 runner_name: Runner
 route_name: Route 02
+route_distance: 220.1
 race_name: Dark Sky 220
 aid_stations:
   - name: 01 Farrandsville

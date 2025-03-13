@@ -6,6 +6,7 @@ caltopo_credential_id: XXXXXXXXXXXX
 caltopo_key: dGVzdGtleQ==
 runner_name: Runner
 route_name: Route 01
+route_distance: 13.78
 race_name: Test Race 01
 aid_stations:
   - name: 01 Aid

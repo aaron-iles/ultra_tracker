@@ -139,7 +139,7 @@ def find_closest_index(
         raise ValueError("the points and distances arrays must be of equal length")
     return np.argmin(
         [
-            np.abs(distances[j] - mile_mark) + haversine_distance(points[j], coordinates)
+            np.abs(distances[j] - mile_mark) + haversine_distance(points[j], coordinates) / 5280
             for j in range(len(distances))
         ]
     )
@@ -176,18 +176,22 @@ def align_known_mile_marks(
         end_idx = find_closest_index(
             next_kmm["mile_mark"], next_kmm["coordinates"], modified_distances, points
         )
+        if start_idx >= end_idx:
+            raise LookupError(
+                f"found incorrect indices between {current_kmm['name']} and {next_kmm['name']}"
+            )
         segment_distances = modified_distances[start_idx : end_idx + 1]
         # Linearly interpolate the distances between the kmms. This is only valid if the distances
         # have been sufficiently smoothed out so the points are roughly equidistant.
         adjusted_distances = np.linspace(
             current_kmm["mile_mark"], next_kmm["mile_mark"], len(segment_distances)
         )
+        # TODO: sometimes this is putting overlapping aid stations at the same mile mark. Fix it.
         # Update the route distances for this segment
         modified_distances[start_idx : end_idx + 1] = adjusted_distances
         logger.debug(
             f"found {current_kmm['name']} to be closest to {points[start_idx]} ({distances[start_idx]})"
         )
-
     # The very last point needs to be handled differently.
     modified_distances[-1] = known_mile_marks[-1]["mile_mark"]
     return modified_distances

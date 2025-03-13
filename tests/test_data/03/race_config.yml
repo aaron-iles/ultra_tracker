@@ -6,6 +6,7 @@ caltopo_credential_id: XXXXXXXXX
 caltopo_key: dGVzdGtleQ==
 runner_name: Runner
 route_name: Route 03
+route_distance: 103.5
 race_name: Ouray 100
 aid_stations:
   - name: 01 Lower Camp Bird
