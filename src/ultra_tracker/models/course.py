@@ -121,28 +121,43 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
 
 
 def find_closest_index(
-    mile_mark: float, coordinates: list, distances: np.array, points: np.array
+    mile_mark: float,
+    coordinates: list,
+    distances: np.array,
+    points: np.array,
+    coordinate_weight: float = 4.0,
+    mile_mark_weight: float = 1.0,
+    tolerance: float = 75,
 ) -> int:
     """
     Finds the nearest index in the list of coordinates/distances to the provided mile mark and
-    coordinates. Both values have equal weight in this minimization problem.
+    coordinates. Greater weight is given to the proximity of coordinates than to mile marks.
 
     :param float mile_mark: The targeted mile mark. This is used to filter out points that are
     close to the given coordinates but at far different mile marks.
     :param list coordinates: A pair of lat/lon coordinates.
     :param np.array distances: A numpy array of cumulative mile marks.
     :param np.array points: A numpy array of coordinates that map to the given distances.
+    :param float coordinate_weight: Weight for the coordinate distance factor (default 2.0).
+    :param float mile_mark_weight: Weight for the mile mark difference factor (default 1.0).
+    :param float tolerance: The maximum distance (in feet) the coordinates may deviate from their
+    original position before throwing a RuntimeError.
     :return int: The index in the large arrays that is closest to the given mile mark and
     coordinates.
     """
     if len(points) != len(distances):
         raise ValueError("the points and distances arrays must be of equal length")
-    return np.argmin(
+
+    found_index = np.argmin(
         [
-            np.abs(distances[j] - mile_mark) + haversine_distance(points[j], coordinates) / 5280
+            mile_mark_weight * np.abs(distances[j] - mile_mark)
+            + coordinate_weight * (haversine_distance(points[j], coordinates) / 5280)
             for j in range(len(distances))
         ]
     )
+    if haversine_distance(points[found_index], coordinates) > tolerance:
+        raise RuntimeError(f"unable to align {mile_mark} @ {coordinates} within tolerance")
+    return found_index
 
 
 def align_known_mile_marks(
