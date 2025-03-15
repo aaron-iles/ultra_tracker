@@ -132,6 +132,8 @@ releases:
       - Changes the race restoration method expected input
       - Decouples the runner's attributes from the check-in process
       - Overhauls the race/runner relationship
+      - Changes mile marker detection by assuming the race config is the source of truth and stretching/squeezing discovered mile marks to match it
+      - Strictly enforces a 75 ft tolerance for aid station marker position to route
       bugfixes:
       - Greys out the last leg and finish location when the runner finishes the race
       major_changes:
@@ -141,15 +143,19 @@ releases:
       - Adds approximate stoppage time for aid stations
       - Overhauls the ETA and pace calculations to treat stoppage time and moving
         time separately
+      - Tightens course point creation to a min/max of 10/25 ft
       minor_changes:
       - Adds ``aid_stations`` property to ``Course`` object
       - Adds new argument to disable marker updates for faster debugging
       - Adds new jinja filters for ``format_time`` and ``format_duration``
       - Changes estimated runner marker to be less intrusive
       - Updates the start location to show an ETA of the race start time
+      - Adds more unit tests
+      - Adds aid station annotations to profile page
+      - Adds tooltips for better UX
       release_summary: Overhauls the backend to include approximate arrival times,
         departure times, stoppage time, and more. Refreshes the UI with minor tweaks
         and fixes some minor bugs.
     fragments:
     - timing.yml
-    release_date: '2025-03-03'
+    release_date: '2025-03-15'

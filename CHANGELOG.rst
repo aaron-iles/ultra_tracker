@@ -20,23 +20,29 @@ Major Changes
 - Adds approximate duration for legs
 - Adds approximate stoppage time for aid stations
 - Overhauls the ETA and pace calculations to treat stoppage time and moving time separately
+- Tightens course point creation to a min/max of 10/25 ft
 
 Minor Changes
 -------------
 
 - Adds ``aid_stations`` property to ``Course`` object
+- Adds aid station annotations to profile page
+- Adds more unit tests
 - Adds new argument to disable marker updates for faster debugging
 - Adds new jinja filters for ``format_time`` and ``format_duration``
+- Adds tooltips for better UX
 - Changes estimated runner marker to be less intrusive
 - Updates the start location to show an ETA of the race start time
 
 Breaking Changes / Porting Guide
 --------------------------------
 
+- Changes mile marker detection by assuming the race config is the source of truth and stretching/squeezing discovered mile marks to match it
 - Changes the format of the JSON serialized save file
 - Changes the race restoration method expected input
 - Decouples the runner's attributes from the check-in process
 - Overhauls the race/runner relationship
+- Strictly enforces a 75 ft tolerance for aid station marker position to route
 
 Bugfixes
 --------
