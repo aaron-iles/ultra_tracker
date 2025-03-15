@@ -109,6 +109,4 @@ def test_race_05_full(race_05, race_05_post_log, race_05_expected_mile_marks):
     for ping_data in race_05_post_log:
         race_05.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_05.runner.mile_mark, 2)))
-    with open("/tmp/mi", "w") as f:
-        f.write(json.dumps(mile_mark_progression, indent=2))
     assert_lists_equal_with_percentage(mile_mark_progression, race_05_expected_mile_marks)
