@@ -1,0 +1,25 @@
+---
+start_time: '2025-02-05T08:00:00'
+garmin_api_token: XXXXXXXX
+caltopo_map_id: "04"
+caltopo_credential_id: XXXXXXXXXXXX
+caltopo_key: dGVzdGtleQ==
+runner_name: Runner
+route_name: Route 04
+route_distance: 220.8
+race_name: TWOT 200
+aid_stations:
+  - name: 01 TWOT Lot
+    mile_mark: 27.6
+  - name: 02 TWOT Lot
+    mile_mark: 55.2
+  - name: 03 TWOT Lot
+    mile_mark: 82.8
+  - name: 04 TWOT Lot
+    mile_mark: 110.4
+  - name: 05 TWOT Lot
+    mile_mark: 138.0
+  - name: 06 TWOT Lot
+    mile_mark: 165.6
+  - name: 07 TWOT Lot
+    mile_mark: 193.2

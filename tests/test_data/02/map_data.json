@@ -162,8 +162,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.46932,
-                            41.39001,
+                            -77.46890,
+                            41.38922, 
                             0,
                             0
                         ],
@@ -187,8 +187,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.47481,
-                            41.33804,
+                            -77.47465,
+                            41.33752, 
                             0,
                             0
                         ],
@@ -200,7 +200,7 @@
                         "marker-symbol": "medevac-site",
                         "creator": "4NFH2U",
                         "marker-color": "None",
-                        "description": "𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: 175.4\n𝗘𝗧𝗔: 04-14 12:52\n",
+                        "description": "",
                         "title": "14 Haneyville",
                         "marker-size": "1",
                         "class": "Marker",
@@ -212,8 +212,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.51142,
-                            41.18518,
+                            -77.51165,
+                            41.18519,
                             0,
                             0
                         ],
@@ -324,8 +324,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.89255,
-                            41.69664,
+                            -77.89316,
+                            41.69622, 
                             0,
                             0
                         ],
@@ -400,8 +400,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.79672,
-                            41.64624,
+                            -77.79705,
+                            41.64563, 
                             0,
                             0
                         ],
@@ -413,7 +413,7 @@
                         "marker-symbol": "medevac-site",
                         "creator": "4NFH2U",
                         "marker-color": "None",
-                        "description": "𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: 116.1\n𝗘𝗧𝗔: 04-13 15:57\n",
+                        "description": "",
                         "title": "10 Cherry Springs",
                         "marker-size": "1",
                         "class": "Marker",
@@ -106978,8 +106978,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.37551,
-                            41.19212,
+                            -77.37514,
+                            41.19219, 
                             0,
                             0
                         ],
@@ -106991,7 +106991,7 @@
                         "marker-symbol": "medevac-site",
                         "creator": "4NFH2U",
                         "marker-color": "None",
-                        "description": "𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: 213.4\n𝗘𝗧𝗔: 04-15 02:17\n",
+                        "description": "",
                         "title": "17 Woolrich",
                         "marker-size": "1",
                         "class": "Marker",
@@ -107029,8 +107029,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.62486,
-                            41.36103,
+                            -77.62626,
+                            41.36091, 
                             0,
                             0
                         ],
@@ -107054,8 +107054,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.33416,
-                            41.27202,
+                            -77.32458,
+                            41.28462, 
                             0,
                             0
                         ],
@@ -107067,7 +107067,7 @@
                         "marker-symbol": "medevac-site",
                         "creator": "4NFH2U",
                         "marker-color": "None",
-                        "description": "𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: 203.4\n𝗘𝗧𝗔: 04-14 22:45\n",
+                        "description": "",
                         "title": "16 Ramsey Bridge",
                         "marker-size": "1",
                         "class": "Marker",
@@ -107079,8 +107079,8 @@
                 {
                     "geometry": {
                         "coordinates": [
-                            -77.66463,
-                            41.43433,
+                            -77.66339,
+                            41.43524, 
                             0,
                             0
                         ],
@@ -107092,7 +107092,7 @@
                         "marker-symbol": "medevac-site",
                         "creator": "4NFH2U",
                         "marker-color": "None",
-                        "description": "𝗺𝗶𝗹𝗲 𝗺𝗮𝗿𝗸: 50.5\n𝗘𝗧𝗔: 04-12 12:37\n",
+                        "description": "",
                         "title": "05 Young Woman's Creek",
                         "marker-size": "1",
                         "class": "Marker",

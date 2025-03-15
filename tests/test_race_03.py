@@ -23,11 +23,11 @@ def race_03_path():
 
 
 @pytest.fixture
-def aid_stations_map_03(race_03_path):
+def race_03_config(race_03_path):
     race_config_file = os.path.join(race_03_path, "race_config.yml")
     with open(race_config_file, "r") as file:
-        config_data = yaml.safe_load(file)
-    return config_data["aid_stations"]
+        config_03 = yaml.safe_load(file)
+    return config_03
 
 
 @pytest.fixture
@@ -38,18 +38,22 @@ def caltopo_map_03(caltopo_session, requests_mock, race_03_path):
         map_mock_response = json.loads(f.read())
     requests_mock.get(f"https://caltopo.com/api/v1/map/{map_id}/since/0", json=map_mock_response)
 
-    elevation_data_file = os.path.join(race_03_path, "elevation_data.json")
-    with open(elevation_data_file, "r") as f:
-        elev_mock_response = json.loads(f.read())
-
-    requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
-
+    requests_mock.real_http = True
+    # elevation_data_file = os.path.join(race_03_path, "elevation_data.json")
+    # with open(elevation_data_file, "r") as f:
+    #    elev_mock_response = json.loads(f.read())
+    # requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
     return caltopo.CaltopoMap(map_id, caltopo_session)
 
 
 @pytest.fixture
-def course_03(caltopo_map_03, aid_stations_map_03):
-    return course.Course(caltopo_map_03, aid_stations_map_03, "Route 03")
+def course_03(caltopo_map_03, race_03_config):
+    return course.Course(
+        caltopo_map_03,
+        race_03_config["aid_stations"],
+        "Route 03",
+        race_03_config["route_distance"],
+    )
 
 
 @pytest.fixture

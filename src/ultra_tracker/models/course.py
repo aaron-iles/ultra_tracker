@@ -125,7 +125,7 @@ def find_closest_index(
     coordinates: list,
     distances: np.array,
     points: np.array,
-    coordinate_weight: float = 4.0,
+    coordinate_weight: float = 8.0,
     mile_mark_weight: float = 1.0,
     tolerance: float = 75,
 ) -> int:
@@ -156,7 +156,10 @@ def find_closest_index(
         ]
     )
     if haversine_distance(points[found_index], coordinates) > tolerance:
-        raise RuntimeError(f"unable to align {mile_mark} @ {coordinates} within tolerance")
+        raise RuntimeError(
+            f"unable to align {mile_mark} @ {coordinates} within tolerance of "
+            f"{tolerance} ft; found mi {distances[found_index]} @ {points[found_index]}"
+        )
     return found_index
 
 
@@ -201,7 +204,6 @@ def align_known_mile_marks(
         adjusted_distances = np.linspace(
             current_kmm["mile_mark"], next_kmm["mile_mark"], len(segment_distances)
         )
-        # TODO: sometimes this is putting overlapping aid stations at the same mile mark. Fix it.
         # Update the route distances for this segment
         modified_distances[start_idx : end_idx + 1] = adjusted_distances
         logger.debug(
@@ -559,6 +561,7 @@ class AidStation(CourseElement):
         self.comments = comments
         self.coordinates = coordinates
         self.display_name = f"{name} (mile {mile_mark})"
+        self.estimated_duration = datetime.timedelta(0)
         self.previous_leg = prev_leg
         self.next_leg = next_leg
         self._arrival_time = datetime.datetime.fromtimestamp(0)

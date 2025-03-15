@@ -101,7 +101,7 @@ def get_config_data(file_path: str) -> dict:
     :return dict: The parsed dict from the config file.
     """
     try:
-        with open(file_path, "r") as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             yaml_content = yaml.safe_load(file)
         return yaml_content
     except FileNotFoundError:
@@ -135,7 +135,7 @@ def post_data():
     if not content_length:
         return "Content-Length header is missing or zero", 411
     payload = request.get_data(as_text=True)
-    with open(f"{app.config['UT_DATA_DIR']}/post_log.txt", "a") as file:
+    with open(f"{app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii") as file:
         file.write(f"{payload}\n")
     app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200

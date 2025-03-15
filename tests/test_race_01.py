@@ -34,12 +34,12 @@ def caltopo_map_01(caltopo_session, requests_mock, race_01_path):
         map_mock_response = json.loads(f.read())
     requests_mock.get(f"https://caltopo.com/api/v1/map/{map_id}/since/0", json=map_mock_response)
 
-    elevation_data_file = os.path.join(race_01_path, "elevation_data.json")
-    with open(elevation_data_file, "r") as f:
-        elev_mock_response = json.loads(f.read())
+    requests_mock.real_http = True
+    # elevation_data_file = os.path.join(race_01_path, "elevation_data.json")
+    # with open(elevation_data_file, "r") as f:
+    #    elev_mock_response = json.loads(f.read())
 
-    requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
-
+    # requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
     return caltopo.CaltopoMap(map_id, caltopo_session)
 
 
@@ -103,4 +103,6 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks):
     for ping_data in race_01_post_log:
         race_01.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_01.runner.mile_mark, 2)))
+    # with open('/tmp/mi', 'w') as f:
+    #    f.write(json.dumps(mile_mark_progression))
     assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
