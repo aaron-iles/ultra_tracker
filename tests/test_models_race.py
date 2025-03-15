@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 
-
 from ultra_tracker.models import race
 
 
@@ -15,4 +14,3 @@ def test_calculate_most_probable_mile_mark_large_spread():
 
 def test_calculate_most_probable_mile_mark_long_list():
     assert race.calculate_most_probable_mile_mark(range(1, 1000), 60, 12.56) == 5
-

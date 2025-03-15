@@ -103,7 +103,6 @@ class Race:
                 self.runner.average_moving_pace
             ),
             "altitude": format_distance(self.runner.last_ping.altitude, True),
-            "current_pace": convert_decimal_pace_to_pretty_format(self.runner.current_pace),
             "mile_mark": round(self.runner.mile_mark, 2),
             "elapsed_time": format_duration(self.runner.elapsed_time),
             "stoppage_time": format_duration(self.runner.stoppage_time),
@@ -114,6 +113,7 @@ class Race:
             "start_time": self.start_time,
             "map_url": self.map_url,
             "course_elements": self.course.course_elements,
+            "aid_station_annotations": self.course.aid_stations_annotations,
             "course_deviation": format_distance(self.runner.course_deviation),
             "deviation_background_color": (
                 "#90EE90"
@@ -142,7 +142,6 @@ class Race:
             },
         }
 
-    # TODO need to save off entrance and exit time for course elements
     def save(self) -> None:
         """
         Saves the race stats to a file.
@@ -206,7 +205,7 @@ class Race:
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
         logger.debug(ping)
-        if ping.gps_fix == 0 or ping.latlon == [0, 0]:
+        if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")
             self.runner.pings += 1
             return
@@ -534,4 +533,4 @@ class Runner:
         overall_pace = convert_decimal_pace_to_pretty_format(self.average_overall_pace)
         moving_pace = convert_decimal_pace_to_pretty_format(self.average_moving_pace)
         clock = format_duration(self.elapsed_time)
-        return f"runner {round(self.mile_mark, 2)} mi @ {overall_pace}/{moving_pace} ({clock})"
+        return f"runner {round(self.mile_mark, 2)} mi @ {moving_pace}/{overall_pace} ({clock})"

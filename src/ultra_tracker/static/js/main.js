@@ -53,6 +53,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var data = [route, runner_marker];
 
+    // Create annotations for each course element
+    var annotations = aid_station_annotations.map(element => ({
+        x: element.x,
+        y: element.y,
+        xref: 'x',
+        yref: 'y',
+        text: element.name,
+        showarrow: true,
+        arrowhead: 0,
+        ax: 0,
+        ay: -40
+    }));
+
+    // Add the runner annotation to the array
+    annotations.push({
+        x: runner_x,
+        y: runner_y,
+        xref: 'x',
+        yref: 'y',
+        text: runner_name,
+        showarrow: true,
+        arrowhead: 0,
+        ax: 0,
+        ay: -40
+    });
+
+
     // Define the layout with axis labels
     var layout = {
         xaxis: {
@@ -76,19 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         showlegend: false,
         hovermode: 'closest',
-        annotations: [
-            {
-                x: runner_x,
-                y: runner_y,
-                xref: 'x',
-                yref: 'y',
-                text: runner_name,
-                showarrow: true,
-                arrowhead: 0,
-                ax: 0,
-                ay: -40
-            }
-        ]
+        annotations: annotations,
     };
     var config = {
       responsive: false,

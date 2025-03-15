@@ -1,0 +1,45 @@
+---
+start_time: '2024-04-11T23:00:00'
+garmin_api_token: XXXXXXXX
+caltopo_map_id: "02"
+caltopo_credential_id: XXXXXXXXXXXX
+caltopo_key: dGVzdGtleQ==
+runner_name: Runner
+route_name: Route 02
+route_distance: 220.1
+race_name: Dark Sky 220
+aid_stations:
+  - name: 01 Farrandsville
+    mile_mark: 8.8
+  - name: 02 Rattlesnake
+    mile_mark: 22.5
+  - name: 03 Hyner View
+    mile_mark: 34.8
+  - name: 04 Hyner Run
+    mile_mark: 41.5
+  - name: 05 Young Woman's Creek
+    mile_mark: 50.5
+  - name: 06 Cross Fork
+    mile_mark: 67.3
+  - name: 07 Jamison Run
+    mile_mark: 81.6
+  - name: 08 Patterson
+    mile_mark: 93.7
+  - name: 09 Lyman Run
+    mile_mark: 108.2
+  - name: 10 Cherry Springs
+    mile_mark: 116.1
+  - name: 11 Ole Bull
+    mile_mark: 128.9
+  - name: 12 Pipe Dream
+    mile_mark: 145.3
+  - name: 13 Lebo Vista
+    mile_mark: 164.4
+  - name: 14 Haneyville
+    mile_mark: 175.4
+  - name: 15 Waterville
+    mile_mark: 192.1
+  - name: 16 Ramsey Bridge
+    mile_mark: 202.0
+  - name: 17 Woolrich
+    mile_mark: 214.8

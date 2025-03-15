@@ -39,19 +39,17 @@
     <table class="responsive-table stats-table">
       <thead>
         <tr>
-          <th>start time</th>
-          <th>last update</th>
-          <th>elapsed time</th>
-          <th>moving time</th>
-          <th>stoppage time</th>
-          <th>mile mark</th>
-          <th>altitude</th>
-          <th>average overall pace</th>
-          <th>average moving pace</th>
-          <th>current pace</th>
-          <th>est finish date</th>
-          <th>est finish time</th>
-          <th>course deviation</th>
+          <th>start time<span class="tooltip-icon" data-tooltip="Race start time">ⓘ</span></th>
+          <th>last update<span class="tooltip-icon" data-tooltip="Last ping received">ⓘ</span></th>
+          <th>elapsed time<span class="tooltip-icon" data-tooltip="Total time from start to last ping">ⓘ</span></th>
+          <th>moving time<span class="tooltip-icon" data-tooltip="Total time less stoppage time">ⓘ</span></th>
+          <th>stoppage time<span class="tooltip-icon" data-tooltip="Approximate time spent at aid stations">ⓘ</span></th>
+          <th>mile mark<span class="tooltip-icon" data-tooltip="Current mile mark">ⓘ</span></th>
+          <th>altitude<span class="tooltip-icon" data-tooltip="Current altitude">ⓘ</span></th>
+          <th>avg pace<span class="tooltip-icon" data-tooltip="Average pace (moving / overall)">ⓘ</span></th>
+          <th>est finish date<span class="tooltip-icon" data-tooltip="Estimated date of finish">ⓘ</span></th>
+          <th>est finish time<span class="tooltip-icon" data-tooltip="Estimated clock time at finish">ⓘ</span></th>
+          <th>course deviation<span class="tooltip-icon" data-tooltip="Difference between ping location and est. mile mark">ⓘ</span></th>
         </tr>
       </thead>
       <tbody>
@@ -63,9 +61,7 @@
           <td>{{ stoppage_time }}</td>
           <td>{{ mile_mark }}</td>
           <td>{{ altitude }}</td>
-          <td>{{ average_overall_pace }}</td>
-          <td>{{ average_moving_pace }}</td>
-          <td>{{ current_pace }}</td>
+          <td>{{ average_moving_pace }} / {{ average_overall_pace }}</td>
           <td>{{ est_finish_date | format_time }}</td>
           <td>{{ est_finish_time }}</td>
           <td style="background-color:{{ deviation_background_color}}">{{ course_deviation }}</td>
@@ -89,13 +85,13 @@
             {% if course_element.__class__.__name__ == 'Leg' %}
               <thead>
                 <tr>
-                  <th>distance</th>
-                  <th>gain</th>
-                  <th>loss</th>
-                  <th>estimated duration</th>
-                  <th>approx. start time</th>
-                  <th>approx. finish time</th>
-                  <th>approx. duration</th>
+                  <th>distance<span class="tooltip-icon" data-tooltip="Total distance">ⓘ</span></th>
+                  <th>gain<span class="tooltip-icon" data-tooltip="Total vertical gain">ⓘ</span></th>
+                  <th>loss<span class="tooltip-icon" data-tooltip="Total vertical loss">ⓘ</span></th>
+                  <th>estimated duration<span class="tooltip-icon" data-tooltip="Predicted leg duration">ⓘ</span></th>
+                  <th>approx. start time<span class="tooltip-icon" data-tooltip="Observed leg start time">ⓘ</span></th>
+                  <th>approx. finish time<span class="tooltip-icon" data-tooltip="Observed leg finish time">ⓘ</span></th>
+                  <th>approx. duration<span class="tooltip-icon" data-tooltip="Observed leg duration">ⓘ</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -113,12 +109,12 @@
             {% if course_element.__class__.__name__ == 'AidStation' %}
               <thead>
                 <tr>
-                  <th>mile mark</th>
-                  <th>navigation</th>
-                  <th>eta</th>
-                  <th>approx. arrival time</th>
-                  <th>approx. departure time</th>
-                  <th>approx. stoppage time</th>
+                  <th>mile mark<span class="tooltip-icon" data-tooltip="Mile mark of the aid station">ⓘ</span></th>
+                  <th>navigation<span class="tooltip-icon" data-tooltip="Link to Google Maps navigation">ⓘ</span></th>
+                  <th>eta<span class="tooltip-icon" data-tooltip="Estimated time of arrival">ⓘ</span></th>
+                  <th>approx. arrival time<span class="tooltip-icon" data-tooltip="Observed arrival time">ⓘ</span></th>
+                  <th>approx. departure time<span class="tooltip-icon" data-tooltip="Observed departure time">ⓘ</span></th>
+                  <th>approx. stoppage time<span class="tooltip-icon" data-tooltip="Observed stoppage time">ⓘ</span></th>
                   <th>comments</th>
                 </tr>
               </thead>
@@ -150,8 +146,16 @@
     <h1 class="page-header">Raw Data</h1>
     <pre><code id="json-data" class="language-json">{{ debug_data | tojson(indent=2) }}</code></pre>
   </div>
-  <div id="profile" class="container tab-content" style="padding-top: 88px; width: 100%; height: 90%;"></div>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> 
+  <div id="profile" class="container tab-content" style="padding-top: 88px; width: 100%; height: 90%; overflow-x: auto;"></div>
+    <style>
+      /* Make the profile height more responsive for mobile screens */
+      @media only screen and (max-width: 768px) {
+        #profile {
+          height: 50%; /* Reduce the height for mobile */
+        }
+      }
+    </style>
+  <script src="https://cdn.plot.ly/plotly-2.25.0.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script> 
@@ -164,6 +168,7 @@
     var elevations = {{ elevations | safe }};
     var runner_x = {{ runner_x }};
     var runner_y = {{ runner_y }};
+    var aid_station_annotations = {{ aid_station_annotations | safe }};
   </script>
 </body>
 </html>

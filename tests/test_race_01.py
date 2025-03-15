@@ -13,18 +13,17 @@ from ultra_tracker_fixtures import *
 from ultra_tracker.models import caltopo, course, race
 
 
-
 @pytest.fixture
 def race_01_path():
     return os.path.join(os.path.dirname(__file__), "test_data", "01")
 
 
 @pytest.fixture
-def aid_stations_map_01(race_01_path):
+def race_01_config(race_01_path):
     race_config_file = os.path.join(race_01_path, "race_config.yml")
     with open(race_config_file, "r") as file:
-        config_data = yaml.safe_load(file)
-    return config_data["aid_stations"]
+        config_01 = yaml.safe_load(file)
+    return config_01
 
 
 @pytest.fixture
@@ -35,18 +34,20 @@ def caltopo_map_01(caltopo_session, requests_mock, race_01_path):
         map_mock_response = json.loads(f.read())
     requests_mock.get(f"https://caltopo.com/api/v1/map/{map_id}/since/0", json=map_mock_response)
 
-    elevation_data_file = os.path.join(race_01_path, "elevation_data.json")
-    with open(elevation_data_file, "r") as f:
-        elev_mock_response = json.loads(f.read())
+    requests_mock.real_http = True
+    # elevation_data_file = os.path.join(race_01_path, "elevation_data.json")
+    # with open(elevation_data_file, "r") as f:
+    #    elev_mock_response = json.loads(f.read())
 
-    requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
-
+    # requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
     return caltopo.CaltopoMap(map_id, caltopo_session)
 
 
 @pytest.fixture
-def course_01(caltopo_map_01, aid_stations_map_01):
-    return course.Course(caltopo_map_01, aid_stations_map_01, "Route 01")
+def course_01(caltopo_map_01, race_01_config):
+    return course.Course(
+        caltopo_map_01, race_01_config["aid_stations"], "Route 01", race_01_config["route_distance"]
+    )
 
 
 @pytest.fixture
@@ -59,23 +60,20 @@ def runner_01(caltopo_map_01, race_01_path, requests_mock):
             f"https://caltopo.com/api/v1/map/01/Marker/{marker_id}",
             json={"result": {}, "status": "ok"},
         )
-    return race.Runner(caltopo_map_01, "Runner", [0,0], None, True)
+    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, True)
 
 
 @pytest.fixture
-def race_01(race_01_path, caltopo_map_01, course_01, runner_01):
-    race_config_file = os.path.join(race_01_path, "race_config.yml")
-    with open(race_config_file, "r") as file:
-        config_data = yaml.safe_load(file)
+def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config):
 
     if os.path.exists("/tmp/data_store.json"):
         os.remove("/tmp/data_store.json")
 
     return race.Race(
-        config_data["race_name"],
+        race_01_config["race_name"],
         caltopo_map_01,
         course_01.timezone.localize(
-            datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
+            datetime.datetime.strptime(race_01_config["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
         "/tmp/data_store.json",
         course_01,
@@ -105,4 +103,6 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks):
     for ping_data in race_01_post_log:
         race_01.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_01.runner.mile_mark, 2)))
+    # with open('/tmp/mi', 'w') as f:
+    #    f.write(json.dumps(mile_mark_progression))
     assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)

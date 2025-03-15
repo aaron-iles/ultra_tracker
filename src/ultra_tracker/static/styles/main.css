@@ -157,3 +157,86 @@ body, html {
 .tab-content.active {
     display: block; /* Show active tab content */
 }
+
+
+th {
+  position: relative; /* ensures that children are positioned relative to the th */
+}
+
+
+/* Tooltip icon styling */
+.tooltip-icon {
+  font-size: 1.2em;
+  color: #5ab6f9;
+  cursor: pointer;
+  margin-left: 5px;
+  user-select: none; /* Prevent text selection/highlighting */
+  outline: none; /* Remove focus outline */
+  -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on mobile */
+}
+
+/* Tooltip container */
+.tooltip-icon[data-tooltip] {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+
+.tooltip-icon[data-tooltip]::before,
+.tooltip-icon[data-tooltip]::after {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Tooltip text */
+.tooltip-icon[data-tooltip]::before {
+  content: attr(data-tooltip);
+  background-color: rgba(0, 0, 0, 0.85); /* Material black with opacity */
+  color: #fff;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Ensure long words break and wrap */
+  bottom: 100%; /* Position above the element */
+  left: 0%;
+  transform: translateX(-5%); /* Center the tooltip horizontally */
+  width: max-content;
+  overflow-wrap: break-word; /* Break long words */
+}
+
+/* Show the tooltip and arrow when hovered or tapped */
+.tooltip-icon:hover::before,
+.tooltip-icon:hover::after,
+.tooltip-icon:active::before,
+.tooltip-icon:active::after {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Adjust tooltip for small screens (mobile) */
+@media (max-width: 600px) {
+  .tooltip-icon[data-tooltip]::before {
+    left: 50%;
+    transform: translateX(-5%); /* Ensure it is centered on small screens */
+    bottom: 100%; /* Move the tooltip above */
+    top: auto; /* Override top positioning */
+  }
+
+  .tooltip-icon[data-tooltip]::after {
+    top: calc(100% + 5px); /* Adjust arrow position on mobile */
+  }
+}
+
+/* Ensure tooltip stays within the screen width */
+@media (max-width: 600px) {
+  .tooltip-icon[data-tooltip]::before {
+    max-width: calc(100vw - 20px); /* Ensure the tooltip doesn't overflow the screen */
+  }
+}
+
+
