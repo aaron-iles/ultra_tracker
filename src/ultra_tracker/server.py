@@ -36,7 +36,7 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
     :param datetime.datetime time_obj: The datetime object to be formatted.
     :return str: The human-friendly formatted time object.
     """
-    if time_obj == datetime.datetime.fromtimestamp(0):
+    if time_obj.astimezone(datetime.timezone.utc) == datetime.datetime.fromtimestamp(0, datetime.timezone.utc):
         return "--/-- --:--"
     return time_obj.strftime("%-m/%-d %-I:%M %p")
 
