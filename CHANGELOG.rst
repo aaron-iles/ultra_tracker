@@ -4,6 +4,19 @@ Project Release Notes
 
 .. contents:: Topics
 
+v5.0.1
+======
+
+Release Summary
+---------------
+
+Minor bugfixes
+
+Bugfixes
+--------
+
+- Fixes the "last update" display in the UI when the race hasn't started yet
+
 v5.0.0
 ======
 
