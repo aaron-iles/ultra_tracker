@@ -1,0 +1,36 @@
+---
+start_time: '2024-07-19T08:00:00'
+caltopo_map_id: CPP7SGP
+runner_name: Aaron
+route_name: Route
+route_distance: 102.1
+race_name: Ouray 100
+aid_stations:
+  - name: 01 Lower Camp Bird
+    mile_mark: 5.6
+  - name: 02 Lower Camp Bird
+    mile_mark: 11.6
+  - name: 03 Richmond Trailhead
+    mile_mark: 13.6
+  - name: 04 Richmond Trailhead
+    mile_mark: 21.5
+  - name: 05 Ironton Park
+    mile_mark: 27.4
+  - name: 06 Ironton Park
+    mile_mark: 35.6
+  - name: 07 Ironton Park
+    mile_mark: 43.7
+  - name: 08 Weehawken Trailhead
+    mile_mark: 53.8
+  - name: 09 Weehawken Trailhead
+    mile_mark: 59
+  - name: 10 Crystal Lake
+    mile_mark: 66
+  - name: 11 Fellin Park
+    mile_mark: 74.5
+  - name: 12 Silvershield Trailhead
+    mile_mark: 80.8
+  - name: 13 Fellin Park
+    mile_mark: 84.8
+  - name: 14 Fellin Park
+    mile_mark: 91.5

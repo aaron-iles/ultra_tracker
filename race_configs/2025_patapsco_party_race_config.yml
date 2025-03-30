@@ -1,0 +1,13 @@
+---
+start_time: '2025-01-05T03:45:00'
+caltopo_map_id: N05K7T1
+runner_name: Aaron
+route_name: Out-n-Back
+race_name: Patapsco Party
+aid_stations:
+  - name: Woodstock
+    mile_mark: 28.1
+  - name: Jeremy's House
+    mile_mark: 36.2
+  - name: Aaron's House
+    mile_mark: 44.2

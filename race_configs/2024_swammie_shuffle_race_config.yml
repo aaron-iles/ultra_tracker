@@ -1,0 +1,70 @@
+---
+start_time: '2024-02-25T08:00:00'
+caltopo_map_id: JT680
+runner_name: Aaron
+route_name: Route
+route_distance: 220.0
+race_name: Swammie Shuffle
+aid_stations:
+  - name: 01 Air Down Lot
+    mile_mark: 23.3
+  - name: 02 Kimball's Kitchen
+    mile_mark: 34.9
+  - name: 03 Kitty Hawk
+    mile_mark: 47.7
+  - name: 04 Coquina Beach
+    mile_mark: 65.9
+  - name: 05 Pea Island
+    mile_mark: 75.8
+  - name: 06 Rodanthe
+    mile_mark: 84.2
+  - name: 07 Ramp 30
+    mile_mark: 95.3
+  - name: 08 Lighthouse
+    mile_mark: 110.2
+  - name: 09 Ramp 30
+    mile_mark: 124.1
+  - name: 10 Rodanthe
+    mile_mark: 135
+  - name: 11 Pea Island
+    mile_mark: 144.5
+  - name: 12 Coquina Beach
+    mile_mark: 154.5
+  - name: 13 Kitty Hawk
+    mile_mark: 173.0
+  - name: 14 Kimball's Kitchen
+    mile_mark: 185.4
+  - name: 15 Air Down Lot
+    mile_mark: 196.5
+
+#aid_stations:
+#  - name: 01 Air Down Lot
+#    mile_mark: 23.3
+#  - name: 02 Kimball's Kitchen
+#    mile_mark: 34.6
+#  - name: 03 Kitty Hawk
+#    mile_mark: 46.7
+#  - name: 04 Coquina Beach
+#    mile_mark: 64.9
+#  - name: 05 Pea Island
+#    mile_mark: 74
+#  - name: 06 Rodanthe
+#    mile_mark: 82.9
+#  - name: 07 Ramp 30
+#    mile_mark: 93.8
+#  - name: 08 Lighthouse
+#    mile_mark: 107.5
+#  - name: 09 Ramp 30
+#    mile_mark: 121.1
+#  - name: 10 Rodanthe
+#    mile_mark: 132
+#  - name: 11 Pea Island
+#    mile_mark: 141
+#  - name: 12 Coquina Beach
+#    mile_mark: 150.1
+#  - name: 13 Kitty Hawk
+#    mile_mark: 168.3
+#  - name: 14 Kimball's Kitchen
+#    mile_mark: 180.4
+#  - name: 15 Air Down Lot
+#    mile_mark: 191.8

@@ -1,0 +1,17 @@
+---
+start_time: '2024-12-30T15:30:00'
+caltopo_map_id: 07E74MA
+runner_name: Jim
+route_name: Route
+race_name: Pizza Run
+aid_stations:
+  - name: 01 Pizza Hut
+    mile_mark: 0.35
+  - name: 02 Peace of Pizza
+    mile_mark: 1.46
+  - name: 03 Coal Fire Pizza
+    mile_mark: 9.8
+  - name: 04 Pub Dog
+    mile_mark: 13.2
+  - name: 05 Cushwa
+    mile_mark: 13.7

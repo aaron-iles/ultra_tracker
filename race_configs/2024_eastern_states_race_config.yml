@@ -1,0 +1,37 @@
+---
+start_time: '2024-08-10T05:00:00'
+caltopo_map_id: JPVM5
+runner_name: Aaron
+route_name: Route
+race_name: Eastern States 100
+aid_stations:
+  - name: 01 Ramsey Rd
+    mile_mark: 4.5
+  - name: 02 Ramsey
+    mile_mark: 9.9
+  - name: 03 Lower Pine Bottom
+    mile_mark: 16.3
+  - name: 04 Browns Run
+    mile_mark: 24.1
+  - name: 05 Happy Dutchman
+    mile_mark: 29.8
+  - name: 06 Ritchie Rd
+    mile_mark: 36.7
+  - name: 07 Hyner Run
+    mile_mark: 41.4
+  - name: 08 Dry Run
+    mile_mark: 49.1
+  - name: 09 Big Trail
+    mile_mark: 54.6
+  - name: 10 Tomb Flats
+    mile_mark: 61.8
+  - name: 11 Cedar Run
+    mile_mark: 70.7
+  - name: 12 Blackwell
+    mile_mark: 78.5
+  - name: 13 Sky Top
+    mile_mark: 82.7
+  - name: 14 Barrens
+    mile_mark: 90.9
+  - name: 15 Hackett
+    mile_mark: 97.1

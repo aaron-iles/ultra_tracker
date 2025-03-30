@@ -1,0 +1,144 @@
+start_time: '2024-09-08T10:00:00'
+caltopo_map_id: UMLH4
+runner_name: Aaron
+route_name: Route
+race_name: Tor des Geants
+aid_stations:
+  - name: Baite Youlaz
+    mile_mark: 8
+    comments: refreshments only
+  - name: La Thuile
+    mile_mark: 11.8
+    comments: refreshments + aid
+  - name: Rifugio Deffeyes
+    mile_mark: 17.3
+    comments: refreshments only
+  - name: Bivacco Zappelli
+    mile_mark: 20.4
+    comments: refreshments + aid
+  - name: Planaval
+    mile_mark: 26.6
+    comments: refreshments only
+  - name: Valgrisenche
+    mile_mark: 30.2
+    comments: life base
+  - name: Rifugio Chalet de L'epée
+    mile_mark: 34.1
+    comments: refreshments only
+  - name: Rhemes-Notre-Dame
+    mile_mark: 39
+    comments: refreshments + aid
+  - name: Col Entrelor
+    mile_mark: 42.4
+    comments: aid only
+  - name: Eaux Rousses
+    mile_mark: 48.6
+    comments: refreshments + aid
+  - name: Col Loson
+    mile_mark: 56.3
+    comments: aid only
+  - name: Rifugio Vittorio Sella
+    mile_mark: 59.1
+    comments: refreshments only
+  - name: Cogne
+    mile_mark: 64.6
+    comments: life base
+  - name: Goilles Dessous
+    mile_mark: 68.2
+    comments: refreshments only
+  - name: Rifugio Dondena
+    mile_mark: 78.3
+    comments: refreshments only
+  - name: Chardonney - Champorcher
+    mile_mark: 81.7
+    comments: refreshments + aid
+  - name: Pont Boset
+    mile_mark: 86.6
+    comments: refreshments only
+  - name: Donnas
+    mile_mark: 93.1
+    comments: life base
+  - name: Perloz
+    mile_mark: 96.7
+    comments: refreshments only
+  - name: La Sassa
+    mile_mark: 101.2
+    comments: refreshments only
+  - name: Rifugio Delfo E Agostino Coda
+    mile_mark: 104
+    comments: refreshments + aid
+  - name: Rifugio Del Lago Della Barma
+    mile_mark: 109.2
+    comments: refreshments only
+  - name: Lago Chiaro
+    mile_mark: 112.5
+    comments: refreshments only
+  - name: Colle Della Vecchia
+    mile_mark: 115
+    comments: refreshments + aid
+  - name: Niel - Dortoir La Gruba
+    mile_mark: 118.5
+    comments: refreshments + aid
+  - name: Bleckene - Lòò Superiore
+    mile_mark: 122.3
+    comments: refreshments only
+  - name: Gressoney
+    mile_mark: 126.8
+    comments: life base
+  - name: Alpenzu Grande
+    mile_mark: 129.9
+    comments: refreshments only
+  - name: Champoluc
+    mile_mark: 137.1
+    comments: refreshments + aid
+  - name: Rifugio Grand Tournalin
+    mile_mark: 142.2
+    comments: refreshments only
+  - name: Valtournenche
+    mile_mark: 147.7
+    comments: life base
+  - name: Rifugio Jean Barmasse
+    mile_mark: 150.7
+    comments: refreshments only
+  - name: Bivacco Vareton
+    mile_mark: 153.8
+    comments: refreshments only
+  - name: Rifugio Lo Magià
+    mile_mark: 159
+    comments: refreshments only
+  - name: Rifugio Oratorio Di Cuney
+    mile_mark: 161.2
+    comments: refreshments + aid
+  - name: Bivacco Rosaire Clermont
+    mile_mark: 164
+    comments: refreshments only
+  - name: Oyace
+    mile_mark: 170.1
+    comments: refreshments + aid
+  - name: Bruson Arp
+    mile_mark: 172.6
+    comments: refreshments only
+  - name: Berrio Damon
+    mile_mark: 175.2
+    comments: refreshments only
+  - name: Ollomont
+    mile_mark: 177.5
+    comments: life base
+  - name: Rifugio Letey Champillon
+    mile_mark: 180.4
+    comments: refreshments only
+  - name: Ponteille
+    mile_mark: 184.5
+    comments: refreshments only
+  - name: Bosses
+    mile_mark: 190.7
+    comments: refreshments + aid
+  - name: Rifugio Pier Giorgio Frassati
+    mile_mark: 196.4
+    comments: refreshments only
+  - name: Entre Deux Sauts
+    mile_mark: 200
+    comments: refreshments + aid
+  - name: Mont de la Saxe
+    mile_mark: 205.5
+    comments: refreshments only

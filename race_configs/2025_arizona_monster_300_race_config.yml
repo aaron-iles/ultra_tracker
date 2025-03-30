@@ -1,0 +1,65 @@
+---
+start_time: '2025-04-04T13:00:00'
+caltopo_map_id: FS9AK98
+runner_name: Aaron
+route_name: Route
+route_distance: 304.3
+race_name: Arizona Monster 300
+aid_stations:
+  - name: Picket Post
+    mile_mark: 6.6
+    comments: full aid, no crew, no pacers
+  - name: Gila River
+    mile_mark: 28.7
+    comments: full aid, no crew, no pacers
+  - name: Grand Enchantment
+    mile_mark: 45.4
+    comments: sleep station, drop bags, no crew, no pacers
+  - name: Tortilla
+    mile_mark: 58.6
+    comments: R&R, no crew, no pacers
+  - name: Freeman
+    mile_mark: 75
+    comments: sleep station, drop bags, crew access, no pacers
+  - name: Black Hills
+    mile_mark: 91
+    comments: full aid, no crew, no pacers
+  - name: Tiger Mine
+    mile_mark: 105.3
+    comments: sleep station, drop bags, crew access, pacer pickup/dropoff
+  - name: Oracle
+    mile_mark: 114.3
+    comments: full aid, drop bags, no crew, pacers allowed
+  - name: Mt Lemmon
+    mile_mark: 128.5
+    comments: sleep station, drop bags, crew access, pacer pickup/dropoff
+  - name: Charloux Gap
+    mile_mark: 145.9
+    comments: R&R, no crew, no pacers
+  - name: Catalina
+    mile_mark: 158.1
+    comments: full aid, drop bags, crew access, pacer pickup/dropoff
+  - name: Rillito
+    mile_mark: 176.4
+    comments: sleep station, drop bags, crew access, pacer pickup/dropoff
+  - name: Valencia
+    mile_mark: 197.6
+    comments: full aid, no crew, no pacers
+  - name: Pistol Hill
+    mile_mark: 212.9
+    comments: R&R, drop bags, no crew, no pacers
+  - name: Gabe Zimmerman
+    mile_mark: 222.9
+    comments: sleep station, drop bags, crew access, pacer pickup/dropoff
+  - name: Santa Rita
+    mile_mark: 233.5
+    comments: R&R, no crew, no pacers
+  - name: Oak Tree
+    mile_mark: 251.2
+    comments: sleep station, drop bags, no crew, no pacers
+  - name: Apache Springs
+    mile_mark: 266.6
+    comments: full aid, drop bags, no crew, no pacers
+  - name: Casa Blanca
+    mile_mark: 288.1
+    comments: sleep station, drop bags, crew access, pacer pickup/dropoff

@@ -1,0 +1,11 @@
+---
+start_time: '2024-04-06T07:00:00'
+caltopo_map_id: 6T23R
+runner_name: Aaron
+route_name: Route
+race_name: Test Run
+aid_stations:
+  - name: AS1
+    mile_mark: 7.6
+  - name: AS0
+    mile_mark: 2.8

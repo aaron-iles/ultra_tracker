@@ -1,0 +1,35 @@
+---
+start_time: '2024-12-07T06:00:00'
+caltopo_map_id: CVA0H9R
+runner_name: Tony
+route_name: Route
+race_name: Devil Dog 100
+aid_stations:
+  - name: 01 Camp Gunny
+    mile_mark: 8.5
+  - name: 02 Camp Toofy
+    mile_mark: 16.5
+  - name: 03 Camp Remi
+    mile_mark: 22.75
+  - name: 04 Camp Gunny
+    mile_mark: 28
+  - name: 05 Camp Toofy
+    mile_mark: 36
+  - name: 06 Camp Remi
+    mile_mark: 42.25
+  - name: 07 Camp Gunny
+    mile_mark: 47.5
+  - name: 08 Camp Toofy
+    mile_mark: 55.5
+  - name: 09 Camp Remi
+    mile_mark: 62
+  - name: 10 Camp Gunny
+    mile_mark: 67
+  - name: 11 Camp Toofy
+    mile_mark: 75
+  - name: 12 Camp Remi
+    mile_mark: 81.25
+  - name: 13 Camp Gunny
+    mile_mark: 86.5
+  - name: 14 Camp Toofy
+    mile_mark: 94.5
