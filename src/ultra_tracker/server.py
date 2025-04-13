@@ -3,11 +3,16 @@
 import argparse
 import datetime
 import json
+import hashlib
+from collections import deque
 import logging
+import random
+import time
 import sys
 
 import yaml
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response, session, stream_with_context
+from flask import request, redirect, url_for, render_template_string, abort
 
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
@@ -36,9 +41,24 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
     :param datetime.datetime time_obj: The datetime object to be formatted.
     :return str: The human-friendly formatted time object.
     """
-    if time_obj.astimezone(datetime.timezone.utc) == datetime.datetime.fromtimestamp(0, datetime.timezone.utc):
+    if time_obj.astimezone(datetime.timezone.utc) == datetime.datetime.fromtimestamp(
+        0, datetime.timezone.utc
+    ):
         return "--/-- --:--"
     return time_obj.strftime("%-m/%-d %-I:%M %p")
+
+
+class InMemoryLogHandler(logging.Handler):
+    def __init__(self, max_logs=1000):
+        super().__init__(level=logging.NOTSET)
+        self.logs = deque(maxlen=max_logs)
+        self.setFormatter(logging.Formatter("%(asctime)s   %(levelname)s   %(message)s", "%Y-%m-%d %H:%M:%S"))
+
+    def emit(self, record):
+        self.logs.append(self.format(record))
+
+    def get_logs(self):
+        return list(self.logs)
 
 
 def setup_logging(verbose: bool = False):
@@ -51,14 +71,17 @@ def setup_logging(verbose: bool = False):
     :return None:
     """
     # Define the logging format
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    log_format = "%(asctime)s   %(levelname)s   %(message)s"
     # Create a stream handler to log to stdout since the application will log via journald.
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(logging.Formatter(log_format))
+    stream_handler.setFormatter(logging.Formatter(log_format, "%Y-%m-%d %H:%M:%S"))
+    stream_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
     # Add the stream handler to the root logger
     logging.root.addHandler(stream_handler)
+    in_memory_log_handler = InMemoryLogHandler()
+    logging.root.addHandler(in_memory_log_handler)
     # Set the logging level.
-    logging.root.setLevel(logging.DEBUG if verbose else logging.INFO)
+    logging.root.setLevel(logging.NOTSET)
 
 
 def parse_args() -> argparse.Namespace:
@@ -112,6 +135,27 @@ def get_config_data(file_path: str) -> dict:
         return None
 
 
+def validate_config(config_data: dict):
+    """ """
+    # TODO
+    mandatory_keys = {
+        "admin_password_hash",
+        "aid_stations",
+        "caltopo_credential_id",
+        "caltopo_key",
+        "caltopo_map_id",
+        "garmin_api_token",
+        "race_name",
+        "route_distance",
+        "route_name",
+        "runner_name",
+        "start_time",
+    }
+    for key in mandatory_keys:
+        assert key in config_data.keys(), f"Missing {key} in config file!"
+    return
+
+
 @app.route("/", methods=["GET"])
 def get_race_stats():
     """
@@ -122,6 +166,89 @@ def get_race_stats():
     return render_template("race_stats.html", **race.html_stats)
 
 
+
+
+
+
+
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """
+    """
+    error = None
+
+    # Check for lockout
+    if "lockout_until" in session:
+        lockout_time = session["lockout_until"]
+        if datetime.datetime.now(datetime.timezone.utc) < lockout_time:
+            remaining = int((lockout_time - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
+            return render_template("login.html", error=f"Too many attempts. Try again in {remaining} seconds.")
+        else:
+            # Reset lockout once time has passed
+            session.pop("lockout_until", None)
+            session["failed_attempts"] = 0
+
+    if request.method == "POST":
+        entered_password = request.form["password"]
+        entered_hash = hashlib.sha256(entered_password.encode()).hexdigest()
+
+        if entered_hash == app.config["UT_ADMIN_PASSWORD_HASH"]:
+            session["logged_in"] = True
+            session.pop("failed_attempts", None)
+            return redirect(url_for("get_logs"))
+        else:
+            session["failed_attempts"] = session.get("failed_attempts", 0) + 1
+            if session["failed_attempts"] >= 5:
+                session["lockout_until"] = datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
+                error = "Too many incorrect attempts. Login disabled for 30 seconds."
+            else:
+                error = f"Incorrect password. Attempts left: {5 - session['failed_attempts']}"
+
+    return render_template("login.html", error=error)
+
+
+
+
+
+
+
+@app.route("/logs")
+def get_logs():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    log_handler = logging.root.handlers[1]  # your InMemoryLogHandler
+
+    if request.headers.get("Accept") == "text/event-stream":
+        @stream_with_context
+        def event_stream():
+            seen = 0
+            while True:
+                logs = log_handler.get_logs()
+                if len(logs) > seen:
+                    for line in logs[seen:]:
+                        yield f"data: {line}\n\n"
+                    seen = len(logs)
+                time.sleep(1)
+
+        return Response(event_stream(), mimetype="text/event-stream")
+    return render_template("logs.html")
+
+#@app.route("/logs", methods=["GET"])
+#def get_logs():
+#    """
+#    Renders the webpage for the race statistics and monitoring.
+#
+#    :return tuple: The rendered HTML page.
+#    """
+#    if not session.get("logged_in"):
+#        return redirect(url_for("login"))
+#    log_output = "\n".join(logging.root.handlers[1].get_logs()[::-1])
+#    return Response(log_output, mimetype="text/plain")
+
+
 @app.route("/", methods=["POST"])
 def post_data():
     """
@@ -130,9 +257,11 @@ def post_data():
     :return tuple: The HTTP response.
     """
     if request.headers.get("x-outbound-auth-token") != app.config["UT_GARMIN_API_TOKEN"]:
+        logger.error("Invalid or missing auth token in {request.headers}")
         return "Invalid or missing auth token", 401
     content_length = request.headers.get("Content-Length", 0)
     if not content_length:
+        logger.error("Content-Length header is missing or zero")
         return "Content-Length header is missing or zero", 411
     payload = request.get_data(as_text=True)
     with open(f"{app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii") as file:
@@ -145,6 +274,7 @@ def post_data():
 args = parse_args()
 # TODO: Need to validate values and keys.
 config_data = get_config_data(args.config)
+validate_config(config_data)
 setup_logging(args.verbose)
 logger = logging.getLogger(__name__)
 # Create the objects to manage the race.
@@ -186,6 +316,8 @@ logger.info("created race object...")
 app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
 app.config["UT_RACE"] = race
 app.config["UT_DATA_DIR"] = args.data_dir
+app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
+app.secret_key = random.randbytes(64).hex()
 
 
 if __name__ == "__main__":
