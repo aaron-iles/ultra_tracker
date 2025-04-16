@@ -283,8 +283,8 @@ def login():
 def get_logs():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-
-    log_handler = logging.root.handlers[1]  # your InMemoryLogHandler
+    # This is the InMemoryLogHandler
+    log_handler = logging.root.handlers[1]
 
     if request.headers.get("Accept") == "text/event-stream":
         @stream_with_context
