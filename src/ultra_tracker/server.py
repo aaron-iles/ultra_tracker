@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+import eventlet
 import argparse
 import datetime
+from flask_socketio import SocketIO, send
+import os
 import json
 import hashlib
 from collections import deque
@@ -20,6 +23,7 @@ from .models.race import Race, Runner
 from .utils import format_duration
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 
 @app.template_filter("format_duration")
@@ -59,6 +63,17 @@ class InMemoryLogHandler(logging.Handler):
 
     def get_logs(self):
         return list(self.logs)
+
+
+
+
+
+
+
+
+
+
+
 
 
 def setup_logging(verbose: bool = False):
@@ -168,6 +183,56 @@ def get_race_stats():
 
 
 
+CHAT_HISTORY_FILE = "data/chat_history.json"
+chat_history = []
+
+# --- Persistence ---
+def load_history():
+    global chat_history
+    if os.path.exists(CHAT_HISTORY_FILE):
+        with open(CHAT_HISTORY_FILE) as f:
+            chat_history = json.load(f)
+
+def save_history():
+    with open(CHAT_HISTORY_FILE, "w") as f:
+        json.dump(chat_history, f)
+
+# --- Routes ---
+@app.route("/user", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        session["username"] = request.form["username"]
+        return redirect(url_for("chat"))
+    return render_template("user.html")
+
+@app.route("/chat")
+def chat():
+    if "username" not in session:
+        return redirect(url_for("index"))
+    return render_template("chat.html", username=session["username"])
+
+# --- SocketIO Events ---
+@socketio.on("connect")
+def handle_connect():
+    for msg in chat_history:
+        socketio.emit("message", msg)
+
+@socketio.on("message")
+def handle_message(msg_text):
+    username = session.get("username", "Anonymous")
+    msg = {
+        "username": username,
+        "text": msg_text,
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    }
+    chat_history.append(msg)
+    save_history()
+    socketio.emit("message", msg)
+
+
+
+
+
 
 
 
@@ -270,55 +335,58 @@ def post_data():
     return "OK", 200
 
 
-# Read in the config file.
-args = parse_args()
-# TODO: Need to validate values and keys.
-config_data = get_config_data(args.config)
-validate_config(config_data)
-setup_logging(args.verbose)
-logger = logging.getLogger(__name__)
-# Create the objects to manage the race.
-caltopo_session = CaltopoSession(config_data["caltopo_credential_id"], config_data["caltopo_key"])
-logger.info("created session object...")
-caltopo_map = CaltopoMap(config_data["caltopo_map_id"], caltopo_session)
-logger.info("created map object...")
-logger.info("performing authentication test...")
-if not caltopo_map.test_authentication():
-    exit(1)
-logger.info("authentication test passed...")
-course = Course(
-    caltopo_map,
-    config_data["aid_stations"],
-    config_data["route_name"],
-    config_data["route_distance"],
-)
-logger.info("created course object...")
-runner = Runner(
-    caltopo_map,
-    config_data["runner_name"],
-    list(course.route.start_location),
-    None,
-    not args.disable_marker_updates,
-)
-logger.info("created runner object...")
-race = Race(
-    config_data["race_name"],
-    caltopo_map,
-    course.timezone.localize(
-        datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
-    ),
-    f"{args.data_dir}/data_store.json",
-    course,
-    runner,
-)
-runner.race = race
-logger.info("created race object...")
-app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
-app.config["UT_RACE"] = race
-app.config["UT_DATA_DIR"] = args.data_dir
-app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
-app.secret_key = random.randbytes(64).hex()
+def main():
+    # Read in the config file.
+    args = parse_args()
+    # TODO: Need to validate values and keys.
+    config_data = get_config_data(args.config)
+    validate_config(config_data)
+    setup_logging(args.verbose)
+    logger = logging.getLogger(__name__)
+    # Create the objects to manage the race.
+    caltopo_session = CaltopoSession(config_data["caltopo_credential_id"], config_data["caltopo_key"])
+    logger.info("created session object...")
+    caltopo_map = CaltopoMap(config_data["caltopo_map_id"], caltopo_session)
+    logger.info("created map object...")
+    logger.info("performing authentication test...")
+    if not caltopo_map.test_authentication():
+        exit(1)
+    logger.info("authentication test passed...")
+    course = Course(
+        caltopo_map,
+        config_data["aid_stations"],
+        config_data["route_name"],
+        config_data["route_distance"],
+    )
+    logger.info("created course object...")
+    runner = Runner(
+        caltopo_map,
+        config_data["runner_name"],
+        list(course.route.start_location),
+        None,
+        not args.disable_marker_updates,
+    )
+    logger.info("created runner object...")
+    race = Race(
+        config_data["race_name"],
+        caltopo_map,
+        course.timezone.localize(
+            datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
+        ),
+        f"{args.data_dir}/data_store.json",
+        course,
+        runner,
+    )
+    runner.race = race
+    logger.info("created race object...")
+    app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
+    app.config["UT_RACE"] = race
+    app.config["UT_DATA_DIR"] = args.data_dir
+    app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
+    app.secret_key = random.randbytes(64).hex()
+    load_history()
+    socketio.run(app, host="0.0.0.0", port=8080, debug=True)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    main()
