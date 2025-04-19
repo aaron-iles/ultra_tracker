@@ -3,12 +3,14 @@
 
 import datetime
 import logging
+import yaml
 from math import atan2, cos, radians, sin, sqrt
 
 import numpy as np
 import pytz
 from lxml import etree
 from timezonefinder import TimezoneFinder
+
 
 logger = logging.getLogger(__name__)
 
@@ -186,3 +188,37 @@ def detect_consecutive_sequences(integers: list) -> list:
     # Add the start and end integers of the split sequences
     sequences = np.split(sorted_integers, break_points)
     return [seq.tolist() for seq in sequences]
+
+
+def get_config_data(file_path: str) -> dict:
+    """
+    Reads in a yaml file and returns the dict.
+
+    :param str file_path: The path to the file.
+    :return dict: The parsed dict from the config file.
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            yaml_content = yaml.safe_load(file)
+        mandatory_keys = {
+            "admin_password_hash",
+            "aid_stations",
+            "caltopo_credential_id",
+            "caltopo_key",
+            "caltopo_map_id",
+            "garmin_api_token",
+            "race_name",
+            "route_distance",
+            "route_name",
+            "runner_name",
+            "start_time",
+        }
+        for key in mandatory_keys:
+            assert key in yaml_content.keys(), f"Missing {key} in config file!"
+        return yaml_content
+    except FileNotFoundError:
+        logger.info(f"Error: File '{file_path}' not found.")
+        return None
+    except yaml.YAMLError as e:
+        logger.info(f"Error: YAML parsing error in '{file_path}': {e}")
+        return None

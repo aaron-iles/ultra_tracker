@@ -9,6 +9,7 @@ lxml
 numpy
 pytz
 pyuwsgi
+sqlalchemy
 pyyaml
 requests
 scipy
