@@ -30,6 +30,7 @@ from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
 from .utils import get_config_data
+#from .chat import CHAT_HISTORY, load_history, save_history
 
 log = logging.getLogger(__name__)
 
@@ -136,40 +137,14 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
         return "--/-- --:--"
     return time_obj.strftime("%-m/%-d %-I:%M %p")
 
-CHAT_HISTORY = []
-
 
 
 # --- Persistence ---
-def load_history():
-    if os.path.exists(f"{app.config['UT_DATA_DIR']}/chat_history.json"):
-        with open(f"{app.config['UT_DATA_DIR']}/chat_history.json") as f:
-            CHAT_HISTORY = json.load(f)
 
 
-def save_history():
-    with open(f"{app.config['UT_DATA_DIR']}/chat_history.json", "w") as f:
-        json.dump(CHAT_HISTORY, f)
 
+#--- SocketIO Events ---
 
-# --- SocketIO Events ---
-@socketio.on("connect")
-def handle_connect():
-    for msg in CHAT_HISTORY:
-        socketio.emit("message", msg)
-
-
-@socketio.on("message")
-def handle_message(msg_text):
-    username = session.get("username", "Anonymous")
-    msg = {
-        "username": username,
-        "text": msg_text,
-        "timestamp": datetime.datetime.utcnow().isoformat(),
-    }
-    CHAT_HISTORY.append(msg)
-    save_history()
-    socketio.emit("message", msg)
 
 
 #####################
@@ -221,6 +196,6 @@ def start_application():
     app.config["UT_DATA_DIR"] = args.data_dir
     app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
-    load_history()
+    #load_history()
     socketio.run(app, host="0.0.0.0", port=8080, debug=True)
     return

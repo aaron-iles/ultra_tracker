@@ -1,6 +1,11 @@
 
-from flask import Blueprint, request, session, redirect, url_for, render_template
+from flask import Blueprint, request, session, redirect, url_for, render_template, current_app
+import hashlib
+import logging
+from flask import stream_with_context, request, Response
+import time
 
+from .chat import CHAT_HISTORY, load_history
 
 blueprint = Blueprint("root", __name__)
 
@@ -13,7 +18,7 @@ def post_data():
 
     :return tuple: The HTTP response.
     """
-    if request.headers.get("x-outbound-auth-token") != app.config["UT_GARMIN_API_TOKEN"]:
+    if request.headers.get("x-outbound-auth-token") != current_app.config["UT_GARMIN_API_TOKEN"]:
         logger.error("Invalid or missing auth token in {request.headers}")
         return "Invalid or missing auth token", 401
     content_length = request.headers.get("Content-Length", 0)
@@ -21,25 +26,25 @@ def post_data():
         logger.error("Content-Length header is missing or zero")
         return "Content-Length header is missing or zero", 411
     payload = request.get_data(as_text=True)
-    with open(f"{app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii") as file:
+    with open(f"{current_app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii") as file:
         file.write(f"{payload}\n")
-    app.config["UT_RACE"].ingest_ping(json.loads(payload))
+    current_app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200
 
 
 @blueprint.route("/user", methods=["GET", "POST"])
-def index():
+def user():
     if request.method == "POST":
         session["username"] = request.form["username"]
-        load_history()
-        return redirect(url_for("chat"))
+        load_history(current_app)
+        return redirect(url_for("root.chat"))
     return render_template("user.html")
 
 
 @blueprint.route("/chat")
 def chat():
     if "username" not in session:
-        return redirect(url_for("user"))
+        return redirect(url_for("root.user"))
     return render_template("chat.html", username=session["username"])
 
 
@@ -69,10 +74,10 @@ def login():
         entered_password = request.form["password"]
         entered_hash = hashlib.sha256(entered_password.encode()).hexdigest()
 
-        if entered_hash == app.config["UT_ADMIN_PASSWORD_HASH"]:
+        if entered_hash == current_app.config["UT_ADMIN_PASSWORD_HASH"]:
             session["logged_in"] = True
             session.pop("failed_attempts", None)
-            return redirect(url_for("get_logs"))
+            return redirect(url_for("root.get_logs"))
         else:
             session["failed_attempts"] = session.get("failed_attempts", 0) + 1
             if session["failed_attempts"] >= 5:
@@ -92,7 +97,7 @@ def login():
 @blueprint.route("/logs")
 def get_logs():
     if not session.get("logged_in"):
-        return redirect(url_for("login"))
+        return redirect(url_for("root.login"))
     # This is the InMemoryLogHandler
     log_handler = logging.root.handlers[1]
 
