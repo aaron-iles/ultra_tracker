@@ -11,6 +11,17 @@ blueprint = Blueprint("root", __name__)
 
 
 
+@blueprint.route("/", methods=["GET"])
+def get_race_stats():
+    """
+    Renders the webpage for the race statistics and monitoring.
+
+    :return tuple: The rendered HTML page.
+    """
+    race = current_app.config["UT_RACE"]
+    return render_template("race_stats.html", **race.html_stats)
+
+
 @blueprint.route("/", methods=["POST"])
 def post_data():
     """

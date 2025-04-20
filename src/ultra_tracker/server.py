@@ -29,7 +29,7 @@ from . import application, database
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
-from .utils import get_config_data
+from .utils import get_config_data, format_duration
 #from .chat import CHAT_HISTORY, load_history, save_history
 
 log = logging.getLogger(__name__)
