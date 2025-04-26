@@ -11,7 +11,7 @@ from .socketio_handlers import register_socketio_handlers
 __all__ = ["create_app"]
 
 
-def create_app(session):
+def create_app(database_session):
     app = flask.Flask(__name__)
 
     from .api import blueprint
@@ -22,7 +22,7 @@ def create_app(session):
 
     @app.teardown_request
     def remove_session(exception=None):
-        session.remove()
+        database_session.remove()
         return
 
     return app, socketio

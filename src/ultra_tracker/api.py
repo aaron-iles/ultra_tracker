@@ -5,7 +5,7 @@ import logging
 from flask import stream_with_context, request, Response
 import time
 
-from .chat import CHAT_HISTORY, load_history
+#from .chat import CHAT_HISTORY, load_history
 
 blueprint = Blueprint("root", __name__)
 
@@ -47,7 +47,7 @@ def post_data():
 def user():
     if request.method == "POST":
         session["username"] = request.form["username"]
-        load_history(current_app)
+        #load_history(current_app)
         return redirect(url_for("root.chat"))
     return render_template("user.html")
 

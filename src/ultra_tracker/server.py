@@ -30,7 +30,6 @@ from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
 from .utils import get_config_data, format_duration
-#from .chat import CHAT_HISTORY, load_history, save_history
 
 log = logging.getLogger(__name__)
 
@@ -196,6 +195,5 @@ def start_application():
     app.config["UT_DATA_DIR"] = args.data_dir
     app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
-    #load_history()
     socketio.run(app, host="0.0.0.0", port=8080, debug=True)
     return

@@ -3,23 +3,38 @@
 
 import datetime
 import os
-
-
-
-import os
 import json
-
-CHAT_HISTORY = []
-
-
-def load_history(app):
-    if os.path.exists(f"{app.config['UT_DATA_DIR']}/chat_history.json"):
-        with open(f"{app.config['UT_DATA_DIR']}/chat_history.json") as f:
-            CHAT_HISTORY = json.load(f)
+from datetime import datetime
+from .database import ChatMessage, session
 
 
-def save_history(app):
-    with open(f"{app.config['UT_DATA_DIR']}/chat_history.json", "w") as f:
-        json.dump(CHAT_HISTORY, f)
 
 
+
+
+def get_recent_messages(limit=10000):
+    """Return the most recent chat messages from the database."""
+    messages = (
+        session.query(ChatMessage)
+        .order_by(ChatMessage.timestamp.asc())
+        .limit(limit)
+        .all()
+    )
+    result = [
+        {
+            "username": msg.username,
+            "text": msg.text,
+            "timestamp": msg.timestamp.isoformat()
+        }
+        for msg in messages
+    ]
+    session.close()
+    return result
+
+
+def save_message(msg: dict):
+    session.add(msg)
+    session.commit()
+    #session.refresh(msg)
+    session.close()
+    return

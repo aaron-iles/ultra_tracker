@@ -1,5 +1,5 @@
 
-from .chat import CHAT_HISTORY, save_history
+from .chat import get_recent_messages, save_message
 from flask import session
 import datetime
 
@@ -8,7 +8,7 @@ import datetime
 def register_socketio_handlers(socketio, app):
     @socketio.on("connect")
     def handle_connect():
-        for msg in CHAT_HISTORY:
+        for msg in get_recent_messages(limit=100):
             socketio.emit("message", msg)
 
 
@@ -20,6 +20,11 @@ def register_socketio_handlers(socketio, app):
             "text": msg_text,
             "timestamp": datetime.datetime.utcnow().isoformat(),
         }
-        CHAT_HISTORY.append(msg)
-        save_history(app)
+        save_message(msg)
         socketio.emit("message", msg)
+
+
+
+
+
+
