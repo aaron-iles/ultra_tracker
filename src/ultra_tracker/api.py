@@ -46,7 +46,9 @@ def post_data():
 @blueprint.route("/user", methods=["GET", "POST"])
 def user():
     if request.method == "POST":
-        session["username"] = request.form["username"]
+        requested_username  = request.form["username"]
+        # TODO check that the username is not already taken.
+        session["username"] = requested_username
         #load_history(current_app)
         return redirect(url_for("root.chat"))
     return render_template("user.html")

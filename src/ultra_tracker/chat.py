@@ -5,7 +5,7 @@ import datetime
 import os
 import json
 from datetime import datetime
-from .database import ChatMessage, session
+from . import database
 
 
 
@@ -15,8 +15,8 @@ from .database import ChatMessage, session
 def get_recent_messages(limit=10000):
     """Return the most recent chat messages from the database."""
     messages = (
-        session.query(ChatMessage)
-        .order_by(ChatMessage.timestamp.asc())
+        database.session.query(database.ChatMessage)
+        .order_by(database.ChatMessage.timestamp.asc())
         .limit(limit)
         .all()
     )
@@ -28,13 +28,13 @@ def get_recent_messages(limit=10000):
         }
         for msg in messages
     ]
-    session.close()
+    database.session.close()
     return result
 
 
 def save_message(msg: dict):
-    session.add(msg)
-    session.commit()
+    database.session.add(msg)
+    database.session.commit()
     #session.refresh(msg)
-    session.close()
+    database.session.close()
     return

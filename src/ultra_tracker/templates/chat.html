@@ -25,7 +25,14 @@
 
     socket.on("message", (msg) => {
       const item = document.createElement("div");
-      item.innerHTML = `<strong>${msg.username}</strong>: ${msg.text} <small class="text-muted float-end">${new Date(msg.timestamp).toLocaleTimeString()}</small>`;
+      item.classList.add("mb-3");  // Optional spacing between messages
+      item.innerHTML = `
+        <div>
+          <strong>${msg.username}</strong>
+          <small class="text-muted">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+        </div>
+        <div>${msg.text}</div>
+      `;
       chatBox.appendChild(item);
       chatBox.scrollTop = chatBox.scrollHeight;
     });
