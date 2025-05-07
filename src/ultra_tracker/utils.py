@@ -3,14 +3,13 @@
 
 import datetime
 import logging
-import yaml
 from math import atan2, cos, radians, sin, sqrt
 
 import numpy as np
 import pytz
+import yaml
 from lxml import etree
 from timezonefinder import TimezoneFinder
-
 
 logger = logging.getLogger(__name__)
 

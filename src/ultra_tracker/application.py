@@ -2,27 +2,29 @@
 
 
 import logging
-import warnings
-from flask_socketio import SocketIO, send
-import flask
-from .socketio_handlers import register_socketio_handlers
 
+import flask
+from flask_socketio import SocketIO
+
+from .socketio_handlers import register_socketio_handlers
+from . import api
 
 __all__ = ["create_app"]
 
 
-def create_app(database_session):
+def create_app() -> tuple:
+    """
+    Creates the Flask application and socketio object to be used elsewhere in the package.
+
+    :return tuple: The app and socketio objects.
+    """
+    logging.info(f"creating app {__name__}")
     app = flask.Flask(__name__)
-
-    from .api import blueprint
-    app.register_blueprint(blueprint)
-
+    logging.info("registering blueprints")
+    app.register_blueprint(api.chat.blueprint, url_prefix=api.chat.URL_PREFIX)
+    app.register_blueprint(api.logs.blueprint, url_prefix=api.logs.URL_PREFIX)
+    app.register_blueprint(api.race.blueprint, url_prefix=api.race.URL_PREFIX)
+    logging.info(f"registering SocketIO handlers")
     socketio = SocketIO(app)
-    register_socketio_handlers(socketio, app)
-
-    @app.teardown_request
-    def remove_session(exception=None):
-        database_session.remove()
-        return
-
+    register_socketio_handlers(socketio)
     return app, socketio

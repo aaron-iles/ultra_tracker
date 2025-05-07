@@ -4,9 +4,7 @@
 import datetime
 import logging
 import sys
-from urllib.parse import urlparse
 
-import sqlalchemy
 from sqlalchemy import JSON, Column, DateTime, Integer, String, Text, create_engine
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
@@ -27,6 +25,7 @@ class ChatMessage(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 
+# TODO: Add pings to the database
 class Ping(Base):
     __tablename__ = "pings"
 
@@ -34,9 +33,17 @@ class Ping(Base):
     data = Column(JSON, nullable=False)
 
 
-def connect(path: str):
+def connect(path: str) -> None:
+    """
+    Connects to the database to establish an engine and database session that will be defined at the
+    module level to be used across the package.
+
+    :param str path: The path to the database including the protocol.
+    :return None:
+    """
+    # First check if the engine has already been initialized.
     if not this.engine:
-        this.engine = sqlalchemy.create_engine(path)
+        this.engine = create_engine(path)
     session_factory = sessionmaker(bind=this.engine)
     this.session = scoped_session(session_factory)
     Base.metadata.create_all(this.engine)

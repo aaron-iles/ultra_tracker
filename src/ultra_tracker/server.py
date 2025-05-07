@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import datetime
+import json
 import logging
+import os
 import random
 import sys
-import json
 from collections import deque
 
 import eventlet
@@ -29,7 +29,7 @@ from . import application, database
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
-from .utils import get_config_data, format_duration
+from .utils import format_duration, get_config_data
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +69,7 @@ def parse_args() -> argparse.Namespace:
 class InMemoryLogHandler(logging.Handler):
     def __init__(self, max_logs=1000):
         super().__init__(level=logging.NOTSET)
+        self.name = 'InMemoryLogHandler'
         self.logs = deque(maxlen=max_logs)
         self.setFormatter(
             logging.Formatter("%(asctime)s   %(levelname)s   %(message)s", "%Y-%m-%d %H:%M:%S")
@@ -105,11 +106,21 @@ def setup_logging(verbose: bool = False):
 
 
 args = parse_args()
-database.connect(os.path.join('sqlite:///', args.data_dir, "ut_datastore.db"))
-app, socketio = application.create_app(database.session)
+database.connect(os.path.join("sqlite:///", args.data_dir, "ut_datastore.db"))
+app, socketio = application.create_app()
 
 
 #####################################
+
+
+@app.teardown_request
+def remove_session(exception=None) -> None:
+    """
+    Overrides the remove_session method to ensure the database session is removed.
+    """
+    database.session.remove()
+    return
+
 
 @app.template_filter("format_duration")
 def format_duration_filter(duration: datetime.timedelta) -> str:
@@ -138,15 +149,7 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
 
 
 
-# --- Persistence ---
 
-
-
-#--- SocketIO Events ---
-
-
-
-#####################
 
 def start_application():
     config_data = get_config_data(args.config)
