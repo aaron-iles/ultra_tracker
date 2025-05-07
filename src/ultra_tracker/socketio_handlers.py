@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import datetime
-
+import logging
 from flask import session
 
 from .chat import get_recent_messages, save_message
 from .database import ChatMessage
 
+logger = logging.getLogger(__name__)
 
 def register_socketio_handlers(socketio) -> None:
     """
@@ -44,6 +45,7 @@ def register_socketio_handlers(socketio) -> None:
             "text": message_text,
             "timestamp": timestamp_str,
         }
+        logger.debug(f"message from {username} received")
         save_message(ChatMessage(username=username, text=message_text, timestamp=timestamp))
         socketio.emit("message", msg_json)
         return

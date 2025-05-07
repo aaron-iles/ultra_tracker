@@ -3,9 +3,7 @@
 import hashlib
 import logging
 import time
-
-
-
+import eventlet
 from flask import (
     Blueprint,
     Response,
@@ -37,13 +35,26 @@ def get_logs():
         @stream_with_context
         def event_stream():
             seen = 0
-            while True:
-                logs = log_handler.get_logs()
-                if len(logs) > seen:
-                    for line in logs[seen:]:
-                        yield f"data: {line}\n\n"
-                    seen = len(logs)
-                time.sleep(1)
+            try:
+                while True:
+                    logs = log_handler.get_logs()
+                    if len(logs) > seen:
+                        for line in logs[seen:]:
+                            yield f"data: {line}\n\n"
+                        seen = len(logs)
+                    eventlet.sleep(1)
+            except GeneratorExit:
+                # Client disconnected
+                return
+
+
+           # while True:
+           #     logs = log_handler.get_logs()
+           #     if len(logs) > seen:
+           #         for line in logs[seen:]:
+           #             yield f"data: {line}\n\n"
+           #         seen = len(logs)
+           #     time.sleep(1)
 
         return Response(event_stream(), mimetype="text/event-stream")
     return render_template("logs.html")
