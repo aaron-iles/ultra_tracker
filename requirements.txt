@@ -1,4 +1,6 @@
+eventlet
 flask
+flask-socketio
 build
 geopy
 gpxpy
@@ -7,6 +9,7 @@ lxml
 numpy
 pytz
 pyuwsgi
+sqlalchemy
 pyyaml
 requests
 scipy
