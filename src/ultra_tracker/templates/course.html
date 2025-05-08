@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-header">Course Overview</h1>
+  <div class="accordion" id="accordionExample">
+    {% for course_element in (course_elements | sort(attribute='mile_mark')) %}
+    <div class="accordion-item">
+      <h1 class="accordion-header" id="heading{{ loop.index }}"><button class=
+      "accordion-button collapsed {% if not course_element.is_passed %}completed-item{% else %}not-completed-item{% endif %}" type="button"
+      data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">{{
+      course_element.display_name }}</button></h1>
+      <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent=
+      "#accordionExample">
+        <div class="accordion-body">
+          <table class="responsive-table course-table">
+          {% if course_element.__class__.__name__ == 'Leg' %}
+            <thead>
+              <tr>
+                <th>distance<span class="tooltip-icon" data-tooltip="Total distance">ⓘ</span></th>
+                <th>gain<span class="tooltip-icon" data-tooltip="Total vertical gain">ⓘ</span></th>
+                <th>loss<span class="tooltip-icon" data-tooltip="Total vertical loss">ⓘ</span></th>
+                <th>estimated duration<span class="tooltip-icon" data-tooltip="Predicted leg duration">ⓘ</span></th>
+                <th>approx. start time<span class="tooltip-icon" data-tooltip="Observed leg start time">ⓘ</span></th>
+                <th>approx. finish time<span class="tooltip-icon" data-tooltip="Observed leg finish time">ⓘ</span></th>
+                <th>approx. duration<span class="tooltip-icon" data-tooltip="Observed leg duration">ⓘ</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ course_element.distance | round(1) }} miles</td>
+                <td style="background-color:#FFC0CB">{{ course_element.gain | d(0) | int }} feet</td>
+                <td style="background-color:#90EE90">{{ course_element.loss | d(0) | int }} feet</td>
+                <td>{{ course_element.estimated_duration | format_duration }}</td>
+                <td>{{ course_element.arrival_time | format_time }}</td>
+                <td>{{ course_element.departure_time | format_time }}</td>
+                <td>{{ course_element.transit_time | format_duration }}</td>
+              </tr>
+            </tbody>
+          {% endif %}
+          {% if course_element.__class__.__name__ == 'AidStation' %}
+            <thead>
+              <tr>
+                <th>mile mark<span class="tooltip-icon" data-tooltip="Mile mark of the aid station">ⓘ</span></th>
+                <th>navigation<span class="tooltip-icon" data-tooltip="Link to Google Maps navigation">ⓘ</span></th>
+                <th>eta<span class="tooltip-icon" data-tooltip="Estimated time of arrival">ⓘ</span></th>
+                <th>approx. arrival time<span class="tooltip-icon" data-tooltip="Observed arrival time">ⓘ</span></th>
+                <th>approx. departure time<span class="tooltip-icon" data-tooltip="Observed departure time">ⓘ</span></th>
+                <th>approx. stoppage time<span class="tooltip-icon" data-tooltip="Observed stoppage time">ⓘ</span></th>
+                <th>comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ course_element.mile_mark }}</td>
+                <td>
+                  <a href="{{course_element.gmaps_url}}" target="_blank"><img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
+                  alt="Google Maps Icon" style="width: 24px; height: 24px; margin-right: 8px;"></a>
+                </td>
+                <td>{{ course_element.estimated_arrival_time | format_time }}</td>
+                <td>{{ course_element.arrival_time | format_time }}</td>
+                <td>{{ course_element.departure_time | format_time }}</td>
+                <td>{{ course_element.stoppage_time | format_duration }}</td>
+                <td>{{ course_element.comments }}</td>
+              </tr>
+            </tbody>
+          {% endif %}
+          </table>
+        </div>
+      </div>
+    </div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

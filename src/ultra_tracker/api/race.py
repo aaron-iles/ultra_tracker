@@ -21,15 +21,56 @@ URL_PREFIX = "/"
 blueprint = Blueprint("root", __name__)
 
 
-@blueprint.route("/", methods=["GET"])
-def get_race_stats():
+@blueprint.route("/stats", methods=["GET"])
+def render_stats_page():
     """
     Renders the webpage for the race statistics and monitoring.
 
     :return tuple: The rendered HTML page.
     """
     race = current_app.config["UT_RACE"]
-    return render_template("race_stats.html", **race.html_stats)
+    return render_template("stats.html", **race.html_stats)
+
+
+@blueprint.route("/course", methods=["GET"])
+def render_course_page():
+    """
+    """
+    race = current_app.config["UT_RACE"]
+    return render_template("course.html", **race.html_stats)
+
+
+
+
+
+
+@blueprint.route("/map", methods=["GET"])
+def render_map_page():
+    """
+    """
+    race = current_app.config["UT_RACE"]
+    return render_template("map.html", **race.html_stats)
+
+
+@blueprint.route("/profile", methods=["GET"])
+def render_profile_page():
+    """
+    """
+    race = current_app.config["UT_RACE"]
+    return render_template("profile.html", **race.html_stats)
+
+
+@blueprint.route("/raw", methods=["GET"])
+def render_raw_page():
+    """
+    """
+    race = current_app.config["UT_RACE"]
+    return render_template("raw.html", **race.html_stats)
+
+
+
+
+
 
 
 @blueprint.route("/", methods=["POST"])

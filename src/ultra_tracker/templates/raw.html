@@ -13,27 +13,42 @@
   <title>Ultra Tracker</title>
 </head>
 <body>
-  <nav>
-    <div class="nav-wrapper">
-      <ul id="nav-mobile">
-        <li>
-          <a href="#stats" class="tab-link">Stats</a>
-        </li>
-        <li>
-          <a href="#course" class="tab-link">Course</a>
-        </li>
-        <li>
-          <a href="#map" class="tab-link">Map</a>
-        </li>
-        <li>
-          <a href="#profile" class="tab-link">Profile</a>
-        </li>
-        <li>
-          <a href="#raw" class="tab-link">Raw</a>
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">Ultra Tracker</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDropdown"
+      aria-controls="navbarDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarDropdown">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <!-- Dropdown for Navigation -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Menu
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navMenu">
+            <li><a class="dropdown-item" href="/stats">Stats</a></li>
+            <li><a class="dropdown-item" href="/course">Course</a></li>
+            <li><a class="dropdown-item" href="/map">Map</a></li>
+            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+            <li><a class="dropdown-item" href="/raw">Raw</a></li>
+          </ul>
         </li>
       </ul>
     </div>
-  </nav>
+  </div>
+</nav>
+
+
   <div id="stats" class="container tab-content" style="padding-top: 88px;">
     <h1 class="page-header">Race Stats</h1>
     <table class="responsive-table stats-table">
