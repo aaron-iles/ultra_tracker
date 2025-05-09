@@ -21,7 +21,7 @@ URL_PREFIX = "/"
 blueprint = Blueprint("root", __name__)
 
 
-@blueprint.route("/stats", methods=["GET"])
+@blueprint.route("/", methods=["GET"])
 def render_stats_page():
     """
     Renders the webpage for the race statistics and monitoring.

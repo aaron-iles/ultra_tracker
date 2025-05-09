@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
             autorange: false,
             fixedrange: true,
         },
-        title: 'Elevation Profile',
+        title: null,
         margin: {
             l: 50,  // left margin
             r: 50,  // right margin

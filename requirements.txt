@@ -8,11 +8,8 @@ jinja2
 lxml
 numpy
 pytz
-pyuwsgi
 sqlalchemy
 pyyaml
 requests
 scipy
-uwsgi
 timezonefinder
-uwsgidecorators
