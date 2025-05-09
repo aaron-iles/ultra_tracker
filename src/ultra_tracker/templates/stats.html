@@ -45,8 +45,9 @@
 {% block content %}
 
 
-<div class="table-responsive">
-  <table class="stats-table">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/tables.css') }}">
+<div class="container">
+  <table class="responsive-table stats-table">
     <thead>
       <tr>
         <th>start time<span class="tooltip-icon" data-tooltip="Race start time">ⓘ</span></th>
