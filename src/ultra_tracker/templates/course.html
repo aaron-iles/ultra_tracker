@@ -2,9 +2,8 @@
 
 {% extends "base.html" %}
 
-{% block content %}
+<!--
 <div class="container">
-  <h1 class="page-header">Course Overview</h1>
   <div class="accordion" id="accordionExample">
     {% for course_element in (course_elements | sort(attribute='mile_mark')) %}
     <div class="accordion-item">
@@ -71,6 +70,106 @@
         </div>
       </div>
     </div>{% endfor %}
+  </div>
+</div>
+-->
+
+{% block content %}
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggerList.forEach(t => new bootstrap.Tooltip(t));
+</script>
+
+<div class="container">
+  <div class="accordion" id="accordionExample">
+    {% for course_element in (course_elements | sort(attribute='mile_mark')) %}
+    <div class="accordion-item">
+      <h1 class="accordion-header" id="heading{{ loop.index }}">
+        <button class="accordion-button collapsed {% if not course_element.is_passed %}completed-item{% else %}not-completed-item{% endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse{{ loop.index }}"
+                aria-expanded="false"
+                aria-controls="collapse{{ loop.index }}">
+          {{ course_element.display_name }}
+        </button>
+      </h1>
+      <div id="collapse{{ loop.index }}" class="accordion-collapse collapse"
+           aria-labelledby="heading{{ loop.index }}" data-bs-parent="#accordionExample">
+        <div class="accordion-body">
+          <table class="course-table">
+            <tbody>
+              {% if course_element.__class__.__name__ == 'Leg' %}
+              <tr>
+                <th scope="row">distance <span class="text-info ms-1" data-bs-toggle="tooltip" title="Total distance">ⓘ</span></th>
+                <td>{{ course_element.distance | round(1) }} miles</td>
+              </tr>
+              <tr>
+                <th scope="row">gain <span class="text-info ms-1" data-bs-toggle="tooltip" title="Total vertical gain">ⓘ</span></th>
+                <td style="background-color:#FFC0CB">{{ course_element.gain | d(0) | int }} feet</td>
+              </tr>
+              <tr>
+                <th scope="row">loss <span class="text-info ms-1" data-bs-toggle="tooltip" title="Total vertical loss">ⓘ</span></th>
+                <td style="background-color:#90EE90">{{ course_element.loss | d(0) | int }} feet</td>
+              </tr>
+              <tr>
+                <th scope="row">estimated duration <span class="text-info ms-1" data-bs-toggle="tooltip" title="Predicted leg duration">ⓘ</span></th>
+                <td>{{ course_element.estimated_duration | format_duration }}</td>
+              </tr>
+              <tr>
+                <th scope="row">approx. start time <span class="text-info ms-1" data-bs-toggle="tooltip" title="Observed leg start time">ⓘ</span></th>
+                <td>{{ course_element.arrival_time | format_time }}</td>
+              </tr>
+              <tr>
+                <th scope="row">approx. finish time <span class="text-info ms-1" data-bs-toggle="tooltip" title="Observed leg finish time">ⓘ</span></th>
+                <td>{{ course_element.departure_time | format_time }}</td>
+              </tr>
+              <tr>
+                <th scope="row">approx. duration <span class="text-info ms-1" data-bs-toggle="tooltip" title="Observed leg duration">ⓘ</span></th>
+                <td>{{ course_element.transit_time | format_duration }}</td>
+              </tr>
+              {% elif course_element.__class__.__name__ == 'AidStation' %}
+              <tr>
+                <th scope="row">mile mark <span class="text-info ms-1" data-bs-toggle="tooltip" title="Mile mark of the aid station">ⓘ</span></th>
+                <td>{{ course_element.mile_mark }}</td>
+              </tr>
+              <tr>
+                <th scope="row">navigation <span class="text-info ms-1" data-bs-toggle="tooltip" title="Link to Google Maps navigation">ⓘ</span></th>
+                <td>
+                  <a href="{{ course_element.gmaps_url }}" target="_blank">
+                    <img src="https://www.google.com/images/branding/product/2x/maps_96dp.png"
+                         alt="Google Maps Icon"
+                         style="width: 24px; height: 24px; margin-right: 8px;">
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">eta <span class="text-info ms-1" data-bs-toggle="tooltip" title="Estimated time of arrival">ⓘ</span></th>
+                <td>{{ course_element.estimated_arrival_time | format_time }}</td>
+              </tr>
+              <tr>
+                <th scope="row">approx. arrival time <span class="text-info ms-1" data-bs-toggle="tooltip" title="Observed arrival time">ⓘ</span></th>
+                <td>{{ course_element.arrival_time | format_time }}</td>
+              </tr>
+              <tr>
+                <th scope="row">approx. departure time <span class="text-info ms-1" data-bs-toggle="tooltip" title="Observed departure time">ⓘ</span></th>
+                <td>{{ course_element.departure_time | format_time }}</td>
+              </tr>
+              <tr>
+                <th scope="row">approx. stoppage time <span class="text-info ms-1" data-bs-toggle="tooltip" title="Observed stoppage time">ⓘ</span></th>
+                <td>{{ course_element.stoppage_time | format_duration }}</td>
+              </tr>
+              <tr>
+                <th scope="row">comments</th>
+                <td>{{ course_element.comments }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}

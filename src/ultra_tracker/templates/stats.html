@@ -1,81 +1,92 @@
 <!DOCTYPE html>
-<!--
-
-<div class="container">
-  <h1 class="page-header">Race Stats</h1>
-  <table class="responsive-table stats-table">
-    <thead>
-      <tr>
-        <th>start time<span class="tooltip-icon" data-tooltip="Race start time">ⓘ</span></th>
-        <th>last update<span class="tooltip-icon" data-tooltip="Last ping received">ⓘ</span></th>
-        <th>elapsed time<span class="tooltip-icon" data-tooltip="Total time from start to last ping">ⓘ</span></th>
-        <th>moving time<span class="tooltip-icon" data-tooltip="Total time less stoppage time">ⓘ</span></th>
-        <th>stoppage time<span class="tooltip-icon" data-tooltip="Approximate time spent at aid stations">ⓘ</span></th>
-        <th>mile mark<span class="tooltip-icon" data-tooltip="Current mile mark">ⓘ</span></th>
-        <th>altitude<span class="tooltip-icon" data-tooltip="Current altitude">ⓘ</span></th>
-        <th>avg pace<span class="tooltip-icon" data-tooltip="Average pace (moving / overall)">ⓘ</span></th>
-        <th>est finish date<span class="tooltip-icon" data-tooltip="Estimated date of finish">ⓘ</span></th>
-        <th>est finish time<span class="tooltip-icon" data-tooltip="Estimated clock time at finish">ⓘ</span></th>
-        <th>course deviation<span class="tooltip-icon" data-tooltip="Difference between ping location and est. mile mark">ⓘ</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>{{ start_time | format_time }}</td>
-        <td>{{ last_update | format_time }}</td>
-        <td>{{ elapsed_time }}</td>
-        <td>{{ moving_time }}</td>
-        <td>{{ stoppage_time }}</td>
-        <td>{{ mile_mark }}</td>
-        <td>{{ altitude }}</td>
-        <td>{{ average_moving_pace }} / {{ average_overall_pace }}</td>
-        <td>{{ est_finish_date | format_time }}</td>
-        <td>{{ est_finish_time }}</td>
-        <td style="background-color:{{ deviation_background_color}}">{{ course_deviation }}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
--->
 
 {% extends "base.html" %}
 
-
 {% block content %}
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggerList.forEach(t => new bootstrap.Tooltip(t));
+</script>
 
-
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/tables.css') }}">
 <div class="container">
-  <table class="responsive-table stats-table">
-    <thead>
-      <tr>
-        <th>start time<span class="tooltip-icon" data-tooltip="Race start time">ⓘ</span></th>
-        <th>last update<span class="tooltip-icon" data-tooltip="Last ping received">ⓘ</span></th>
-        <th>elapsed time<span class="tooltip-icon" data-tooltip="Total time from start to last ping">ⓘ</span></th>
-        <th>moving time<span class="tooltip-icon" data-tooltip="Total time less stoppage time">ⓘ</span></th>
-        <th>stoppage time<span class="tooltip-icon" data-tooltip="Approximate time spent at aid stations">ⓘ</span></th>
-        <th>mile mark<span class="tooltip-icon" data-tooltip="Current mile mark">ⓘ</span></th>
-        <th>altitude<span class="tooltip-icon" data-tooltip="Current altitude">ⓘ</span></th>
-        <th>avg pace<span class="tooltip-icon" data-tooltip="Average pace (moving / overall)">ⓘ</span></th>
-        <th>est finish date<span class="tooltip-icon" data-tooltip="Estimated date of finish">ⓘ</span></th>
-        <th>est finish time<span class="tooltip-icon" data-tooltip="Estimated clock time at finish">ⓘ</span></th>
-        <th>course deviation<span class="tooltip-icon" data-tooltip="Difference between ping location and est. mile mark">ⓘ</span></th>
-      </tr>
-    </thead>
+  <table class="stats-table">
     <tbody>
       <tr>
+        <th scope="row">
+          start time 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Race start time">ⓘ</span>
+        </th>
         <td>{{ start_time | format_time }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          last update 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Last ping received">ⓘ</span>
+        </th>
         <td>{{ last_update | format_time }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          elapsed time 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Total time from start to last ping">ⓘ</span>
+        </th>
         <td>{{ elapsed_time }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          moving time 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Total time less stoppage time">ⓘ</span>
+        </th>
         <td>{{ moving_time }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          stoppage time 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Approximate time spent at aid stations">ⓘ</span>
+        </th>
         <td>{{ stoppage_time }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          mile mark 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Current mile mark">ⓘ</span>
+        </th>
         <td>{{ mile_mark }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          altitude 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Current altitude">ⓘ</span>
+        </th>
         <td>{{ altitude }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          avg pace 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Average pace (moving / overall)">ⓘ</span>
+        </th>
         <td>{{ average_moving_pace }} / {{ average_overall_pace }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          est finish date 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Estimated date of finish">ⓘ</span>
+        </th>
         <td>{{ est_finish_date | format_time }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          est finish time 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Estimated clock time at finish">ⓘ</span>
+        </th>
         <td>{{ est_finish_time }}</td>
-        <td style="background-color:{{ deviation_background_color}}">{{ course_deviation }}</td>
+      </tr>
+      <tr>
+        <th scope="row">
+          course deviation 
+          <span class="text-info ms-1" data-bs-toggle="tooltip" title="Difference between ping location and est. mile mark">ⓘ</span>
+        </th>
+        <td style="background-color:{{ deviation_background_color }}">{{ course_deviation }}</td>
       </tr>
     </tbody>
   </table>

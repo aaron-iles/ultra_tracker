@@ -1,33 +1,16 @@
 /* Navigation Bar */
-nav {
-  position: fixed; 
-  top: 0;
-  left: 0;
-  width: 100%; 
-  z-index: 1000; 
-  background-color: #081839;
+
+
+
+.navbar .dropdown-menu {
+  position: absolute !important;
+  top: 100% !important;
+  left: auto;
+  right: 0;
+  z-index: 1050; /* Bootstrap's default z-index for dropdowns */
 }
 
-.nav-wrapper {
-  background-color: #263238; /* Material dark grey background */
-  padding: 0 5px;
-}
 
-#nav-mobile {
-  list-style: none;
-  display: flex;
-  justify-content: flex-start;
-  margin: 0;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-}
-
-#nav-mobile li {
-  list-style-type: none;
-  margin-right: 8px;
-  font-size: 20px;
-}
 
 .tab-link {
   color: white;
