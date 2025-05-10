@@ -21,6 +21,7 @@ def create_app() -> tuple:
     """
     log.info(f"creating app {__name__}")
     app = flask.Flask(__name__)
+    app.url_map.strict_slashes = False
     log.info("registering blueprints")
     app.register_blueprint(api.chat.blueprint, url_prefix=api.chat.URL_PREFIX)
     app.register_blueprint(api.logs.blueprint, url_prefix=api.logs.URL_PREFIX)

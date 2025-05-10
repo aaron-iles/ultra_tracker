@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import eventlet
+eventlet.monkey_patch()
 import argparse
 import datetime
 import json
@@ -9,7 +11,6 @@ import random
 import sys
 from collections import deque
 
-import eventlet
 import yaml
 from flask import (
     Flask,
