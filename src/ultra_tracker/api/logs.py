@@ -39,15 +39,22 @@ def get_logs():
                     logs = log_handler.get_logs()
                     if len(logs) > seen:
                         for line in logs[seen:]:
-                            print('About to log line SSE')
                             yield f"data: {line}\n\n"
                         seen = len(logs)
+                    else:
+                        # Flush output even if no new logs
+                        yield ": keepalive\n\n"
                     eventlet.sleep(1)
             except GeneratorExit:
-                # Client disconnected
-                print('disconnect !!!!!!')
                 return
-        return Response(event_stream(), mimetype="text/event-stream")
+        return Response(
+            event_stream(),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
+            }
+        )
     return render_template("logs.html")
 
 

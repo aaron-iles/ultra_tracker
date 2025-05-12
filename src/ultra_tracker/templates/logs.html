@@ -23,15 +23,11 @@
   <div class="container-fluid">
     <div id="log-container"></div>
   </div>
-
- 
     <script>
       const logContainer = document.getElementById("log-container");
       const eventSource = new EventSource("/logs/");
 
-
       eventSource.onmessage = (event) => {
-        console.log("SSE received:", event.data);
         const line = document.createElement("div");
         line.textContent = event.data;
         logContainer.appendChild(line);
