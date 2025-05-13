@@ -19,6 +19,8 @@ from ..utils import (
     haversine_distance,
     meters_to_feet,
 )
+from ..chat import send_bot_message
+from ..application import socketio
 from .caltopo import CaltopoMap, CaltopoShape, lookup_marker_by_name
 
 logger = logging.getLogger(__name__)
@@ -705,6 +707,7 @@ class AidStation(CourseElement):
             else:
                 self.estimated_arrival_time = runner.last_ping.timestamp
                 self.arrival_time = self.estimated_arrival_time
+            send_bot_message(socketio, f"runner entered {self.display_name} at {self.arrival_time}")
             logger.info(f"runner entered {self.display_name} at {self.arrival_time}")
             return
 
@@ -730,6 +733,7 @@ class AidStation(CourseElement):
                 self.departure_time = self.arrival_time
             else:
                 self.departure_time = depart_time
+            send_bot_message(socketio, f"runner departed {self.display_name} at {self.departure_time}")
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 

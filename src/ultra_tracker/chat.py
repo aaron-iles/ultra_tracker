@@ -4,11 +4,25 @@
 import datetime
 import json
 import os
-from datetime import datetime
 
 from . import database
 
 # TODO move these to the database.py file ??
+
+
+def send_bot_message(socketio, message_text):
+    username = "UT Bot"
+    timestamp = datetime.datetime.now()
+    timestamp_str = timestamp.isoformat()
+    msg_json = {
+        "username": username,
+        "text": message_text,
+        "timestamp": timestamp_str,
+    }
+    save_message(database.ChatMessage(username=username, text=message_text, timestamp=timestamp))
+    socketio.emit("message", msg_json)
+
+
 
 
 def get_recent_messages(limit: int) -> list:

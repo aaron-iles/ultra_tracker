@@ -9,9 +9,12 @@ from flask_socketio import SocketIO
 from .socketio_handlers import register_socketio_handlers
 from . import api
 
-__all__ = ["create_app"]
+__all__ = ["create_app", "socketio"]
 
 log = logging.getLogger(__name__)
+
+socketio = SocketIO()
+
 
 def create_app() -> tuple:
     """
@@ -27,6 +30,6 @@ def create_app() -> tuple:
     app.register_blueprint(api.logs.blueprint, url_prefix=api.logs.URL_PREFIX)
     app.register_blueprint(api.race.blueprint, url_prefix=api.race.URL_PREFIX)
     log.info(f"registering SocketIO handlers")
-    socketio = SocketIO(app)
+    socketio.init_app(app)
     register_socketio_handlers(socketio)
-    return app, socketio
+    return app
