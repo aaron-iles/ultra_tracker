@@ -17,28 +17,15 @@ body, html {
   z-index: 1050; /* Bootstrap's default z-index for dropdowns */
 }
 
-.tab-link {
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
-  padding: 10px 12px;
-  transition: background-color 0.3s, color 0.3s; /* Smooth transitions */
-}
 
-.tab-link:hover,
-.tab-link.active {
-  background-color: #546E7A; /* Hover & active state background */
-  border-radius: 4px;
-}
 
-/* Page Header */
-.page-header {
-  color: #263238;
-  font-size: 36px;
-  margin-bottom: 20px;
-}
 
-/* Tables */
+
+
+
+
+
+
 .stats-table, .course-table {
   width: 100%;
   table-layout: fixed; 
@@ -50,23 +37,26 @@ body, html {
 .course-table td {
   padding: 15px;
   text-align: left;
-  background-color: white;
-  color: black;
   font-size: 16px;
   border-bottom: 1px solid #ddd;
 }
 
-.stats-table th,
-.course-table th {
-  background-color: #37474F; /* Dark material grey */
-  color: white;
-  font-size: 16px;
-}
 
-.stats-table td,
-.course-table td {
-  background-color: white;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Accordion */
 .accordion {
@@ -81,30 +71,32 @@ body, html {
   width: 100%;
   text-align: left;
   font-weight: bold;
-  background-color: #ECEFF1;
-  color: #37474F;
+  /*background-color: #ECEFF1;
+  color: #37474F;*/
   border: none;
   padding: 10px;
   transition: background-color 0.3s;
 }
 
-.accordion-button:hover {
+/*.accordion-button:hover {
   background-color: #CFD8DC;
-}
+}*/
 
 .accordion-body {
   padding: 10px;
 }
 
-.accordion-item .completed-item {
+/*
+.accordion-item .not-completed-item {
   background-color: #FFFFFF;
   color: #000000;
 }
+*/
 
-.accordion-item .not-completed-item {
-  background-color: #B0BEC5;
-  color: #37474F;
+.accordion-item .completed-item {
+  background-color: #000000;
 }
+
 
 /* Map */
 #map {
@@ -120,24 +112,7 @@ body, html {
   border: none;
 }
 
-/* Active Tab Indicator */
-.tab-link.active::after {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 4px;
-  background-color: #42A5F5; /* Light blue for material accent */
-  border-radius: 2px;
-}
 
-.tab-content {
-    display: none; /* Hide all tab content by default */
-    padding-top: 80px; /* This creates space for the dropdown */
-}
-
-.tab-content.active {
-    display: block; /* Show active tab content */
-}
 
 
 th {

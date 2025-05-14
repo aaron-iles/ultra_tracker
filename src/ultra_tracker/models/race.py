@@ -116,12 +116,12 @@ class Race:
             "aid_station_annotations": self.course.aid_stations_annotations,
             "course_deviation": format_distance(self.runner.course_deviation),
             "deviation_background_color": (
-                "#90EE90"
+                "#61a161"
                 if self.runner.course_deviation < 100
                 else (
-                    "#FAFAD2"
+                    "#6f6f3d"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                    else "#a9653c" if 151 <= self.runner.course_deviation <= 200 else "#792f3c"
                 )
             ),
             "debug_data": {
