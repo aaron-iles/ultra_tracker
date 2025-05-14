@@ -15,6 +15,7 @@ from flask import (
     stream_with_context,
     url_for,
 )
+from ..chat import send_bot_message
 URL_PREFIX = "/chat"
 
 blueprint = Blueprint("chat", __name__)
@@ -25,6 +26,7 @@ blueprint = Blueprint("chat", __name__)
 def run_chat():
     if "username" not in session:
         return redirect(url_for("chat.make_user"))
+    send_bot_message(f"👋 {session['username']} just joined the chat!")
     return render_template("chat.html", username=session["username"])
 
 

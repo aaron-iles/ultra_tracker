@@ -5,12 +5,13 @@ import datetime
 import json
 import os
 
+from .ut_socket import socketio
 from . import database
 
 # TODO move these to the database.py file ??
 
 
-def send_bot_message(socketio, message_text):
+def send_bot_message(message_text: str):
     username = "UT Bot"
     timestamp = datetime.datetime.now()
     timestamp_str = timestamp.isoformat()

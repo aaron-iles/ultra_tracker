@@ -26,7 +26,7 @@ from flask import (
 )
 from flask_socketio import SocketIO, send
 
-from . import application, database
+from . import application, database, ut_socket
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
@@ -199,5 +199,5 @@ def start_application():
     app.config["UT_DATA_DIR"] = args.data_dir
     app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
-    application.socketio.run(app, host="0.0.0.0", port=8080, debug=True)
+    ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=False)
     return
