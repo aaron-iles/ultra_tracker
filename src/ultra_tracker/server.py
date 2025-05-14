@@ -108,7 +108,7 @@ def setup_logging(verbose: bool = False):
 
 
 args = parse_args()
-database.connect(os.path.join("sqlite:///", args.data_dir, "ut_datastore.db"))
+database.connect(f"sqlite:///{os.path.join(args.data_dir, 'ut_datastore.db')}")
 app = application.create_app()
 
 

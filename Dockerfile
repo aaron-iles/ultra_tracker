@@ -4,7 +4,7 @@ WORKDIR /app
 
 VOLUME /app
 
-COPY docker-entrypoint.sh requirements.txt uwsgi.ini /app/
+COPY docker-entrypoint.sh requirements.txt /app/
 
 COPY dist/ultra_tracker-*.whl /tmp/
 
