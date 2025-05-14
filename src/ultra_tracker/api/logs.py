@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import time
+
 import eventlet
 from flask import (
     Blueprint,
@@ -16,21 +17,22 @@ from flask import (
     url_for,
 )
 
-
 URL_PREFIX = "/logs"
 
 
 blueprint = Blueprint("logs", __name__)
+
 
 @blueprint.route("/")
 def get_logs():
     if not session.get("logged_in"):
         return redirect(url_for("logs.login"))
     for handler in logging.root.handlers:
-        if handler.name == 'InMemoryLogHandler':
+        if handler.name == "InMemoryLogHandler":
             log_handler = handler
 
     if request.headers.get("Accept") == "text/event-stream":
+
         @stream_with_context
         def event_stream():
             seen = 0
@@ -47,16 +49,13 @@ def get_logs():
                     eventlet.sleep(1)
             except GeneratorExit:
                 return
+
         return Response(
             event_stream(),
             mimetype="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive"
-            }
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
         )
     return render_template("logs.html")
-
 
 
 @blueprint.route("/login", methods=["GET", "POST"])
@@ -98,6 +97,3 @@ def login():
                 error = f"Incorrect password. Attempts left: {5 - session['failed_attempts']}"
 
     return render_template("login.html", error=error)
-
-
-

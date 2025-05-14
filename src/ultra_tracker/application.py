@@ -5,14 +5,13 @@ import logging
 
 import flask
 
-from .socketio_handlers import register_socketio_handlers
 from . import api
+from .socketio_handlers import register_socketio_handlers
 from .ut_socket import socketio
 
 __all__ = ["create_app"]
 
 log = logging.getLogger(__name__)
-
 
 
 def create_app() -> tuple:

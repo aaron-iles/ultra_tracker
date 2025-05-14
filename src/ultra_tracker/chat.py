@@ -5,8 +5,8 @@ import datetime
 import json
 import os
 
-from .ut_socket import socketio
 from . import database
+from .ut_socket import socketio
 
 # TODO move these to the database.py file ??
 
@@ -22,8 +22,6 @@ def send_bot_message(message_text: str):
     }
     save_message(database.ChatMessage(username=username, text=message_text, timestamp=timestamp))
     socketio.emit("message", msg_json)
-
-
 
 
 def get_recent_messages(limit: int) -> list:

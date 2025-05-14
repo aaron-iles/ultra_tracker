@@ -12,6 +12,7 @@ import requests
 from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
+from ..chat import send_bot_message
 from ..utils import (
     detect_consecutive_sequences,
     get_gmaps_url,
@@ -19,7 +20,6 @@ from ..utils import (
     haversine_distance,
     meters_to_feet,
 )
-from ..chat import send_bot_message
 from .caltopo import CaltopoMap, CaltopoShape, lookup_marker_by_name
 
 logger = logging.getLogger(__name__)

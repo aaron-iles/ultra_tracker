@@ -15,11 +15,12 @@ from flask import (
     stream_with_context,
     url_for,
 )
+
 from ..chat import send_bot_message
+
 URL_PREFIX = "/chat"
 
 blueprint = Blueprint("chat", __name__)
-
 
 
 @blueprint.route("/")
@@ -28,8 +29,6 @@ def run_chat():
         return redirect(url_for("chat.make_user"))
     send_bot_message(f"👋 {session['username']} just joined the chat!")
     return render_template("chat.html", username=session["username"])
-
-
 
 
 @blueprint.route("/login", methods=["GET", "POST"])
@@ -41,6 +40,3 @@ def make_user():
         # load_history(current_app)
         return redirect(url_for("chat.run_chat"))
     return render_template("user.html")
-
-
-

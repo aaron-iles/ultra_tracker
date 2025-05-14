@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import hashlib
+import json
 import logging
 import time
-import json
-
 
 from flask import (
     Blueprint,
@@ -35,43 +34,30 @@ def render_stats_page():
 
 @blueprint.route("/course", methods=["GET"])
 def render_course_page():
-    """
-    """
+    """ """
     race = current_app.config["UT_RACE"]
     return render_template("course.html", **race.html_stats)
 
 
-
-
-
-
 @blueprint.route("/map", methods=["GET"])
 def render_map_page():
-    """
-    """
+    """ """
     race = current_app.config["UT_RACE"]
     return render_template("map.html", **race.html_stats)
 
 
 @blueprint.route("/profile", methods=["GET"])
 def render_profile_page():
-    """
-    """
+    """ """
     race = current_app.config["UT_RACE"]
     return render_template("profile.html", **race.html_stats)
 
 
 @blueprint.route("/raw", methods=["GET"])
 def render_raw_page():
-    """
-    """
+    """ """
     race = current_app.config["UT_RACE"]
     return render_template("raw.html", **race.html_stats)
-
-
-
-
-
 
 
 @blueprint.route("/", methods=["POST"])
@@ -93,5 +79,3 @@ def post_data():
         file.write(f"{payload}\n")
     current_app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200
-
-

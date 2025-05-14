@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import eventlet
+
 eventlet.monkey_patch()
 import argparse
 import datetime
@@ -70,7 +71,7 @@ def parse_args() -> argparse.Namespace:
 class InMemoryLogHandler(logging.Handler):
     def __init__(self, max_logs=1000):
         super().__init__(level=logging.NOTSET)
-        self.name = 'InMemoryLogHandler'
+        self.name = "InMemoryLogHandler"
         self.logs = deque(maxlen=max_logs)
         self.setFormatter(
             logging.Formatter("%(asctime)s   %(levelname)s   %(message)s", "%Y-%m-%d %H:%M:%S")
@@ -147,9 +148,6 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
     ):
         return "--/-- --:--"
     return time_obj.strftime("%-m/%-d %-I:%M %p")
-
-
-
 
 
 def start_application():

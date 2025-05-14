@@ -2,12 +2,14 @@
 
 import datetime
 import logging
+
 from flask import session
 
 from .chat import get_recent_messages, save_message
 from .database import ChatMessage
 
 logger = logging.getLogger(__name__)
+
 
 def register_socketio_handlers(socketio) -> None:
     """
@@ -17,6 +19,7 @@ def register_socketio_handlers(socketio) -> None:
     :param SocketIO socketio: A SocketIO object created from the application.
     :return None:
     """
+
     @socketio.on("connect")
     def handle_connect() -> None:
         """
