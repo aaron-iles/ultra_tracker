@@ -27,7 +27,6 @@ blueprint = Blueprint("chat", __name__)
 def run_chat():
     if "username" not in session:
         return redirect(url_for("chat.make_user"))
-    send_bot_message(f"👋 {session['username']} just joined the chat!")
     return render_template("chat.html", username=session["username"])
 
 
@@ -37,6 +36,6 @@ def make_user():
         requested_username = request.form["username"]
         # TODO check that the username is not already taken.
         session["username"] = requested_username
-        # load_history(current_app)
+        send_bot_message(f"👋 {session['username']} just joined the chat!")
         return redirect(url_for("chat.run_chat"))
     return render_template("user.html")
