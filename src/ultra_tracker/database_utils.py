@@ -6,6 +6,7 @@ import json
 import os
 
 from . import database
+from .models import tracker
 from .ut_socket import socketio
 
 # TODO move these to the database.py file ??
@@ -56,3 +57,31 @@ def save_message(message: database.ChatMessage) -> None:
     database.session.commit()
     database.session.close()
     return
+
+
+
+def get_all_pings() -> list:
+    """
+    """
+    pings = (
+        database.session.query(database.Ping)
+        .order_by(database.Ping.timestamp.desc())
+        .all()
+    )
+    result = [ping.raw_data for ping in pings]
+    database.session.close()
+    return result
+
+
+def save_ping(ping) -> None:
+    """
+    """
+    db_ping = database.Ping(raw_data=ping.as_json_safe, timestamp=ping.timestamp)
+    database.session.add(db_ping)
+    database.session.commit()
+    database.session.close()
+    return
+
+
+
+

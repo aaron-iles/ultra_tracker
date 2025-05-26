@@ -30,7 +30,8 @@ class Ping(Base):
     __tablename__ = "pings"
 
     id = Column(Integer, primary_key=True)
-    data = Column(JSON, nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    raw_data = Column(JSON, nullable=False)
 
 
 def connect(path: str) -> None:

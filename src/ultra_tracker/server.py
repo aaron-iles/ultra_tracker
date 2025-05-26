@@ -197,5 +197,5 @@ def start_application():
     app.config["UT_DATA_DIR"] = args.data_dir
     app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
-    ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=False)
+    ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=args.verbose)
     return

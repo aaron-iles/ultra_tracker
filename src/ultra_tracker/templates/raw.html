@@ -3,8 +3,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div id="raw" class="container tab-content" style="padding-top: 88px;">
-    <h1 class="page-header">Raw Data</h1>
+  <div class="container">
     <pre><code id="json-data" class="language-json">{{ debug_data | tojson(indent=2) }}</code></pre>
   </div>
 {% endblock %}

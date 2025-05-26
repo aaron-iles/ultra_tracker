@@ -16,6 +16,7 @@ from ..utils import (
     haversine_distance,
     kph_to_min_per_mi,
 )
+from ..database_utils import save_ping
 from .caltopo import CaltopoMarker
 from .course import AidStation, Route
 from .tracker import Ping
@@ -204,6 +205,7 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
+        save_ping(ping)
         logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")

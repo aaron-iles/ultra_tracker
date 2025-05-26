@@ -16,7 +16,7 @@ from flask import (
     url_for,
 )
 
-from ..chat import send_bot_message
+from ..database_utils import send_bot_message
 
 URL_PREFIX = "/chat"
 

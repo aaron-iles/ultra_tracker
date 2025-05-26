@@ -5,7 +5,7 @@ import logging
 
 from flask import session
 
-from .chat import get_recent_messages, save_message
+from .database_utils import get_recent_messages, save_message
 from .database import ChatMessage
 
 logger = logging.getLogger(__name__)

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  {% for ping in all_pings %}
+    <div class="card bg-dark text-light mb-3">
+      <div class="card-body">
+        {% for key, value in ping.items() %}
+          <p><strong>{{ key }}:</strong> {{ value }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

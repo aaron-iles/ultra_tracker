@@ -9,4 +9,4 @@ python3 -m build --wheel
 python3 -m pip install --force-reinstall --no-deps dist/ultra_tracker-*.whl
 
 #uwsgi uwsgi.ini --honour-stdin --pyargv '-c data/race_config.yml -d data/ --disable-marker-updates'
-ultra-tracker -c data/race_config.yml -d data/ --disable-marker-updates
+ultra-tracker -c data/race_config.yml -d data/ --disable-marker-updates -v

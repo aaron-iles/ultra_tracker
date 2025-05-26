@@ -12,7 +12,7 @@ import requests
 from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
-from ..chat import send_bot_message
+from ..database_utils import send_bot_message
 from ..utils import (
     detect_consecutive_sequences,
     get_gmaps_url,
