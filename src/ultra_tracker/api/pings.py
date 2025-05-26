@@ -17,6 +17,7 @@ from flask import (
     url_for,
 )
 
+import yaml
 from ..database_utils import get_all_pings
 
 URL_PREFIX = "/pings"
@@ -25,7 +26,12 @@ URL_PREFIX = "/pings"
 blueprint = Blueprint("pings", __name__)
 
 
+
 @blueprint.route("/")
 def get_pings():
     all_pings = get_all_pings()
-    return render_template("pings.html", all_pings=all_pings)
+
+    # Convert each ping (dict) to YAML-formatted string
+    ping_yaml_strings = [yaml.dump(ping, default_flow_style=False, sort_keys=False) for ping in all_pings]
+
+    return render_template("pings.html", ping_yamls=ping_yaml_strings)

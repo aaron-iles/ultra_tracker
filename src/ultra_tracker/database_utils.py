@@ -76,7 +76,7 @@ def get_all_pings() -> list:
 def save_ping(ping) -> None:
     """
     """
-    db_ping = database.Ping(raw_data=ping.as_json_safe, timestamp=ping.timestamp)
+    db_ping = database.Ping(raw_data=ping.for_database, timestamp=ping.timestamp)
     database.session.add(db_ping)
     database.session.commit()
     database.session.close()

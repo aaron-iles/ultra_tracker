@@ -4,12 +4,10 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-  {% for ping in all_pings %}
+  {% for yaml_text in ping_yamls %}
     <div class="card bg-dark text-light mb-3">
       <div class="card-body">
-        {% for key, value in ping.items() %}
-          <p><strong>{{ key }}:</strong> {{ value }}</p>
-        {% endfor %}
+        <pre><code class="language-yaml">{{ yaml_text }}</code></pre>
       </div>
     </div>
   {% endfor %}
