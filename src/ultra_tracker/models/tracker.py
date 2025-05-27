@@ -54,6 +54,7 @@ class Ping:
         "longitude",
         "message_code",
         "speed",
+        "transport_mode",
         "timestamp",
         "low_battery",
         "interval_change",
@@ -69,6 +70,7 @@ class Ping:
         self.longitude = self._event.get("point", {}).get("longitude", 0.0)
         self.message_code = MESSAGE_CODE_LOOKUP.get(self._event.get("messageCode"))
         self.speed = self._event.get("point", {}).get("speed", 0.0)
+        self.transport_mode = self._event.get("transportMode", "unknown")
         self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(
