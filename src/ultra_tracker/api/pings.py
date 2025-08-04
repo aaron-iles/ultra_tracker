@@ -29,6 +29,8 @@ blueprint = Blueprint("pings", __name__)
 
 @blueprint.route("/")
 def get_pings():
+    if not session.get("logged_in"):
+        return redirect(url_for("logs.login"))
     all_pings = get_all_pings()
 
     # Convert each ping (dict) to YAML-formatted string

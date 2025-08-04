@@ -120,7 +120,7 @@ def test_ping_as_json(basic_ping):
         "heading": 225.0,
         "latlon": [38.04270386695862, -107.66809701919556],
         "lonlat": [-107.66809701919556, 38.04270386695862],
-        "message_code": 0,
+        "message_code": "Position Report",
         "speed": 3.003,
         "status": {"autonomous": 0, "intervalChange": 0, "lowBattery": 0, "resetDetected": 0},
         "timestamp": datetime.datetime.fromtimestamp(1721571300, pytz.timezone("America/Denver")),

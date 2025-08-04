@@ -93,6 +93,7 @@ class Race:
         """
         return {
             "distances": json.dumps(self.course.route.distances.tolist()),
+            "total_distance": self.course.route.distances[-1],
             "elevations": json.dumps(self.course.route.elevations.tolist()),
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
@@ -488,6 +489,8 @@ class Runner:
         # seen frequently at aid stations.
         if (self.mile_mark - last_mile_mark) < -0.1:
             logger.warning(f"runner has moved backward from {last_mile_mark} to {self.mile_mark}")
+            # TODO: is this safe?
+            self.mile_mark = last_mile_mark
 
         if not self.in_progress:
             logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
