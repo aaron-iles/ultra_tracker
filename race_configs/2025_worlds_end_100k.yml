@@ -1,0 +1,47 @@
+---
+start_time: '2025-05-31T05:00:00'
+caltopo_map_id: P1CVRV6
+runner_name: Shannon
+route_name: Route
+route_distance: 63.8
+race_name: World's End 100k
+aid_stations:
+  - name: High Rock
+    mile_mark: 3.8
+    comments: full aid
+  - name: Iron Bridge
+    mile_mark: 11.1
+    comments: full aid
+  - name: Devils Garden
+    mile_mark: 14.5
+    comments: water only
+  - name: Worlds End
+    mile_mark: 18.4
+    comments: full aid, crew access, drop bags
+  - name: Canyon Vista
+    mile_mark: 21.1
+    comments: full aid
+  - name: Coal Mine
+    mile_mark: 24.7
+    comments: full aid
+  - name: Alpine Vista
+    mile_mark: 27.4
+    comments: water only
+  - name: High Knob
+    mile_mark: 34.2
+    comments: full aid, drop bag
+  - name: Jackson Flats
+    mile_mark: 37.3
+    comments: full aid, crew access
+  - name: McCarty
+    mile_mark: 42.7
+    comments: full aid
+  - name: Brunnerdale
+    mile_mark: 48.5
+    comments: full aid, crew access, drop bags
+  - name: The Gate
+    mile_mark: 52.7
+    comments: water only
+  - name: Fern Rock
+    mile_mark: 57.8
+    comments: full aid, crew access

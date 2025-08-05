@@ -3,6 +3,7 @@ start_time: '2025-01-05T03:45:00'
 caltopo_map_id: N05K7T1
 runner_name: Aaron
 route_name: Out-n-Back
+route_distance: 52
 race_name: Patapsco Party
 aid_stations:
   - name: Woodstock

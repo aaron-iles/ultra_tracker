@@ -16,6 +16,7 @@ from ..utils import (
     haversine_distance,
     kph_to_min_per_mi,
 )
+from ..database_utils import save_ping
 from .caltopo import CaltopoMarker
 from .course import AidStation, Route
 from .tracker import Ping
@@ -92,6 +93,7 @@ class Race:
         """
         return {
             "distances": json.dumps(self.course.route.distances.tolist()),
+            "total_distance": self.course.route.distances[-1],
             "elevations": json.dumps(self.course.route.elevations.tolist()),
             "runner_x": self.runner.mile_mark,
             "runner_y": self.runner.elevation,
@@ -116,12 +118,12 @@ class Race:
             "aid_station_annotations": self.course.aid_stations_annotations,
             "course_deviation": format_distance(self.runner.course_deviation),
             "deviation_background_color": (
-                "#90EE90"
+                "#61a161"
                 if self.runner.course_deviation < 100
                 else (
-                    "#FAFAD2"
+                    "#6f6f3d"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#FFD700" if 151 <= self.runner.course_deviation <= 200 else "#FFC0CB"
+                    else "#a9653c" if 151 <= self.runner.course_deviation <= 200 else "#792f3c"
                 )
             ),
             "debug_data": {
@@ -204,6 +206,7 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
+        save_ping(ping)
         logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")
@@ -486,6 +489,8 @@ class Runner:
         # seen frequently at aid stations.
         if (self.mile_mark - last_mile_mark) < -0.1:
             logger.warning(f"runner has moved backward from {last_mile_mark} to {self.mile_mark}")
+            # TODO: is this safe?
+            self.mile_mark = last_mile_mark
 
         if not self.in_progress:
             logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import eventlet
+
+eventlet.monkey_patch()
 import argparse
 import datetime
 import json
@@ -9,7 +12,6 @@ import random
 import sys
 from collections import deque
 
-import eventlet
 import yaml
 from flask import (
     Flask,
@@ -25,7 +27,7 @@ from flask import (
 )
 from flask_socketio import SocketIO, send
 
-from . import application, database
+from . import application, database, ut_socket
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
@@ -69,7 +71,7 @@ def parse_args() -> argparse.Namespace:
 class InMemoryLogHandler(logging.Handler):
     def __init__(self, max_logs=1000):
         super().__init__(level=logging.NOTSET)
-        self.name = 'InMemoryLogHandler'
+        self.name = "InMemoryLogHandler"
         self.logs = deque(maxlen=max_logs)
         self.setFormatter(
             logging.Formatter("%(asctime)s   %(levelname)s   %(message)s", "%Y-%m-%d %H:%M:%S")
@@ -106,8 +108,8 @@ def setup_logging(verbose: bool = False):
 
 
 args = parse_args()
-database.connect(os.path.join("sqlite:///", args.data_dir, "ut_datastore.db"))
-app, socketio = application.create_app()
+database.connect(f"sqlite:///{os.path.join(args.data_dir, 'ut_datastore.db')}")
+app = application.create_app()
 
 
 #####################################
@@ -146,9 +148,6 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
     ):
         return "--/-- --:--"
     return time_obj.strftime("%-m/%-d %-I:%M %p")
-
-
-
 
 
 def start_application():
@@ -198,5 +197,5 @@ def start_application():
     app.config["UT_DATA_DIR"] = args.data_dir
     app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
-    socketio.run(app, host="0.0.0.0", port=8080, debug=True)
+    ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=args.verbose)
     return
