@@ -6,39 +6,39 @@ route_name: Route
 route_distance: 103.1
 race_name: Eastern States 100
 aid_stations:
-  - name: 01 Ramsey Rd
+  - name: Ramsey Rd
     mile_mark: 5.8
-  - name: 02 Ramsey
+  - name: Ramsey
     mile_mark: 11.3
-  - name: 03 Lower Pine Bottom
+  - name: Lower Pine Bottom
     mile_mark: 17.8
     comments: crew
-  - name: 04 Browns Run
+  - name: Browns Run
     mile_mark: 25.8
-  - name: 05 Happy Dutchman
+  - name: Happy Dutchman
     mile_mark: 31.6
-  - name: 06 Ritchie Rd
+  - name: Ritchie Rd
     mile_mark: 38.5
-  - name: 07 Hyner Run
+  - name: Hyner Run
     mile_mark: 43.2
     comments: crew, pacers
-  - name: 08 Dry Run
+  - name: Dry Run
     mile_mark: 51.2
-  - name: 09 Big Trail
+  - name: Big Trail
     mile_mark: 56.6
-  - name: 10 Tomb Flats
+  - name: Tomb Flats
     mile_mark: 62.9
     comments: crew, pacers
-  - name: 11 Cedar Run
+  - name: Cedar Run
     mile_mark: 72.7
-  - name: 12 Blackwell
+  - name: Blackwell
     mile_mark: 80.5
     comments: crew, pacers
-  - name: 13 Sky Top
+  - name: Sky Top
     mile_mark: 85.0
-  - name: 14 Barrens
+  - name: Barrens
     mile_mark: 93.1
     comments: crew, pacers
-  - name: 15 Hackett
+  - name: Hackett
     mile_mark: 99.3
     comments: crew
