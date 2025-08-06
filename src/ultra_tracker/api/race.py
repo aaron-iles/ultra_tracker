@@ -75,7 +75,6 @@ def post_data():
         logger.error("Content-Length header is missing or zero")
         return "Content-Length header is missing or zero", 411
     payload = request.get_data(as_text=True)
-    logger.debug(f"ping received: {payload}")
     with open(f"{current_app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii") as file:
         file.write(f"{payload}\n")
     current_app.config["UT_RACE"].ingest_ping(json.loads(payload))
