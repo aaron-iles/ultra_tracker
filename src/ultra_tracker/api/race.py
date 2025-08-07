@@ -17,6 +17,7 @@ from flask import (
     url_for,
 )
 
+logger = logging.getLogger(__name__)
 URL_PREFIX = "/"
 blueprint = Blueprint("root", __name__)
 
