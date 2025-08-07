@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3 w-100">
+  <div class="row w-100 px-2">
+
+    <!-- Page 4: Status -->
+    <div class="col-lg-6 col-md-12 mb-4">
+      <div class="p-3 border rounded bg-secondary">
+        <h5>Application Status</h5>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item bg-secondary text-light d-flex justify-content-between align-items-center">
+            Operational State:
+            <span>
+              {{ operational_state }}
+              <span class="badge rounded-pill bg-success me-2" style="width: 12px; height: 12px; display: inline-block;"></span>
+            </span>
+          </li>
+          <li class="list-group-item bg-secondary text-light d-flex justify-content-between align-items-center">
+            Pings Received:
+            <span>{{ pings_received }}</span>
+          </li>
+          <li class="list-group-item bg-secondary text-light d-flex justify-content-between align-items-center">
+            Position Report Pings:
+            <span>{{ position_report_pings }}</span>
+          </li>
+          <li class="list-group-item bg-secondary text-light d-flex justify-content-between align-items-center">
+            Tracker Battery:
+            <span>{{ 'low' if debug_data.low_battery else 'okay' }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+
+
+    <!-- Page 1: Live Logs -->
+    <div class="col-lg-6 col-md-12 mb-4">
+      <div class="p-3 border rounded bg-secondary">
+        <h5>Live Logs</h5>
+        <div id="log-container"></div>
+      </div>
+    </div>
+
+    <!-- Page 2: Ping YAMLs -->
+    <div class="col-lg-6 col-md-12 mb-4">
+      <div class="p-3 border rounded bg-secondary">
+        <h5>Ping YAMLs</h5>
+        <div id="yaml-container">
+          {% for yaml_text in ping_yamls %}
+            <div class="card bg-dark text-light mb-2">
+              <pre><code class="language-yaml">{{ yaml_text }}</code></pre>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 3: Debug JSON -->
+    <div class="col-12 mb-4">
+      <div class="p-3 border rounded bg-secondary">
+        <h5>Debug Data</h5>
+        <pre><code id="json-data" class="language-json">{{ debug_data | tojson(indent=2) }}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Inline Styles -->
+<style>
+
+  #yaml-container {
+    background: #1e1e1e;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding-right: 0.5rem; /* space for scrollbar */
+  }
+  
+  @media only screen and (max-width: 768px) {
+    #yaml-container {
+      max-height: 30vh;
+    }
+  }
+
+  #log-container {
+    background: #1e1e1e;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    height: 40vh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border: 1px solid #333;
+    font-family: 'Courier New', monospace;
+  }
+
+  @media only screen and (max-width: 768px) {
+    #log-container {
+      height: 30vh;
+    }
+  }
+</style>
+
+<!-- Live Log Script -->
+<script>
+  const logContainer = document.getElementById("log-container");
+  const eventSource = new EventSource("/admin/");
+  eventSource.onmessage = (event) => {
+    const line = document.createElement("div");
+    line.textContent = event.data;
+    logContainer.appendChild(line);
+    logContainer.scrollTop = logContainer.scrollHeight;
+  };
+  window.addEventListener("beforeunload", () => {
+    eventSource.close();
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const yamlContainer = document.getElementById("yaml-container");
+    if (yamlContainer) {
+      yamlContainer.scrollTop = yamlContainer.scrollHeight;
+    }
+  });
+
+
+
+</script>
+{% endblock %}

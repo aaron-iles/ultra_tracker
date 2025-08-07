@@ -102,6 +102,7 @@ def setup_logging(verbose: bool = False):
     # Add the stream handler to the root logger
     logging.root.addHandler(stream_handler)
     in_memory_log_handler = InMemoryLogHandler()
+    in_memory_log_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
     logging.root.addHandler(in_memory_log_handler)
     # Set the logging level.
     logging.root.setLevel(logging.NOTSET)
