@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import eventlet
 import hashlib
 import json
 import logging
@@ -16,6 +17,8 @@ from flask import (
     stream_with_context,
     url_for,
 )
+import yaml
+from ..database_utils import get_all_pings
 
 URL_PREFIX = "/"
 blueprint = Blueprint("root", __name__)
@@ -51,6 +54,50 @@ def render_profile_page():
     """ """
     race = current_app.config["UT_RACE"]
     return render_template("profile.html", **race.html_stats)
+
+
+@blueprint.route("/admin", methods=["GET"])
+def render_admin_page():
+    """ """
+    if not session.get("logged_in"):
+        return redirect(url_for("logs.login"))
+
+    for handler in logging.root.handlers:
+        if handler.name == "InMemoryLogHandler":
+            log_handler = handler
+
+    if request.headers.get("Accept") == "text/event-stream":
+
+        @stream_with_context
+        def event_stream():
+            seen = 0
+            try:
+                while True:
+                    logs = log_handler.get_logs()
+                    if len(logs) > seen:
+                        for line in logs[seen:]:
+                            yield f"data: {line}\n\n"
+                        seen = len(logs)
+                    else:
+                        # Flush output even if no new logs
+                        yield ": keepalive\n\n"
+                    eventlet.sleep(1)
+            except GeneratorExit:
+                return
+
+        return Response(
+            event_stream(),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+        )
+
+    all_pings = get_all_pings()
+    position_report_pings = sum(1 for p in all_pings if p.get("message_code") in {"Position Report"})
+
+    # Convert each ping (dict) to YAML-formatted string
+    ping_yaml_strings = [yaml.dump(ping, default_flow_style=False, sort_keys=False) for ping in all_pings]
+    race = current_app.config["UT_RACE"]
+    return render_template("admin_dashboard.html", ping_yamls=ping_yaml_strings, **race.html_stats, operational_state="running", position_report_pings=position_report_pings, pings_received=len(all_pings))
 
 
 @blueprint.route("/raw", methods=["GET"])

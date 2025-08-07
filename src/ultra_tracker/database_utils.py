@@ -65,7 +65,7 @@ def get_all_pings() -> list:
     """
     pings = (
         database.session.query(database.Ping)
-        .order_by(database.Ping.timestamp.desc())
+        .order_by(database.Ping.timestamp.asc())
         .all()
     )
     result = [ping.raw_data for ping in pings]
