@@ -85,7 +85,7 @@ def login():
         if entered_hash == current_app.config["UT_ADMIN_PASSWORD_HASH"]:
             session["logged_in"] = True
             session.pop("failed_attempts", None)
-            return redirect(url_for("logs.get_logs"))
+            return redirect(url_for("root.render_admin_page"))
         else:
             session["failed_attempts"] = session.get("failed_attempts", 0) + 1
             if session["failed_attempts"] >= 5:
