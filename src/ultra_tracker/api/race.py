@@ -63,14 +63,15 @@ def render_admin_page():
     if not session.get("logged_in"):
         return redirect(url_for("logs.login"))
 
-    for handler in logging.root.handlers:
-        if handler.name == "InMemoryLogHandler":
-            log_handler = handler
+    log_handler = next((h for h in logging.root.handlers if h.name == "InMemoryLogHandler"), None)
 
     if request.headers.get("Accept") == "text/event-stream":
 
         @stream_with_context
         def event_stream():
+            # Bust proxy buffers + show something instantly
+            yield ":" + (" " * 2048) + "\n"
+            yield "event: hello\ndata: connected\n\n"
             seen = 0
             try:
                 while True:
@@ -81,7 +82,7 @@ def render_admin_page():
                         seen = len(logs)
                     else:
                         # Flush output even if no new logs
-                        yield ": keepalive\n\n"
+                        yield "event: ping\ndata: keepalive\n\n"
                     eventlet.sleep(1)
             except GeneratorExit:
                 return
