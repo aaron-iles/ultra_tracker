@@ -33,7 +33,6 @@ from .models.course import Course
 from .models.race import Race, Runner
 from .utils import format_duration, get_config_data
 
-log = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:

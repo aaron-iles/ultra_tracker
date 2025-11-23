@@ -1,0 +1,47 @@
+---
+start_time: '2025-12-12T07:30:00'
+caltopo_map_id: 3R12N85
+runner_name: P100
+route_name: Route
+route_distance: 98.3
+race_name: Patapsco 100
+aid_stations:
+  - name: Avalon
+    mile_mark: 12.4
+    comments: park facility, possible bathrooms
+  - name: Dietrich 1
+    mile_mark: 15.8
+    comments: outdoors, unmanned
+  - name: Iles 1
+    mile_mark: 22.9
+    comments: indoors, manned, bathroom, hot food
+  - name: Green Bridge 1
+    mile_mark: 30.6
+    comments: outdoors, water only after 1530
+  - name: Green Bridge 2
+    mile_mark: 34.9
+    comments: outdoors, water only after 1530
+  - name: Iles 2
+    mile_mark: 41
+    comments: indoors, manned, bathroom, hot food
+  - name: Dietrich 2
+    mile_mark: 53.7
+    comments: outdoors, unmanned
+  - name: Iles 3
+    mile_mark: 59.9
+    comments: indoors, manned, bathroom, hot food
+  - name: Dietrich 3
+    mile_mark: 66.1
+    comments: outdoors, unmanned
+  - name: Iles 4
+    mile_mark: 72.6
+    comments: indoors, manned, bathroom, hot food
+  - name: Dietrich 4
+    mile_mark: 79.1
+    comments: outdoors, unmanned
+  - name: Iles 5
+    mile_mark: 85.5
+    comments: indoors, manned, bathroom, hot food
+  - name: Dietrich 5
+    mile_mark: 92
+    comments: outdoors, unmanned
