@@ -3,7 +3,7 @@ start_time: '2025-12-12T07:30:00'
 caltopo_map_id: 3R12N85
 runner_name: P100
 route_name: Route
-route_distance: 100
+route_distance: 98.3
 race_name: Patapsco 100
 aid_stations:
   - name: Avalon
