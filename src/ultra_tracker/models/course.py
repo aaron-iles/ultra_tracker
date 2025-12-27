@@ -12,7 +12,6 @@ import requests
 from geopy.distance import geodesic
 from scipy.spatial import KDTree
 
-from ..database_utils import send_bot_message
 from ..utils import (
     detect_consecutive_sequences,
     get_gmaps_url,
@@ -706,7 +705,6 @@ class AidStation(CourseElement):
             else:
                 self.estimated_arrival_time = runner.last_ping.timestamp
                 self.arrival_time = self.estimated_arrival_time
-            send_bot_message(f"runner entered {self.display_name} at {self.arrival_time}")
             logger.info(f"runner entered {self.display_name} at {self.arrival_time}")
             return
 
@@ -732,7 +730,6 @@ class AidStation(CourseElement):
                 self.departure_time = self.arrival_time
             else:
                 self.departure_time = depart_time
-            send_bot_message(f"runner departed {self.display_name} at {self.departure_time}")
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 

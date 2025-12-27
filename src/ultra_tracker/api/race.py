@@ -94,12 +94,23 @@ def render_admin_page():
         )
 
     all_pings = get_all_pings()
-    position_report_pings = sum(1 for p in all_pings if p.get("message_code") in {"Position Report"})
+    position_report_pings = sum(
+        1 for p in all_pings if p.get("message_code") in {"Position Report"}
+    )
 
     # Convert each ping (dict) to YAML-formatted string
-    ping_yaml_strings = [yaml.dump(ping, default_flow_style=False, sort_keys=False) for ping in all_pings]
+    ping_yaml_strings = [
+        yaml.dump(ping, default_flow_style=False, sort_keys=False) for ping in all_pings
+    ]
     race = current_app.config["UT_RACE"]
-    return render_template("admin_dashboard.html", ping_yamls=ping_yaml_strings, **race.html_stats, operational_state="running", position_report_pings=position_report_pings, pings_received=len(all_pings))
+    return render_template(
+        "admin_dashboard.html",
+        ping_yamls=ping_yaml_strings,
+        **race.html_stats,
+        operational_state="running",
+        position_report_pings=position_report_pings,
+        pings_received=len(all_pings),
+    )
 
 
 @blueprint.route("/raw", methods=["GET"])

@@ -34,7 +34,6 @@ from .models.race import Race, Runner
 from .utils import format_duration, get_config_data
 
 
-
 def parse_args() -> argparse.Namespace:
     """
     Parses the arguments from the command line.

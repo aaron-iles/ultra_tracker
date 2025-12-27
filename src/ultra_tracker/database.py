@@ -16,15 +16,6 @@ this.session = None
 Base = declarative_base()
 
 
-class ChatMessage(Base):
-    __tablename__ = "chat_messages"
-
-    id = Column(Integer, primary_key=True)
-    username = Column(String(64), nullable=False)
-    text = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-
-
 # TODO: Add pings to the database
 class Ping(Base):
     __tablename__ = "pings"
