@@ -535,7 +535,9 @@ class Runner:
             self.last_ping = ping
             self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         else:
-            logger.warning(f"calculated mile mark of {new_mile_mark} deemed unreasonable")
+            logger.warning(f"calculated mile mark of {round(new_mile_mark, 2)} deemed unreasonable")
+            # Ensure that the estimate marker doesn't get moved.
+            new_coords = self.race.course.route.get_point_at_mile_mark(last_mile_mark)
 
         if not self.in_progress:
             logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
