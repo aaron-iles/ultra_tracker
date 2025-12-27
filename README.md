@@ -50,6 +50,7 @@ To get started with Ultra Tracker, follow these steps:
    caltopo_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
    tracker_marker_name: MyName
    route_name: Route
+   route_distance: 26.2
    aid_stations:
      - name: 01 Aid Station
        mile_mark: 7.6

@@ -9,6 +9,7 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
+from ultra_tracker import application, database, ut_socket
 from ultra_tracker.models import caltopo, course, race
 
 
@@ -106,6 +107,9 @@ def race_04_expected_mile_marks(race_04_path):
 def test_race_04_full(race_04, race_04_post_log, race_04_expected_mile_marks):
     mile_mark_progression = []
     race_04.runner.race = race_04
+    database.connect("sqlite:////tmp/ut_datastore.db")
+    socketio = ut_socket.socketio
+    app = application.create_app()
     for ping_data in race_04_post_log:
         race_04.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_04.runner.mile_mark, 2)))

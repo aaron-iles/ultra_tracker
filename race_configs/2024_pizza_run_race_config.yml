@@ -3,6 +3,7 @@ start_time: '2024-12-30T15:30:00'
 caltopo_map_id: 07E74MA
 runner_name: Jim
 route_name: Route
+route_distance: 13.9
 race_name: Pizza Run
 aid_stations:
   - name: 01 Pizza Hut

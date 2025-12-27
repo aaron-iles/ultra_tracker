@@ -5,7 +5,35 @@ import datetime
 
 from ..utils import get_timezone, meters_to_feet
 
-GPS_FIX_MAP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
+GPS_FIX_LOOKUP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
+MESSAGE_CODE_LOOKUP = {
+    0: "Position Report",
+    1: "Reserved",
+    2: "Locate Response",
+    3: "Free Text Message",
+    4: "Declare SOS",
+    5: "Reserved",
+    6: "Confirm SOS",
+    7: "Cancel SOS",
+    8: "Reference Point",
+    10: "Start Track",
+    11: "Track Interval",
+    12: "Stop Track",
+    13: "Unknown Index",
+    14: "Puck Message 1",
+    15: "Puck Message 2",
+    16: "Puck Message 3",
+    17: "Map Share",
+    20: "Mail Check",
+    21: "Am I Alive",
+    # 24–63 are a range, handled below
+    64: "Encrypted Binary",
+    65: "Pingback Message",
+    66: "Generic Binary",
+    67: "EncryptedPinpoint",
+    3099: "Canned Message",
+    None: "unknown",
+}
 
 
 class Ping:
@@ -26,6 +54,7 @@ class Ping:
         "longitude",
         "message_code",
         "speed",
+        "transport_mode",
         "timestamp",
         "low_battery",
         "interval_change",
@@ -34,13 +63,14 @@ class Ping:
     def __init__(self, ping_data: dict):
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
-        self.gps_fix = GPS_FIX_MAP.get(self._event.get("point", {}).get("gpsFix"))
+        self.gps_fix = GPS_FIX_LOOKUP.get(self._event.get("point", {}).get("gpsFix"))
         self.heading = self._event.get("point", {}).get("course", 0)
         self.imei = self._event.get("imei")
         self.latitude = self._event.get("point", {}).get("latitude", 0.0)
         self.longitude = self._event.get("point", {}).get("longitude", 0.0)
-        self.message_code = self._event.get("messageCode")
+        self.message_code = MESSAGE_CODE_LOOKUP.get(self._event.get("messageCode"))
         self.speed = self._event.get("point", {}).get("speed", 0.0)
+        self.transport_mode = self._event.get("transportMode", "unknown")
         self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(
@@ -105,6 +135,25 @@ class Ping:
             "heading": self.heading,
             "latlon": self.latlon,
             "lonlat": self.lonlat,
+            "altitude": self.altitude,
+            "gps_fix": self.gps_fix,
+            "message_code": self.message_code,
+            "speed": self.speed,
+        }
+
+    @property
+    def for_database(self) -> dict:
+        """
+        A json representation of the ping object.
+
+        :return dict: The dict of the ping object.
+        """
+        return {
+            "status": self._event.get("status", {}),
+            "timestamp": str(self.timestamp),
+            "timestamp_raw": self._event.get("timeStamp", 0),
+            "heading": self.heading,
+            "latlon": self.latlon,
             "altitude": self.altitude,
             "gps_fix": self.gps_fix,
             "message_code": self.message_code,

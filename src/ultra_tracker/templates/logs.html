@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+{% extends "base.html" %}
+
+{% block content %}
+  <style>
+    #log-container {
+      background: #1e1e1e;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      height: 90vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #333;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+  <div class="container-fluid">
+    <div id="log-container"></div>
+  </div>
+    <script>
+      const logContainer = document.getElementById("log-container");
+      const eventSource = new EventSource("/logs/");
+
+      eventSource.onmessage = (event) => {
+        const line = document.createElement("div");
+        line.textContent = event.data;
+        logContainer.appendChild(line);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      };
+
+      window.addEventListener("beforeunload", () => {
+        eventSource.close();
+      });
+    </script>
+{% endblock %}
