@@ -9,8 +9,8 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
+from ultra_tracker import application, database, ut_socket
 from ultra_tracker.models import caltopo, course, race
-from ultra_tracker import database, ut_socket, application
 
 
 @pytest.fixture

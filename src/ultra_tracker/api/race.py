@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import eventlet
 import hashlib
 import json
 import logging
 import time
 
+import eventlet
+import yaml
 from flask import (
     Blueprint,
     Response,
@@ -17,7 +18,7 @@ from flask import (
     stream_with_context,
     url_for,
 )
-import yaml
+
 from ..database_utils import get_all_pings
 
 logger = logging.getLogger(__name__)

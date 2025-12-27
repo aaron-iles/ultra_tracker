@@ -1,3 +1,3 @@
 #!/usr/bin/env python3
 
-from . import logs, race, pings
+from . import logs, pings, race

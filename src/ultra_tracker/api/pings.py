@@ -5,6 +5,7 @@ import logging
 import time
 
 import eventlet
+import yaml
 from flask import (
     Blueprint,
     Response,
@@ -17,7 +18,6 @@ from flask import (
     url_for,
 )
 
-import yaml
 from ..database_utils import get_all_pings
 
 URL_PREFIX = "/pings"
