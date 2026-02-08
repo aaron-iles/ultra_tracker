@@ -1,0 +1,22 @@
+---
+start_time: '2026-02-11T08:00:00'
+caltopo_map_id: 8QDFJ7P
+runner_name: Aaron
+route_name: Route
+route_distance: 228.0
+race_name: TWOT 200
+aid_stations:
+  - name: 01 TWOT Lot
+    mile_mark: 28.5
+  - name: 02 TWOT Lot
+    mile_mark: 57.0
+  - name: 03 TWOT Lot
+    mile_mark: 85.5
+  - name: 04 TWOT Lot
+    mile_mark: 114.0
+  - name: 05 TWOT Lot
+    mile_mark: 142.5
+  - name: 06 TWOT Lot
+    mile_mark: 171.0
+  - name: 07 TWOT Lot
+    mile_mark: 199.5
