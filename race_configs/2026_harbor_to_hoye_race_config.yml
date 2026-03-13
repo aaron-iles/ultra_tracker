@@ -1,0 +1,43 @@
+---
+start_time: '2026-03-28T05:00:00'
+caltopo_map_id: T0CCL
+runner_name: Aaron
+route_name: Route
+route_distance: 203.5
+race_name: Harbor to Hoye
+aid_stations:
+  - name: Windsor Mill
+    mile_mark: 15.2
+  - name: Park n Ride
+    mile_mark: 29.4
+  - name: Saint Peters
+    mile_mark: 42.8
+  - name: Cat Rock
+    mile_mark: 58.7
+  - name: Funkhouser Park
+    mile_mark: 74.3
+  - name: Clear Spring Park
+    mile_mark: 86.7
+  - name: Little Pool
+    mile_mark: 98.1
+  - name: Sideling Hill Creek
+    mile_mark: 111.9
+    comments: small pulloff on side of road
+  - name: Old Williams
+    mile_mark: 123.2
+    comments: small pulloff on side of road
+  - name: Williams
+    mile_mark: 136.5
+    comments: small pulloff on side of road
+  - name: LaVale
+    mile_mark: 147.7
+    comments: small parking lot by historic toll gate house
+  - name: Westmar
+    mile_mark: 158.6
+    comments: parking in front of baseball field
+  - name: Beaver Park
+    mile_mark: 172.5
+    comments: pulloff area
+  - name: Stop n Save
+    mile_mark: 185.3
+
