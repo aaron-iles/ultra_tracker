@@ -263,6 +263,7 @@ class Race:
 
         with open(self.data_store, "w") as f:
             f.write(json.dumps(stats, indent=4))
+        # TODO write to postgres database
 
     def restore(self) -> None:
         """
@@ -308,6 +309,7 @@ class Race:
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")
             self.runner.pings += 1
+            self.save()
             return
         # Don't do anything if the race hasn't started yet.
         if ping.timestamp < self.start_time:
@@ -315,6 +317,7 @@ class Race:
                 f"incoming timestamp {ping.timestamp} before race start time {self.start_time}"
             )
             self.runner.pings += 1
+            self.save()
             return
         # Don't do anything if the runner has already finished.
         if self.runner.finished:

@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: running-log-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_RO_USER: ${POSTGRES_RO_USER}
+      POSTGRES_RO_PASSWORD: ${POSTGRES_RO_PASSWORD}
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  adminer:
+    image: adminer:latest
+    container_name: running-log-adminer
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: running-log-grafana
+    ports:
+      - 3001:3000
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+      - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./dashboards:/var/lib/grafana/dashboards
+    user: '1000'
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_RO_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_RO_PASSWORD}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USERNAME}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+
+  log-etl:
+    image: python:3.13
+    container_name: running-log-etl
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID}
+      STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET}
+      STRAVA_REFRESH_TOKEN: ${STRAVA_REFRESH_TOKEN}
+      LOOKBACK_DAYS: ${LOOKBACK_DAYS}
+    volumes:
+      - ./process_data.py:/app/process_data.py
+      - ./requirements.txt:/app/requirements.txt
+      - ./running-log-etl-entrypoint.sh:/app/entrypoint.sh
+    working_dir: /app
+    entrypoint: ["bash", "/app/entrypoint.sh"]

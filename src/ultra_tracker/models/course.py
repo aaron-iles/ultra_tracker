@@ -733,6 +733,26 @@ class AidStation(CourseElement):
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 
+    # TODO
+    @property
+    def for_database(self) -> dict:
+        """
+        A json representation of the ping object.
+
+        :return dict: The dict of the ping object.
+        """
+        return {
+            "status": self._event.get("status", {}),
+            "timestamp": str(self.timestamp),
+            "timestamp_raw": self._event.get("timeStamp", 0),
+            "heading": self.heading,
+            "latlon": self.latlon,
+            "altitude": self.altitude,
+            "gps_fix": self.gps_fix,
+            "message_code": self.message_code,
+            "speed": self.speed,
+        }
+
 
 class Leg(CourseElement):
     """
