@@ -743,7 +743,6 @@ class AidStation(CourseElement):
         return {
             "altitude": self.altitude,
             "arrival_time": self.arrival_time,
-            "associated_caltopo_marker": self.associated_caltopo_marker,
             "comments": self.comments,
             "coordinates": self.coordinates,
             "departure_time": self.departure_time,
@@ -856,6 +855,31 @@ class Leg(CourseElement):
         :return datetime.timedelta: The estimated amount of time it will take to transit the leg.
         """
         return datetime.timedelta(minutes=self.distance * runner.average_moving_pace)
+
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the leg object.
+
+        :return dict: The dict of the leg object.
+        """
+        return {
+            "arrival_time": self.arrival_time,
+            "departure_time": self.departure_time,
+            "display_name": self.display_name,
+            "distance": self.distance,
+            "end_mile_mark": self.end_mile_mark,
+            "estimated_arrival_time": self.estimated_arrival_time,
+            "estimated_departure_time": self.estimated_departure_time,
+            "estimated_duration": self.estimated_duration.total_seconds(),
+            "gain": self.gain,
+            "is_passed": self.is_passed,
+            "loss": self.loss,
+            "mile_mark": self.mile_mark,
+            "name": self.name,
+        }
+
+
 
     def __len__(self) -> float:
         return self.distance

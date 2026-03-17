@@ -142,7 +142,7 @@ class Ping:
         }
 
     @property
-    def for_database(self) -> dict:
+    def database_record(self) -> dict:
         """
         A json representation of the ping object.
 

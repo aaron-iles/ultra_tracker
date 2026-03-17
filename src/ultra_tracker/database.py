@@ -19,12 +19,43 @@ from psycopg2.extras import execute_values
 
 # TODO what do we need in the postgres?
 # stats: start time, update, moving time, elapsed time,mile mark,altitud, pace, est fin
+# TODO map_url?
 
-# for each aid: eta, stoppage
+CREATE TABLE IF NOT EXISTS runners (
+    name TEXT PRIMARY KEY,
+    mile_mark DOUBLE PRECISION,
+    altitude DOUBLE PRECISION,
+    average_overall_pace TEXT,
+    average_moving_pace TEXT,
+    elapsed_time DOUBLE PRECISION,
+    stoppage_time DOUBLE PRECISION,
+    moving_time DOUBLE PRECISION,
+    last_update TIMESTAMP,
+    est_finish_date TIMESTAMP,
+    est_finish_time DOUBLE PRECISION,
+    start_time TIMESTAMP,
+    course_deviation DOUBLE PRECISION,
+    pings BIGINT,
+);
 
-# make table for all pings
 
 
+
+
+##############
+
+
+CREATE TABLE IF NOT EXISTS pings (
+    timestamp TIMESTAMP,
+    timestamp_raw BIGINT,
+    status JSONB,
+    heading DOUBLE PRECISION,
+    latlon JSONB,
+    altitude DOUBLE PRECISION,
+    gps_fix TEXT,
+    message_code TEXT,
+    speed DOUBLE PRECISION
+);
 
 CREATE TABLE IF NOT EXISTS aidstations (
     name TEXT PRIMARY KEY,
@@ -36,18 +67,59 @@ CREATE TABLE IF NOT EXISTS aidstations (
     comments TEXT,
     coordinates JSONB,
     estimated_duration DOUBLE PRECISION,
-    previous_leg TEXT,
-    next_leg TEXT,
     arrival_time TIMESTAMP,
     departure_time TIMESTAMP,
     estimated_arrival_time TIMESTAMP,
     estimated_departure_time TIMESTAMP,
     is_passed BOOLEAN,
-    associated_caltopo_marker TEXT,
     stoppage_time DOUBLE PRECISION
 );
 
 
+CREATE TABLE IF NOT EXISTS legs (
+    name TEXT PRIMARY KEY,
+    display_name TEXT,
+    mile_mark DOUBLE PRECISION,
+    end_mile_mark DOUBLE PRECISION,
+    distance DOUBLE PRECISION,
+    gain DOUBLE PRECISION,
+    loss DOUBLE PRECISION,
+    estimated_duration DOUBLE PRECISION,
+    arrival_time TIMESTAMP,
+    departure_time TIMESTAMP,
+    estimated_arrival_time TIMESTAMP,
+    estimated_departure_time TIMESTAMP,
+    is_passed BOOLEAN,
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################
 
 import psycopg2
 from psycopg2.extras import execute_values
