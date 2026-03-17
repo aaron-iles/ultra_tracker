@@ -263,6 +263,7 @@ class Race:
 
         with open(self.data_store, "w") as f:
             f.write(json.dumps(stats, indent=4))
+
         # TODO write to postgres database
 
     def restore(self) -> None:

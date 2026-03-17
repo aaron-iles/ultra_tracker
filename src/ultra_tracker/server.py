@@ -66,20 +66,6 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-class InMemoryLogHandler(logging.Handler):
-    def __init__(self, max_logs=1000):
-        super().__init__(level=logging.NOTSET)
-        self.name = "InMemoryLogHandler"
-        self.logs = deque(maxlen=max_logs)
-        self.setFormatter(
-            logging.Formatter("%(asctime)s   %(levelname)s   %(message)s", "%Y-%m-%d %H:%M:%S")
-        )
-
-    def emit(self, record):
-        self.logs.append(self.format(record))
-
-    def get_logs(self):
-        return list(self.logs)
 
 
 def setup_logging(verbose: bool = False):
@@ -99,15 +85,12 @@ def setup_logging(verbose: bool = False):
     stream_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
     # Add the stream handler to the root logger
     logging.root.addHandler(stream_handler)
-    in_memory_log_handler = InMemoryLogHandler()
-    in_memory_log_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
-    logging.root.addHandler(in_memory_log_handler)
     # Set the logging level.
     logging.root.setLevel(logging.NOTSET)
 
 
 args = parse_args()
-database.connect(f"sqlite:///{os.path.join(args.data_dir, 'ut_datastore.db')}")
+database.connect(f"sqlite:///{os.path.join(args.data_dir, 'ut_datastore.db')}") # TODO
 app = application.create_app()
 
 
@@ -119,7 +102,7 @@ def remove_session(exception=None) -> None:
     """
     Overrides the remove_session method to ensure the database session is removed.
     """
-    database.session.remove()
+    # TODO database.session.remove()
     return
 
 
