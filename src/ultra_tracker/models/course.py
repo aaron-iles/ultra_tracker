@@ -733,25 +733,32 @@ class AidStation(CourseElement):
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 
-    # TODO
     @property
-    def for_database(self) -> dict:
+    def database_record(self) -> dict:
         """
-        A json representation of the ping object.
+        A json representation of the aid station object.
 
-        :return dict: The dict of the ping object.
+        :return dict: The dict of the aid station object.
         """
         return {
-            "status": self._event.get("status", {}),
-            "timestamp": str(self.timestamp),
-            "timestamp_raw": self._event.get("timeStamp", 0),
-            "heading": self.heading,
-            "latlon": self.latlon,
             "altitude": self.altitude,
-            "gps_fix": self.gps_fix,
-            "message_code": self.message_code,
-            "speed": self.speed,
+            "arrival_time": self.arrival_time,
+            "associated_caltopo_marker": self.associated_caltopo_marker,
+            "comments": self.comments,
+            "coordinates": self.coordinates,
+            "departure_time": self.departure_time,
+            "display_name": self.display_name,
+            "end_mile_mark": self.end_mile_mark,
+            "estimated_arrival_time": self.estimated_arrival_time,
+            "estimated_departure_time": self.estimated_departure_time,
+            "estimated_duration": self.estimated_duration.total_seconds(),
+            "gmaps_url": self.gmaps_url,
+            "is_passed": self.is_passed,
+            "mile_mark": self.mile_mark,
+            "name": self.name,
+            "stoppage_time": self.stoppage_time.total_seconds(),
         }
+
 
 
 class Leg(CourseElement):

@@ -1,7 +1,23 @@
+---
 services:
+  ultra_tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ultra_tracker:latest
+    logging:
+      driver: none
+    container_name: ultra-tracker
+    ports:
+      - '80:8080'
+    restart: unless-stopped
+    network_mode: bridge
+    volumes:
+      - './data:/app/data'
+
   postgres:
     image: postgres:18
-    container_name: running-log-postgres
+    container_name: ultra-tracker-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -20,19 +36,9 @@ services:
       timeout: 3s
       retries: 10
 
-  adminer:
-    image: adminer:latest
-    container_name: running-log-adminer
-    restart: unless-stopped
-    ports:
-      - 8080:8080
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   grafana:
     image: grafana/grafana:latest
-    container_name: running-log-grafana
+    container_name: ultra-tracker-grafana
     ports:
       - 3001:3000
     volumes:
@@ -49,23 +55,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_RO_PASSWORD}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USERNAME}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
-
-  log-etl:
-    image: python:3.13
-    container_name: running-log-etl
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID}
-      STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET}
-      STRAVA_REFRESH_TOKEN: ${STRAVA_REFRESH_TOKEN}
-      LOOKBACK_DAYS: ${LOOKBACK_DAYS}
-    volumes:
-      - ./process_data.py:/app/process_data.py
-      - ./requirements.txt:/app/requirements.txt
-      - ./running-log-etl-entrypoint.sh:/app/entrypoint.sh
-    working_dir: /app
-    entrypoint: ["bash", "/app/entrypoint.sh"]
+      GF_PANELS_DISABLE_SANITIZE_HTML: true
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_DEFAULT_THEME: dark
+      GF_DASHBOARDS_JSON_ENABLED: true
