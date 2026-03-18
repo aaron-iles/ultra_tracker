@@ -32,6 +32,7 @@ from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
 from .utils import format_duration, get_config_data
+
 # DB connection
 PGHOST = os.getenv("POSTGRES_HOST", "localhost")
 PGPORT = int(os.getenv("POSTGRES_PORT", "5432"))
@@ -72,8 +73,6 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-
-
 def setup_logging(verbose: bool = False):
     """
     Configures the logging module to output log messages to stdout. This function sets up a stream
@@ -96,7 +95,7 @@ def setup_logging(verbose: bool = False):
 
 
 args = parse_args()
-database = database_utils.Database(PGHOST,PGPORT ,PGDATABASE ,PGUSER ,PGPASSWORD )
+database = database_utils.Database(PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD)
 
 app = application.create_app()
 

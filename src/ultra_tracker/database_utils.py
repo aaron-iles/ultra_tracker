@@ -9,17 +9,13 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+import psycopg2
+import requests
+from psycopg2.extras import execute_values
 
 from .models.course import AidStation, Leg
 from .models.race import Race, Runner
 from .models.tracker import Ping
-
-import psycopg2
-import requests
-from psycopg2.extras import execute_values
-import psycopg2
-from psycopg2.extras import execute_values
-
 
 log = logging.getLogger(__name__)
 #  host=PGHOST, port=PGPORT, dbname=PGDATABASE, user=PGUSER, password=PGPASSWORD
@@ -314,7 +310,6 @@ aid_station_upsert_sql = """
     """
 
 
-
 ######################################
 
 
@@ -336,10 +331,8 @@ class Database:
         self.cursor.execute(legs_table_create_sql)
         self.conn.commit()
 
-
     def save(self, object_):
-        """
-        """
+        """ """
         if isinstance(object_, AidStation):
             upsert_sql = aid_station_upsert_sql
         elif isinstance(object_, Leg):
@@ -350,15 +343,9 @@ class Database:
             upsert_sql = ping_upsert_sql
         elif isinstance(object_, Race):
             upsert_sql = race_upsert_sql
-        #log.info(object_.database_record)
+        # log.info(object_.database_record)
         self.cursor.execute(upsert_sql, object_.database_record)
         self.conn.commit()
 
+
 # TODO cursor.close() and conn.close()
-
-
-
-
-
-
-

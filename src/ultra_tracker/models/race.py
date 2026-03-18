@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from psycopg2.extras import Json
 import datetime
 import json
 import logging
 import os
 
 import numpy as np
+from psycopg2.extras import Json
 from scipy.stats import norm
 
 from ..utils import (
@@ -338,15 +338,14 @@ class Race:
         :return dict: The dict of the race object.
         """
         return {
-                "name": self.name,
-                "start_time": self.start_time,
-                "timezone": str(self.course.timezone),
-                "started": bool(self.started),
-                "map_url": self.map_url,
-                "distances": Json(self.course.route.distances.tolist()),
-                "elevations": Json(self.course.route.elevations.tolist()),
+            "name": self.name,
+            "start_time": self.start_time,
+            "timezone": str(self.course.timezone),
+            "started": bool(self.started),
+            "map_url": self.map_url,
+            "distances": Json(self.course.route.distances.tolist()),
+            "elevations": Json(self.course.route.elevations.tolist()),
         }
-
 
 
 class Runner:
@@ -615,18 +614,18 @@ class Runner:
         :return dict: The dict of the runner object.
         """
         return {
-                "name": self.name,
-                "mile_mark": round(float(self.mile_mark), 1),
-                "altitude": round(float(self.elevation)),
-                "average_overall_pace": float(self.average_overall_pace),
-                "average_moving_pace": float(self.average_moving_pace),
-                "elapsed_time": self.elapsed_time.total_seconds(),
-                "stoppage_time": self.stoppage_time.total_seconds(),
-                "moving_time": self.moving_time.total_seconds(),
-                "last_update": self.last_ping.timestamp,
-                "est_finish_date": self.estimated_finish_date,
-                "est_finish_time": self.estimated_finish_time.total_seconds(),
-                "course_deviation": round(float(self.course_deviation)),
+            "name": self.name,
+            "mile_mark": round(float(self.mile_mark), 1),
+            "altitude": round(float(self.elevation)),
+            "average_overall_pace": float(self.average_overall_pace),
+            "average_moving_pace": float(self.average_moving_pace),
+            "elapsed_time": self.elapsed_time.total_seconds(),
+            "stoppage_time": self.stoppage_time.total_seconds(),
+            "moving_time": self.moving_time.total_seconds(),
+            "last_update": self.last_ping.timestamp,
+            "est_finish_date": self.estimated_finish_date,
+            "est_finish_time": self.estimated_finish_time.total_seconds(),
+            "course_deviation": round(float(self.course_deviation)),
         }
 
     def __str__(self):

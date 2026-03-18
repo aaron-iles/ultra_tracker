@@ -2,6 +2,7 @@
 
 
 import datetime
+
 from psycopg2.extras import Json
 
 from ..utils import get_timezone, meters_to_feet

@@ -6,11 +6,11 @@ import datetime
 import json
 import logging
 from functools import cache
-from psycopg2.extras import Json
 
 import numpy as np
 import requests
 from geopy.distance import geodesic
+from psycopg2.extras import Json
 from scipy.spatial import KDTree
 
 from ..utils import (
@@ -745,7 +745,11 @@ class AidStation(CourseElement):
             "altitude": float(self.altitude),
             "arrival_time": self.arrival_time,
             "comments": self.comments,
-            "coordinates": Json(self.coordinates if isinstance(self.coordinates, list) else self.coordinates.tolist()),
+            "coordinates": Json(
+                self.coordinates
+                if isinstance(self.coordinates, list)
+                else self.coordinates.tolist()
+            ),
             "departure_time": self.departure_time,
             "display_name": self.display_name,
             "end_mile_mark": float(self.end_mile_mark),
@@ -758,7 +762,6 @@ class AidStation(CourseElement):
             "name": self.name,
             "stoppage_time": self.stoppage_time.total_seconds(),
         }
-
 
 
 class Leg(CourseElement):
@@ -879,8 +882,6 @@ class Leg(CourseElement):
             "mile_mark": float(self.mile_mark),
             "name": self.name,
         }
-
-
 
     def __len__(self) -> float:
         return self.distance
