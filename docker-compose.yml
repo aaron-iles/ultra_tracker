@@ -52,10 +52,10 @@ services:
     ports:
       - 3001:3000
     volumes:
-      - ./grafana-data:/var/lib/grafana
+      #- ./grafana-data:/var/lib/grafana
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./dashboards:/var/lib/grafana/dashboards
+      #- ./dashboards:/var/lib/grafana/dashboards
     user: '1000'
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
