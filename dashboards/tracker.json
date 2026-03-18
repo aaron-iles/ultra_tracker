@@ -526,7 +526,7 @@
     }
   ],
   "preload": false,
-  "refresh": "1d",
+  "refresh": "10s",
   "schemaVersion": 42,
   "tags": [],
   "templating": {

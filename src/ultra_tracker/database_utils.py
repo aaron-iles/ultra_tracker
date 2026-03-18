@@ -350,7 +350,7 @@ class Database:
             upsert_sql = ping_upsert_sql
         elif isinstance(object_, Race):
             upsert_sql = race_upsert_sql
-        log.info(object_.database_record)
+        #log.info(object_.database_record)
         self.cursor.execute(upsert_sql, object_.database_record)
         self.conn.commit()
 
