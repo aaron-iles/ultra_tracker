@@ -53,6 +53,7 @@ race_table_create_sql = """
     CREATE TABLE IF NOT EXISTS race (
         name TEXT PRIMARY KEY,
         start_time TIMESTAMPTZ,
+        timezone TEXT,
         started BOOLEAN,
         map_url TEXT,
         distances JSONB,
@@ -64,6 +65,7 @@ race_upsert_sql = """
     INSERT INTO race (
         name,
         start_time,
+        timezone,
         started,
         map_url,
         distances,
@@ -71,6 +73,7 @@ race_upsert_sql = """
     ) VALUES (
         %(name)s,
         %(start_time)s,
+        %(timezone)s,
         %(started)s,
         %(map_url)s,
         %(distances)s::jsonb,
@@ -78,6 +81,7 @@ race_upsert_sql = """
     )
     ON CONFLICT (name) DO UPDATE SET
         start_time = EXCLUDED.start_time,
+        timezone = EXCLUDED.timezone,
         started = EXCLUDED.started,
         map_url = EXCLUDED.map_url,
         distances = EXCLUDED.distances,

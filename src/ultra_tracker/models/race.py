@@ -268,7 +268,6 @@ class Race:
         for ce in self.course.course_elements:
             self.database.save(ce)
         self.database.save(self.runner)
-        # TODO write to postgres database
 
     def restore(self) -> None:
         """
@@ -341,10 +340,11 @@ class Race:
         return {
                 "name": self.name,
                 "start_time": self.start_time,
+                "timezone": str(self.course.timezone),
                 "started": bool(self.started),
                 "map_url": self.map_url,
-                "distances": Json(self.distances.to_list()),
-                "elevations": Json(self.elevations.to_list()),
+                "distances": Json(self.course.route.distances.tolist()),
+                "elevations": Json(self.course.route.elevations.tolist()),
         }
 
 
@@ -616,8 +616,8 @@ class Runner:
         """
         return {
                 "name": self.name,
-                "mile_mark": float(self.mile_mark),
-                "altitude": float(self.elevation),
+                "mile_mark": round(float(self.mile_mark), 1),
+                "altitude": round(float(self.elevation)),
                 "average_overall_pace": float(self.average_overall_pace),
                 "average_moving_pace": float(self.average_moving_pace),
                 "elapsed_time": self.elapsed_time.total_seconds(),
@@ -626,7 +626,7 @@ class Runner:
                 "last_update": self.last_ping.timestamp,
                 "est_finish_date": self.estimated_finish_date,
                 "est_finish_time": self.estimated_finish_time.total_seconds(),
-                "course_deviation": float(self.course_deviation),
+                "course_deviation": round(float(self.course_deviation)),
         }
 
     def __str__(self):

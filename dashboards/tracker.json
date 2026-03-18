@@ -182,7 +182,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (duration_min * 60) FROM activities ORDER BY start_time DESC LIMIT 1;",
+          "rawSql": "SELECT elapsed_time FROM runners;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -273,7 +273,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT mile_mark FROM runners;",
+          "rawSql": "SELECT mile_mark FROM runners LIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -533,8 +533,8 @@
     "list": [
       {
         "current": {
-          "text": "",
-          "value": ""
+          "text": "https://caltopo.com/m/07E74MA",
+          "value": "https://caltopo.com/m/07E74MA"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -583,9 +583,9 @@
     "to": "now/y"
   },
   "timepicker": {},
-  "timezone": "utc",
+  "timezone": "browser",
   "title": "Testing",
   "uid": "aan9z5h",
-  "version": 4,
+  "version": 6,
   "weekStart": ""
 }
