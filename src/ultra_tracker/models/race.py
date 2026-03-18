@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-
+from psycopg2.extras import Json
 import datetime
 import json
 import logging
@@ -9,7 +9,6 @@ import os
 import numpy as np
 from scipy.stats import norm
 
-from ..database_utils import save_ping
 from ..utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
@@ -169,16 +168,19 @@ class Race:
         data_store,
         course,
         runner,
+        database,
     ):
         self.course = course
         self.runner = runner
         self.name = name
+        self.database = database
         self.data_store = data_store
         self.start_time = start_time
         self.started = False
         self.last_ping_raw = {}
         self.map_url = caltopo_map.url
         self.restore()
+        self.database.save(self)
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
@@ -263,7 +265,9 @@ class Race:
 
         with open(self.data_store, "w") as f:
             f.write(json.dumps(stats, indent=4))
-
+        for ce in self.course.course_elements:
+            self.database.save(ce)
+        self.database.save(self.runner)
         # TODO write to postgres database
 
     def restore(self) -> None:
@@ -305,7 +309,7 @@ class Race:
         """
         self.last_ping_raw = ping_data
         ping = Ping(ping_data)
-        save_ping(ping)
+        self.database.save(ping)
         logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")
@@ -326,6 +330,23 @@ class Race:
             return
         self.runner.check_in(ping)
         self.save()
+
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the race object.
+
+        :return dict: The dict of the race object.
+        """
+        return {
+                "name": self.name,
+                "start_time": self.start_time,
+                "started": bool(self.started),
+                "map_url": self.map_url,
+                "distances": Json(self.distances.to_list()),
+                "elevations": Json(self.elevations.to_list()),
+        }
+
 
 
 class Runner:
@@ -350,6 +371,7 @@ class Runner:
         self.current_pace = 10
         self.elevation = 0
         self.last_ping = Ping({})
+        self.name = marker_name
         self.low_battery = False
         self.marker, self.estimate_marker = self.extract_marker(
             marker_name, caltopo_map, default_start_location
@@ -584,6 +606,28 @@ class Runner:
             False,
         )
         return true_marker, estimate_marker
+
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the runner object.
+
+        :return dict: The dict of the runner object.
+        """
+        return {
+                "name": self.name,
+                "mile_mark": float(self.mile_mark),
+                "altitude": float(self.elevation),
+                "average_overall_pace": float(self.average_overall_pace),
+                "average_moving_pace": float(self.average_moving_pace),
+                "elapsed_time": self.elapsed_time.total_seconds(),
+                "stoppage_time": self.stoppage_time.total_seconds(),
+                "moving_time": self.moving_time.total_seconds(),
+                "last_update": self.last_ping.timestamp,
+                "est_finish_date": self.estimated_finish_date,
+                "est_finish_time": self.estimated_finish_time.total_seconds(),
+                "course_deviation": float(self.course_deviation),
+        }
 
     def __str__(self):
         overall_pace = convert_decimal_pace_to_pretty_format(self.average_overall_pace)

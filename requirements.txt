@@ -13,3 +13,4 @@ pyyaml
 requests
 scipy
 timezonefinder
+psycopg2-binary

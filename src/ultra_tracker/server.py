@@ -27,11 +27,17 @@ from flask import (
 )
 from flask_socketio import SocketIO, send
 
-from . import application, database, ut_socket
+from . import application, database_utils, ut_socket
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
 from .utils import format_duration, get_config_data
+# DB connection
+PGHOST = os.getenv("POSTGRES_HOST", "localhost")
+PGPORT = int(os.getenv("POSTGRES_PORT", "5432"))
+PGDATABASE = os.getenv("POSTGRES_DB")
+PGUSER = os.getenv("POSTGRES_USER")
+PGPASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 
 def parse_args() -> argparse.Namespace:
@@ -90,7 +96,8 @@ def setup_logging(verbose: bool = False):
 
 
 args = parse_args()
-database.connect(f"sqlite:///{os.path.join(args.data_dir, 'ut_datastore.db')}") # TODO
+database = database_utils.Database(PGHOST,PGPORT ,PGDATABASE ,PGUSER ,PGPASSWORD )
+
 app = application.create_app()
 
 
@@ -171,6 +178,7 @@ def start_application():
         f"{args.data_dir}/data_store.json",
         course,
         runner,
+        database,
     )
     runner.race = race
     logger.info("created race object...")

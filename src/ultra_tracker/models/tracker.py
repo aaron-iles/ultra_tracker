@@ -2,6 +2,7 @@
 
 
 import datetime
+from psycopg2.extras import Json
 
 from ..utils import get_timezone, meters_to_feet
 
@@ -149,11 +150,11 @@ class Ping:
         :return dict: The dict of the ping object.
         """
         return {
-            "status": self._event.get("status", {}),
-            "timestamp": str(self.timestamp),
+            "status": Json(self._event.get("status", {})),
+            "timestamp": self.timestamp,
             "timestamp_raw": self._event.get("timeStamp", 0),
             "heading": self.heading,
-            "latlon": self.latlon,
+            "latlon": Json(self.latlon),
             "altitude": self.altitude,
             "gps_fix": self.gps_fix,
             "message_code": self.message_code,

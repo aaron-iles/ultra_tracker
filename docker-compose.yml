@@ -9,9 +9,19 @@ services:
       driver: none
     container_name: ultra-tracker
     ports:
-      - '80:8080'
+      - '8080:8080'
     restart: unless-stopped
-    network_mode: bridge
+    #network_mode: bridge
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - './data:/app/data'
 
