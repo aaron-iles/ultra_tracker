@@ -1,8 +1,7 @@
 apiVersion: 1
 providers:
-  - name: 'Running Dashboards'
+  - name: Ultra Tracker
     orgId: 1
-    folder: 'Running'              # Grafana folder name (created if missing)
     type: file
     disableDeletion: false
     editable: true

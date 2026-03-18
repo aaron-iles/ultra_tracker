@@ -8,3 +8,5 @@ data/
 .tox
 build/
 dist/
+grafana-data
+pgdata
