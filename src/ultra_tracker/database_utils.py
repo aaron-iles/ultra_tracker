@@ -1,31 +1,15 @@
 #!/usr/bin/env python3
 
 
-import json
 import logging
-import os
-import sys
-import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 
 import psycopg2
-import requests
-from psycopg2.extras import execute_values
 
 from .models.course import AidStation, Leg
 from .models.race import Race, Runner
 from .models.tracker import Ping
 
-log = logging.getLogger(__name__)
-#  host=PGHOST, port=PGPORT, dbname=PGDATABASE, user=PGUSER, password=PGPASSWORD
-
-# TODO should we use TIMESTAMPTZ or TIMESTAMPTZTZ
-
-# TODO what do we need in the postgres?
-# stats: start time, update, moving time, elapsed time,mile mark,altitud, pace, est fin
-# TODO map_url?
-# TODO course profile?
+logger = logging.getLogger(__name__)
 
 runners_table_create_sql = """
     CREATE TABLE IF NOT EXISTS runners (
@@ -52,6 +36,7 @@ race_table_create_sql = """
         timezone TEXT,
         started BOOLEAN,
         map_url TEXT,
+        distance DOUBLE PRECISION,
         distances JSONB,
         elevations JSONB
     );
@@ -64,6 +49,7 @@ race_upsert_sql = """
         timezone,
         started,
         map_url,
+        distance,
         distances,
         elevations
     ) VALUES (
@@ -72,6 +58,7 @@ race_upsert_sql = """
         %(timezone)s,
         %(started)s,
         %(map_url)s,
+        %(distance)s,
         %(distances)s::jsonb,
         %(elevations)s::jsonb
     )
@@ -80,6 +67,7 @@ race_upsert_sql = """
         timezone = EXCLUDED.timezone,
         started = EXCLUDED.started,
         map_url = EXCLUDED.map_url,
+        distance = EXCLUDED.distance,
         distances = EXCLUDED.distances,
         elevations = EXCLUDED.elevations;
     """
@@ -310,9 +298,6 @@ aid_station_upsert_sql = """
     """
 
 
-######################################
-
-
 class Database:
     def __init__(self, host, port, dbname, user, password):
         """
@@ -343,9 +328,5 @@ class Database:
             upsert_sql = ping_upsert_sql
         elif isinstance(object_, Race):
             upsert_sql = race_upsert_sql
-        # log.info(object_.database_record)
         self.cursor.execute(upsert_sql, object_.database_record)
         self.conn.commit()
-
-
-# TODO cursor.close() and conn.close()

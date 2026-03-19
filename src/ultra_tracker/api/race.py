@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
 
-import hashlib
 import json
 import logging
-import time
 
-import eventlet
-import yaml
 from flask import (
     Blueprint,
     current_app,
-    redirect,
-    render_template,
     request,
-    session,
-    stream_with_context,
-    url_for,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,7 +14,7 @@ URL_PREFIX = "/"
 blueprint = Blueprint("root", __name__)
 
 
-@blueprint.route("/api", methods=["POST"])
+@blueprint.route("/ping", methods=["POST"])
 def post_data():
     """
     Receives a ping from the tracker, updates the race object, and logs information.

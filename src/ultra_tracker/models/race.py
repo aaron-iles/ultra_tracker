@@ -17,7 +17,7 @@ from ..utils import (
     kph_to_min_per_mi,
 )
 from .caltopo import CaltopoMarker
-from .course import AidStation, Route
+from .course import AidStation
 from .tracker import Ping
 
 logger = logging.getLogger(__name__)
@@ -56,9 +56,7 @@ def sanity_check_mile_mark(
     traversal_pace = (time_between_pings / 60) / miles_between_pings
     logger.debug(f"sanity check traversal pace: {traversal_pace}")
     # Case 3: The runner moved forward at a rate much too fast to be reasonable.
-    if traversal_pace < 4:
-        return False
-    return True
+    return not traversal_pace < 4
 
 
 def calculate_mile_mark(
@@ -133,10 +131,8 @@ def calculate_most_probable_mile_mark(
     :return float: One of the mile marks from the provided list.
     """
     # Constants
-    if not average_overall_pace:
-        average_speed = 1 / 10
-    else:
-        average_speed = 1 / average_overall_pace  # Speed in miles per minute
+    # Speed in miles per minute
+    average_speed = 1 / 10 if not average_overall_pace else 1 / average_overall_pace
     # Calculate expected distance based on elapsed time and average speed
     expected_distance = elapsed_time * average_speed
     # Calculate standard deviation based on average pace
@@ -182,7 +178,6 @@ class Race:
         self.last_ping_raw = {}
         self.map_url = caltopo_map.url
         self.restore()
-        self.database.save(self)
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
@@ -274,6 +269,7 @@ class Race:
         for ce in self.course.course_elements:
             self.database.save(ce)
         self.database.save(self.runner)
+        self.database.save(self)
 
     def restore(self) -> None:
         """
@@ -282,7 +278,7 @@ class Race:
         :return None:
         """
         if os.path.exists(self.data_store):
-            with open(self.data_store, "r") as f:
+            with open(self.data_store) as f:
                 data = json.load(f)
                 self.runner.race = self
                 self.runner.mile_mark = data.get("mile_mark", 0)
@@ -355,6 +351,7 @@ class Race:
             "timezone": str(self.course.timezone),
             "started": bool(self.started),
             "map_url": self.map_url,
+            "distance": float(self.course.route.distances[-1]),
             "distances": Json(self.course.route.distances.tolist()),
             "elevations": Json(self.course.route.elevations.tolist()),
         }
@@ -569,7 +566,7 @@ class Runner:
             (ping.timestamp - self.race.start_time).total_seconds() / 60,
         )
 
-        if is_reasonable_mile_mark := sanity_check_mile_mark(
+        if sanity_check_mile_mark(
             last_mile_mark, last_check_in_time, ping.timestamp, new_mile_mark
         ):
             self.mile_mark = new_mile_mark

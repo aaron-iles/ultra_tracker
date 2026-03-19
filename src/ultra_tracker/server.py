@@ -1,31 +1,11 @@
 #!/usr/bin/env python3
 
-import eventlet
-
-eventlet.monkey_patch()
 import argparse
 import datetime
-import json
 import logging
 import os
 import random
 import sys
-from collections import deque
-
-import yaml
-from flask import (
-    Flask,
-    Response,
-    abort,
-    redirect,
-    render_template,
-    render_template_string,
-    request,
-    session,
-    stream_with_context,
-    url_for,
-)
-from flask_socketio import SocketIO, send
 
 from . import application, database_utils, ut_socket
 from .models.caltopo import CaltopoMap, CaltopoSession
@@ -106,15 +86,13 @@ database = database_utils.Database(PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWOR
 app = application.create_app()
 
 
-#####################################
-
-
 @app.teardown_request
 def remove_session(exception=None) -> None:
     """
     Overrides the remove_session method to ensure the database session is removed.
     """
-    # TODO database.session.remove()
+    database.cursor.close()
+    database.conn.close()
     return
 
 
@@ -137,9 +115,7 @@ def format_time_filter(time_obj: datetime.datetime) -> str:
     :param datetime.datetime time_obj: The datetime object to be formatted.
     :return str: The human-friendly formatted time object.
     """
-    if time_obj.astimezone(datetime.timezone.utc) == datetime.datetime.fromtimestamp(
-        0, datetime.timezone.utc
-    ):
+    if time_obj.astimezone(datetime.UTC) == datetime.datetime.fromtimestamp(0, datetime.UTC):
         return "--/-- --:--"
     return time_obj.strftime("%-m/%-d %-I:%M %p")
 
@@ -186,11 +162,11 @@ def start_application():
         database,
     )
     runner.race = race
+    race.save()
     logger.info("created race object...")
     app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
     app.config["UT_RACE"] = race
     app.config["UT_DATA_DIR"] = args.data_dir
-    app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
     ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=args.verbose)
     return

@@ -22,7 +22,7 @@ from ..utils import (
 )
 from .caltopo import CaltopoMap, CaltopoShape, lookup_marker_by_name
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def interpolate_and_filter_points(
@@ -197,7 +197,7 @@ def align_known_mile_marks(
         current_kmm = known_mile_marks[i]
         next_kmm = known_mile_marks[i + 1]
 
-        log.debug(f"aligning from {current_kmm['name']} to {next_kmm['name']}")
+        logger.debug(f"aligning from {current_kmm['name']} to {next_kmm['name']}")
         # Find the closest point by both mileage and lat/lon to current kmm.
         start_idx = find_closest_index(
             current_kmm["mile_mark"],
@@ -221,7 +221,7 @@ def align_known_mile_marks(
         )
         # Update the route distances for this segment
         modified_distances[start_idx : end_idx + 1] = adjusted_distances
-        log.debug(
+        logger.debug(
             f"found {current_kmm['name']} to be closest to {points[start_idx]} ({distances[start_idx]})"
         )
     # The very last point needs to be handled differently.
@@ -736,7 +736,7 @@ class AidStation(CourseElement):
             else:
                 self.estimated_arrival_time = runner.last_ping.timestamp
                 self.arrival_time = self.estimated_arrival_time
-            log.info(f"runner entered {self.display_name} at {self.arrival_time}")
+            logger.info(f"runner entered {self.display_name} at {self.arrival_time}")
             return
 
     def detect_departure_time(self, runner) -> None:
@@ -761,7 +761,7 @@ class AidStation(CourseElement):
                 self.departure_time = self.arrival_time
             else:
                 self.departure_time = depart_time
-            log.info(f"runner departed {self.display_name} at {self.departure_time}")
+            logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 
     @property
@@ -928,11 +928,11 @@ class Route(CaltopoShape):
             [[y, x] for x, y in self.coordinates], 10, 25
         )
         self._race_distances = np.array([])
-        log.info(f"created route object from map ID {map_id}")
+        logger.info(f"created route object from map ID {map_id}")
         self.elevations = find_elevations(self.points)
-        log.info(f"calculated elevations on map ID {map_id}")
+        logger.info(f"calculated elevations on map ID {map_id}")
         self.gains, self.losses = cumulative_altitude_changes(self.elevations)
-        log.info(f"calculated cumulative elevation changes on map ID {map_id}")
+        logger.info(f"calculated cumulative elevation changes on map ID {map_id}")
         self.start_location = self.points[0]
         self.finish_location = self.points[-1]
         self.kdtree = KDTree(self.points)
