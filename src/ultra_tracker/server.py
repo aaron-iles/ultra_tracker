@@ -180,6 +180,7 @@ def start_application():
         database,
     )
     runner.race = race
+    race.save()
     logger.info("created race object...")
     app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
     app.config["UT_RACE"] = race

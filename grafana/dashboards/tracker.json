@@ -18,7 +18,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
@@ -81,7 +80,7 @@
         "textMode": "value",
         "wideLayout": true
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "running-log",
@@ -164,7 +163,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "last_update"
+              "options": "from_now"
             },
             "properties": [
               {
@@ -205,7 +204,7 @@
         "textMode": "value",
         "wideLayout": true
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "running-log",
@@ -251,7 +250,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT last_update\nFROM runners\nLIMIT 1;",
+          "rawSql": "SELECT NULLIF(last_update, '1970-01-01 00:00:00') AS from_now\nFROM runners\nLIMIT 1;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -383,7 +382,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "running-log",
@@ -394,7 +393,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT elapsed_time FROM runners;",
+          "rawSql": "SELECT COALESCE(\n  (SELECT elapsed_time FROM runners LIMIT 1),\n  0.0 \n) AS elapsed_time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -429,7 +428,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT moving_time FROM runners;",
+          "rawSql": "SELECT COALESCE(\n  (SELECT moving_time FROM runners LIMIT 1),\n  0.0 \n) AS moving_time;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -458,7 +457,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT stoppage_time FROM runners;",
+          "rawSql": "SELECT COALESCE(\n  (SELECT stoppage_time FROM runners LIMIT 1),\n  0.0 \n) AS stoppage_time;",
           "refId": "C",
           "sql": {
             "columns": [
@@ -566,7 +565,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "running-log",
@@ -718,7 +717,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "running-log",
@@ -897,7 +896,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "running-log",
@@ -978,7 +977,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n    100 * SUM(CASE WHEN gps_fix = '3D Fix' THEN 1 ELSE 0 END) / COUNT(*) AS gps_fix_pct\nFROM pings;",
+          "rawSql": "SELECT \n  COALESCE(\n    100 * SUM(CASE WHEN gps_fix = '3D Fix' THEN 1 ELSE 0 END) \n    / NULLIF(COUNT(*), 0),\n    0\n  ) AS gps_fix_pct\nFROM pings;",
           "refId": "C",
           "sql": {
             "columns": [
@@ -1025,6 +1024,9 @@
               "type": "auto"
             },
             "filterable": false,
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "links": [],
@@ -1047,7 +1049,7 @@
             },
             "properties": [
               {
-                "id": "custom.hidden",
+                "id": "custom.hideFrom.viz",
                 "value": true
               },
               {
@@ -1167,9 +1169,12 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-text",
-                  "wrapText": false
+                  "type": "color-text"
                 }
+              },
+              {
+                "id": "custom.wrapText",
+                "value": false
               },
               {
                 "id": "mappings",
@@ -1229,20 +1234,12 @@
       "id": 16,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "enablePagination": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
+        "enablePagination": false,
         "frameIndex": 0,
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "editorMode": "code",
@@ -1281,19 +1278,6 @@
         "x": 0,
         "y": 23
       },
-      "id": 5,
-      "panels": [],
-      "title": "Course",
-      "type": "row"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      },
       "id": 8,
       "panels": [],
       "title": "Map",
@@ -1308,7 +1292,7 @@
         "h": 17,
         "w": 19,
         "x": 0,
-        "y": 25
+        "y": 24
       },
       "id": 7,
       "options": {
@@ -1320,7 +1304,7 @@
         "content": "<iframe\n  src=\"${map_url}\"\n  width=\"100%\"\n  height=\"99%\"\n  frameborder=\"0\">\n</iframe>",
         "mode": "html"
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "title": "",
       "transparent": true,
       "type": "text"
@@ -1331,7 +1315,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 41
       },
       "id": 14,
       "panels": [],
@@ -1465,7 +1449,7 @@
         "h": 13,
         "w": 22,
         "x": 0,
-        "y": 43
+        "y": 42
       },
       "id": 13,
       "options": {
@@ -1544,7 +1528,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "dataset": "ultra-tracker",
@@ -1639,16 +1623,16 @@
       "type": "xychart"
     }
   ],
-  "preload": false,
+  "preload": true,
   "refresh": "10s",
-  "schemaVersion": 41,
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "text": "https://caltopo.com/m/P1CVRV6",
-          "value": "https://caltopo.com/m/P1CVRV6"
+          "text": "https://caltopo.com/m/07E74MA",
+          "value": "https://caltopo.com/m/07E74MA"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -1663,6 +1647,7 @@
         "query": "SELECT map_url FROM race LIMIT 1;",
         "refresh": 1,
         "regex": "",
+        "regexApplyTo": "value",
         "type": "query"
       },
       {
@@ -1682,6 +1667,7 @@
         "query": "SELECT timezone FROM race LIMIT 1;",
         "refresh": 1,
         "regex": "",
+        "regexApplyTo": "value",
         "type": "query"
       }
     ]
@@ -1690,9 +1676,12 @@
     "from": "now/y",
     "to": "now/y"
   },
-  "timepicker": {},
+  "timepicker": {
+    "hidden": true
+  },
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 25
+  "version": 6,
+  "weekStart": ""
 }

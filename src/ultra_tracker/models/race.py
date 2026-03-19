@@ -180,7 +180,6 @@ class Race:
         self.last_ping_raw = {}
         self.map_url = caltopo_map.url
         self.restore()
-        self.database.save(self)
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
     @property
@@ -268,6 +267,7 @@ class Race:
         for ce in self.course.course_elements:
             self.database.save(ce)
         self.database.save(self.runner)
+        self.database.save(self)
 
     def restore(self) -> None:
         """

@@ -11,11 +11,9 @@ services:
     ports:
       - '8080:8080'
     restart: unless-stopped
-    #network_mode: bridge
     depends_on:
       postgres:
         condition: service_healthy
-
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
@@ -23,7 +21,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - './data:/app/data'
+      - ./data:/app/data
 
   postgres:
     image: postgres:18
@@ -38,7 +36,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./pgdata:/var/lib/postgresql
+      - ultra-tracker-postgres-data:/var/lib/postgresql
       - ./postgres_init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -50,9 +48,10 @@ services:
     image: grafana/grafana:latest
     container_name: ultra-tracker-grafana
     ports:
-      - 3001:3000
+      - 3000:3000
     volumes:
       - ./grafana:/etc/grafana/provisioning/
+      - ultra-tracker-grafana-data:/var/lib/grafana
     user: '1000'
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -68,3 +67,7 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
       GF_USERS_DEFAULT_THEME: dark
       GF_DASHBOARDS_JSON_ENABLED: true
+
+volumes:
+  ultra-tracker-postgres-data:
+  ultra-tracker-grafana-data:
