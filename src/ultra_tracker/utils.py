@@ -197,7 +197,7 @@ def get_config_data(file_path: str) -> dict:
     :return dict: The parsed dict from the config file.
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             yaml_content = yaml.safe_load(file)
         mandatory_keys = {
             "admin_password_hash",

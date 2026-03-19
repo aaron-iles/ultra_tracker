@@ -50,7 +50,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./grafana:/etc/grafana/provisioning/
+      - ./grafana_init:/etc/grafana/provisioning/
       - ultra-tracker-grafana-data:/var/lib/grafana
     user: '1000'
     environment:

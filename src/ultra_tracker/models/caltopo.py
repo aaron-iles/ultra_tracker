@@ -219,7 +219,7 @@ class CaltopoMap:
         new_folder = CaltopoFolder(folder_feature_dict, self.map_id, self.session)
         if new_folder in self.folders:
             logger.info(f"folder '{title}' already exists")
-            return next((obj for obj in self.folders if obj.title == title))
+            return next(obj for obj in self.folders if obj.title == title)
         logger.info(f"folder '{title}' not found; creating folder")
         url = f"/api/v1/map/{self.map_id}/Folder"
         response = self.session.post(url, new_folder.as_json)
@@ -275,7 +275,7 @@ class CaltopoMap:
         new_marker = CaltopoMarker(marker_feature_dict, self.map_id, self.session)
         if new_marker in self.markers:
             logger.info(f"marker '{title}' already exists")
-            return next((obj for obj in self.markers if obj.title == title))
+            return next(obj for obj in self.markers if obj.title == title)
         logger.info(f"marker '{title}' not found; creating marker")
         url = f"/api/v1/map/{self.map_id}/Marker"
         response = self.session.post(url, new_marker.as_json)

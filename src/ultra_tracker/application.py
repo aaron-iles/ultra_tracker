@@ -10,7 +10,7 @@ from .ut_socket import socketio
 
 __all__ = ["create_app"]
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_app() -> tuple:
@@ -19,11 +19,11 @@ def create_app() -> tuple:
 
     :return tuple: The app and socketio objects.
     """
-    log.info(f"creating app {__name__}")
+    logger.info(f"creating app {__name__}")
     app = flask.Flask(__name__)
     app.url_map.strict_slashes = False
-    log.info("registering blueprints")
+    logger.info("registering blueprints")
     app.register_blueprint(api.race.blueprint, url_prefix=api.race.URL_PREFIX)
-    log.info(f"registering SocketIO handlers")
+    logger.info("registering SocketIO handlers")
     socketio.init_app(app)
     return app

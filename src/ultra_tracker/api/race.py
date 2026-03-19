@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
 
-import hashlib
 import json
 import logging
-import time
 
-import eventlet
-import yaml
 from flask import (
     Blueprint,
     current_app,
-    redirect,
-    render_template,
     request,
-    session,
-    stream_with_context,
-    url_for,
 )
 
 logger = logging.getLogger(__name__)

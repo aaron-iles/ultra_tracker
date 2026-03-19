@@ -17,7 +17,7 @@ from ..utils import (
     kph_to_min_per_mi,
 )
 from .caltopo import CaltopoMarker
-from .course import AidStation, Route
+from .course import AidStation
 from .tracker import Ping
 
 logger = logging.getLogger(__name__)
@@ -221,7 +221,9 @@ class Race:
                 else (
                     "#6f6f3d"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#a9653c" if 151 <= self.runner.course_deviation <= 200 else "#792f3c"
+                    else "#a9653c"
+                    if 151 <= self.runner.course_deviation <= 200
+                    else "#792f3c"
                 )
             ),
             "debug_data": {
@@ -276,7 +278,7 @@ class Race:
         :return None:
         """
         if os.path.exists(self.data_store):
-            with open(self.data_store, "r") as f:
+            with open(self.data_store) as f:
                 data = json.load(f)
                 self.runner.race = self
                 self.runner.mile_mark = data.get("mile_mark", 0)
