@@ -52,6 +52,7 @@ race_table_create_sql = """
         timezone TEXT,
         started BOOLEAN,
         map_url TEXT,
+        distance DOUBLE PRECISION,
         distances JSONB,
         elevations JSONB
     );
@@ -64,6 +65,7 @@ race_upsert_sql = """
         timezone,
         started,
         map_url,
+        distance,
         distances,
         elevations
     ) VALUES (
@@ -72,6 +74,7 @@ race_upsert_sql = """
         %(timezone)s,
         %(started)s,
         %(map_url)s,
+        %(distance)s,
         %(distances)s::jsonb,
         %(elevations)s::jsonb
     )
@@ -80,6 +83,7 @@ race_upsert_sql = """
         timezone = EXCLUDED.timezone,
         started = EXCLUDED.started,
         map_url = EXCLUDED.map_url,
+        distance = EXCLUDED.distance,
         distances = EXCLUDED.distances,
         elevations = EXCLUDED.elevations;
     """

@@ -343,6 +343,7 @@ class Race:
             "timezone": str(self.course.timezone),
             "started": bool(self.started),
             "map_url": self.map_url,
+            "distance": float(self.course.route.distances[-1]),
             "distances": Json(self.course.route.distances.tolist()),
             "elevations": Json(self.course.route.elevations.tolist()),
         }
