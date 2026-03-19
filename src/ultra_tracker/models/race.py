@@ -9,6 +9,8 @@ import numpy as np
 from psycopg2.extras import Json
 from scipy.stats import norm
 
+import math
+
 from ..utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
@@ -56,9 +58,7 @@ def sanity_check_mile_mark(
     traversal_pace = (time_between_pings / 60) / miles_between_pings
     logger.debug(f"sanity check traversal pace: {traversal_pace}")
     # Case 3: The runner moved forward at a rate much too fast to be reasonable.
-    if traversal_pace < 4:
-        return False
-    return True
+    return not traversal_pace < 4
 
 
 def calculate_mile_mark(
@@ -133,10 +133,8 @@ def calculate_most_probable_mile_mark(
     :return float: One of the mile marks from the provided list.
     """
     # Constants
-    if not average_overall_pace:
-        average_speed = 1 / 10
-    else:
-        average_speed = 1 / average_overall_pace  # Speed in miles per minute
+    # Speed in miles per minute
+    average_speed = 1 / 10 if not average_overall_pace else 1 / average_overall_pace
     # Calculate expected distance based on elapsed time and average speed
     expected_distance = elapsed_time * average_speed
     # Calculate standard deviation based on average pace
@@ -555,7 +553,7 @@ class Runner:
             (ping.timestamp - self.race.start_time).total_seconds() / 60,
         )
 
-        if is_reasonable_mile_mark := sanity_check_mile_mark(
+        if sanity_check_mile_mark(
             last_mile_mark, last_check_in_time, ping.timestamp, new_mile_mark
         ):
             self.mile_mark = new_mile_mark

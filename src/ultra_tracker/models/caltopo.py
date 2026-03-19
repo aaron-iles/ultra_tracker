@@ -154,8 +154,8 @@ class CaltopoMap:
         map_data = self.get(f"/api/v1/map/{self.map_id}/since/0")
         try:
             features = map_data["result"]["state"]["features"]
-        except KeyError:
-            raise LookupError(f"unable to find features in {map_data}")
+        except KeyError as err:
+            raise LookupError(f"unable to find features in {map_data}") from err
         for feature in features:
             feature_class = feature.get("properties", {}).get("class")
             if feature_class == "Folder":
