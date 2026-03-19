@@ -9,8 +9,6 @@ import numpy as np
 from psycopg2.extras import Json
 from scipy.stats import norm
 
-import math
-
 from ..utils import (
     convert_decimal_pace_to_pretty_format,
     format_distance,
