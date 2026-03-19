@@ -14,7 +14,7 @@ URL_PREFIX = "/"
 blueprint = Blueprint("root", __name__)
 
 
-@blueprint.route("/api", methods=["POST"])
+@blueprint.route("/ping", methods=["POST"])
 def post_data():
     """
     Receives a ping from the tracker, updates the race object, and logs information.
