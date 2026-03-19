@@ -200,7 +200,6 @@ def get_config_data(file_path: str) -> dict:
         with open(file_path, encoding="utf-8") as file:
             yaml_content = yaml.safe_load(file)
         mandatory_keys = {
-            "admin_password_hash",
             "aid_stations",
             "caltopo_credential_id",
             "caltopo_key",
