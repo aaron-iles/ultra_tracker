@@ -21,19 +21,6 @@
   "links": [],
   "panels": [
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 4,
-      "panels": [],
-      "title": "Status",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
@@ -54,17 +41,72 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "est_finish_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dthms"
+              },
+              {
+                "id": "displayName",
+                "value": "Est. Finish Time"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "est_finish_date"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-yellow",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Est. Finish Date"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "start_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Start Time"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 3,
-        "w": 7,
+        "h": 5,
+        "w": 14,
         "x": 0,
-        "y": 1
+        "y": 0
       },
-      "id": 1,
+      "id": 17,
       "options": {
-        "colorMode": "value",
+        "colorMode": "background_solid",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -77,13 +119,13 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "value",
+        "textMode": "value_and_name",
         "wideLayout": true
       },
       "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "running-log",
+          "dataset": "ultra-tracker",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "P44368ADAD746BC27"
@@ -91,17 +133,12 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT to_char(start_time AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM') FROM race;",
-          "refId": "A",
+          "rawSql": "SELECT to_char(start_time AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM') as start_time FROM race;",
+          "refId": "B",
           "sql": {
             "columns": [
               {
-                "parameters": [
-                  {
-                    "name": "start_time",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -114,12 +151,35 @@
               }
             ],
             "limit": 50
-          },
-          "table": "activities"
+          }
+        },
+        {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (\n    SELECT to_char(\n      est_finish_date AT TIME ZONE '$timezone',\n      'FMMM/FMDD FMHH12:MI AM'\n    )\n    FROM runners\n    LIMIT 1\n  ) AS est_finish_date,\n  COALESCE(\n    (SELECT est_finish_time FROM runners LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
         }
       ],
-      "title": "Start Time",
-      "transparent": true,
+      "title": "",
       "type": "stat"
     },
     {
@@ -183,8 +243,8 @@
       "gridPos": {
         "h": 3,
         "w": 7,
-        "x": 7,
-        "y": 1
+        "x": 0,
+        "y": 5
       },
       "id": 10,
       "options": {
@@ -283,6 +343,160 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "moving_pace_formatted"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. Moving Pace"
+              },
+              {
+                "id": "color"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "overall_pace_formatted"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. Overall Pace"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 7,
+        "x": 7,
+        "y": 5
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "running-log",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    FLOOR(average_moving_pace)::int || '''' || LPAD(ROUND((average_moving_pace - FLOOR(average_moving_pace)) * 60)::text, 2, '0') || '\"' AS moving_pace_formatted\nFROM runners\nLIMIT 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "start_time",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "activities"
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    FLOOR(average_overall_pace)::int || '''' || LPAD(ROUND((average_overall_pace - FLOOR(average_overall_pace)) * 60)::text, 2, '0') || '\"' AS overall_pace_formatted\nFROM runners\nLIMIT 1;",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "P44368ADAD746BC27"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "fixedColor": "yellow",
             "mode": "fixed"
           },
@@ -362,7 +576,7 @@
         "h": 4,
         "w": 7,
         "x": 0,
-        "y": 4
+        "y": 8
       },
       "id": 2,
       "options": {
@@ -500,312 +714,6 @@
               {
                 "color": "green",
                 "value": 0
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "moving_pace_formatted"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Avg. Moving Pace"
-              },
-              {
-                "id": "color"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "overall_pace_formatted"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Avg. Overall Pace"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "semi-dark-orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 7,
-        "x": 7,
-        "y": 4
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/.*/",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "dataset": "running-log",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "P44368ADAD746BC27"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n    FLOOR(average_moving_pace)::int || '''' || LPAD(ROUND((average_moving_pace - FLOOR(average_moving_pace)) * 60)::text, 2, '0') || '\"' AS moving_pace_formatted\nFROM runners\nLIMIT 1;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [
-                  {
-                    "name": "start_time",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          },
-          "table": "activities"
-        },
-        {
-          "dataset": "ultra-tracker",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "P44368ADAD746BC27"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n    FLOOR(average_overall_pace)::int || '''' || LPAD(ROUND((average_overall_pace - FLOOR(average_overall_pace)) * 60)::text, 2, '0') || '\"' AS overall_pace_formatted\nFROM runners\nLIMIT 1;",
-          "refId": "B",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "P44368ADAD746BC27"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "blue",
-            "mode": "fixed"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "mile_mark"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "lengthmi"
-              },
-              {
-                "id": "displayName",
-                "value": "Mile Mark"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "altitude"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "lengthft"
-              },
-              {
-                "id": "displayName",
-                "value": "Altitude"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 7,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/.*/",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "dataset": "running-log",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "P44368ADAD746BC27"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT mile_mark FROM runners LIMIT 1;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [
-                  {
-                    "name": "start_time",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          },
-          "table": "activities"
-        },
-        {
-          "dataset": "ultra-tracker",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "P44368ADAD746BC27"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT altitude FROM runners LIMIT 1;",
-          "refId": "B",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "P44368ADAD746BC27"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "blue",
-            "mode": "fixed"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
               },
               {
                 "color": "#E24D42",
@@ -876,7 +784,7 @@
         "h": 4,
         "w": 7,
         "x": 7,
-        "y": 8
+        "y": 9
       },
       "id": 9,
       "options": {
@@ -1002,6 +910,158 @@
             "limit": 50
           },
           "table": "activities"
+        }
+      ],
+      "title": "",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "P44368ADAD746BC27"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mile_mark"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "lengthmi"
+              },
+              {
+                "id": "displayName",
+                "value": "Mile Mark"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "altitude"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "lengthft"
+              },
+              {
+                "id": "displayName",
+                "value": "Altitude"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 7,
+        "x": 0,
+        "y": 12
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "running-log",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT mile_mark FROM runners LIMIT 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "start_time",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "activities"
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT altitude FROM runners LIMIT 1;",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
         }
       ],
       "title": "",
@@ -1229,7 +1289,7 @@
         "h": 11,
         "w": 19,
         "x": 0,
-        "y": 12
+        "y": 16
       },
       "id": 16,
       "options": {
@@ -1276,7 +1336,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 27
       },
       "id": 8,
       "panels": [],
@@ -1292,7 +1352,7 @@
         "h": 17,
         "w": 19,
         "x": 0,
-        "y": 24
+        "y": 28
       },
       "id": 7,
       "options": {
@@ -1315,7 +1375,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 45
       },
       "id": 14,
       "panels": [],
@@ -1449,7 +1509,7 @@
         "h": 13,
         "w": 22,
         "x": 0,
-        "y": 42
+        "y": 46
       },
       "id": 13,
       "options": {
@@ -1631,8 +1691,8 @@
     "list": [
       {
         "current": {
-          "text": "https://caltopo.com/m/07E74MA",
-          "value": "https://caltopo.com/m/07E74MA"
+          "text": "https://caltopo.com/m/P1CVRV6",
+          "value": "https://caltopo.com/m/P1CVRV6"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -1682,6 +1742,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 6,
+  "version": 8,
   "weekStart": ""
 }
