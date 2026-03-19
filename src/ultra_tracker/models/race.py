@@ -142,7 +142,9 @@ def calculate_most_probable_mile_mark(
     # Calculate standard deviation based on average pace
     standard_deviation = average_overall_pace / 3  # Adjust for variability in pace
     # Calculate probabilities for each mile mark
-    probabilities = norm.pdf(mile_marks, loc=expected_distance, scale=standard_deviation)
+    probabilities = norm.pdf(
+        mile_marks, loc=expected_distance, scale=standard_deviation
+    )
     # Find the mile mark with the highest probability
     most_probable_mile_mark = mile_marks[np.argmax(probabilities)]
     return most_probable_mile_mark
@@ -222,13 +224,17 @@ class Race:
                 else (
                     "#6f6f3d"
                     if 100 <= self.runner.course_deviation <= 150
-                    else "#a9653c" if 151 <= self.runner.course_deviation <= 200 else "#792f3c"
+                    else "#a9653c"
+                    if 151 <= self.runner.course_deviation <= 200
+                    else "#792f3c"
                 )
             ),
             "debug_data": {
                 "course_deviation": format_distance(self.runner.course_deviation),
                 "last_ping": self.runner.last_ping.as_json,
-                "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
+                "estimated_course_location": self.runner.estimate_marker.coordinates[
+                    ::-1
+                ],
                 "pings": self.runner.pings,
                 "track_interval": self.runner.track_interval,
                 "low_battery": self.runner.low_battery,
@@ -286,12 +292,18 @@ class Race:
                 self.runner.last_ping = ping
                 # TODO leg estimated duration is not set.
                 for idx, aid_station in enumerate(data.get("aid_stations", [])):
-                    arrival_time = datetime.datetime.fromisoformat(aid_station["arrival_time"])
-                    departure_time = datetime.datetime.fromisoformat(aid_station["departure_time"])
+                    arrival_time = datetime.datetime.fromisoformat(
+                        aid_station["arrival_time"]
+                    )
+                    departure_time = datetime.datetime.fromisoformat(
+                        aid_station["departure_time"]
+                    )
                     self.course.aid_stations[idx].arrival_time = arrival_time
                     self.course.aid_stations[idx].estimated_arrival_time = arrival_time
                     self.course.aid_stations[idx].departure_time = departure_time
-                    self.course.aid_stations[idx].estimated_departure_time = departure_time
+                    self.course.aid_stations[
+                        idx
+                    ].estimated_departure_time = departure_time
 
                 self.runner.check_in(ping)
                 logger.info(f"restore success: {self.runner.last_ping}")
@@ -426,7 +438,9 @@ class Runner:
 
         :return datetime.timedelta: The runner's stoppage time.
         """
-        num_stops = sum(1 for station in self.race.course.aid_stations if station.is_passed)
+        num_stops = sum(
+            1 for station in self.race.course.aid_stations if station.is_passed
+        )
         if num_stops == 0:
             return datetime.timedelta(0)
         return self.stoppage_time / num_stops
@@ -513,7 +527,10 @@ class Runner:
         """
         if not self.started:
             return datetime.timedelta(0)
-        return self.race.course.course_elements[-1].estimated_arrival_time - self.race.start_time
+        return (
+            self.race.course.course_elements[-1].estimated_arrival_time
+            - self.race.start_time
+        )
 
     def check_in(self, ping: Ping) -> None:
         """
@@ -560,12 +577,16 @@ class Runner:
             self.last_ping = ping
             self.current_pace = kph_to_min_per_mi(self.last_ping.speed)
         else:
-            logger.warning(f"calculated mile mark of {round(new_mile_mark, 2)} deemed unreasonable")
+            logger.warning(
+                f"calculated mile mark of {round(new_mile_mark, 2)} deemed unreasonable"
+            )
             # Ensure that the estimate marker doesn't get moved.
             new_coords = self.race.course.route.get_point_at_mile_mark(last_mile_mark)
 
         if not self.in_progress:
-            logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
+            logger.info(
+                f"race not in progress; started: {self.started} finished: {self.finished}"
+            )
             return
 
         if self.marker_updating:
@@ -581,7 +602,9 @@ class Runner:
         # Now update the course elements.
         self.race.course.update_course_elements(self)
 
-    def extract_marker(self, marker_name: str, caltopo_map, default_start_location: list) -> tuple:
+    def extract_marker(
+        self, marker_name: str, caltopo_map, default_start_location: list
+    ) -> tuple:
         """
         Given a marker name, extracts the marker from the map object to associate with the runner.
         This also includes the estimate marker for troubleshooting.

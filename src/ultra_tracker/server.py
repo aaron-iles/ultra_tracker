@@ -52,7 +52,11 @@ def parse_args() -> argparse.Namespace:
         description="This is a description of my module.",
     )
     p.add_argument(
-        "-c", required=True, type=str, dest="config", help="The config file for the event."
+        "-c",
+        required=True,
+        type=str,
+        dest="config",
+        help="The config file for the event.",
     )
     p.add_argument(
         "-d",
@@ -69,7 +73,9 @@ def parse_args() -> argparse.Namespace:
         dest="disable_marker_updates",
         help="Disables updating the marker location in Caltopo. Primarily used for testing.",
     )
-    p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
+    p.add_argument(
+        "-v", required=False, action="store_true", dest="verbose", help="Run verbosely."
+    )
     return p.parse_args()
 
 

@@ -64,7 +64,9 @@ class Ping:
 
     def __init__(self, ping_data: dict):
         self._event = ping_data.get("Events", [{}])[0]
-        self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
+        self.altitude = meters_to_feet(
+            self._event.get("point", {}).get("altitude", 0.0)
+        )
         self.gps_fix = GPS_FIX_LOOKUP.get(self._event.get("point", {}).get("gpsFix"))
         self.heading = self._event.get("point", {}).get("course", 0)
         self.imei = self._event.get("imei")
@@ -76,7 +78,8 @@ class Ping:
         self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(
-            self._event.get("timeStamp", 0), get_timezone([self.latitude, self.longitude])
+            self._event.get("timeStamp", 0),
+            get_timezone([self.latitude, self.longitude]),
         )
 
     @property

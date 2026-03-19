@@ -44,7 +44,9 @@ def interpolate_and_filter_points(
     coordinates.
     """
     interpolated_points = np.empty((0, 2), dtype=float)
-    interpolated_points = np.vstack([interpolated_points, [coordinates[0, 0], coordinates[0, 1]]])
+    interpolated_points = np.vstack(
+        [interpolated_points, [coordinates[0, 0], coordinates[0, 1]]]
+    )
     last_point = interpolated_points[0]
     for i in range(1, len(coordinates) - 1):
         point1 = {"latitude": last_point[0], "longitude": last_point[1]}
@@ -70,7 +72,10 @@ def interpolate_and_filter_points(
             # Generate interpolated points
             intermediate_array = np.array(
                 [
-                    [point1["latitude"] + j * lat_step, point1["longitude"] + j * lon_step]
+                    [
+                        point1["latitude"] + j * lat_step,
+                        point1["longitude"] + j * lon_step,
+                    ]
                     for j in range(1, num_intervals + 1)  # Include the last point
                 ]
             )
@@ -87,7 +92,9 @@ def interpolate_and_filter_points(
     return interpolated_points
 
 
-def transform_path(path_data: list, min_step_size: float, max_step_size: float) -> tuple:
+def transform_path(
+    path_data: list, min_step_size: float, max_step_size: float
+) -> tuple:
     """
     Takes a list of coordinate pairs (a list) and performs two operations. The first is to
     interpolate the path so that no two points are more than the `max_step_size` apart. The second
@@ -111,7 +118,11 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     for i, point in enumerate(interpolated_path_data):
         if prev_point is not None:
             geo = geodesic(
-                (prev_point[0], prev_point[1], prev_point[2] if len(prev_point) == 3 else 0),
+                (
+                    prev_point[0],
+                    prev_point[1],
+                    prev_point[2] if len(prev_point) == 3 else 0,
+                ),
                 (point[0], point[1], point[2] if len(point) == 3 else 0),
             )
             distance = geo.miles
@@ -189,7 +200,10 @@ def align_known_mile_marks(
         log.debug(f"aligning from {current_kmm['name']} to {next_kmm['name']}")
         # Find the closest point by both mileage and lat/lon to current kmm.
         start_idx = find_closest_index(
-            current_kmm["mile_mark"], current_kmm["coordinates"], modified_distances, points
+            current_kmm["mile_mark"],
+            current_kmm["coordinates"],
+            modified_distances,
+            points,
         )
         # Find the closest point by both mileage and lat/lon to next kmm.
         end_idx = find_closest_index(
@@ -232,7 +246,9 @@ def find_elevations(points: np.array) -> list:
     }
     reversed_points = points[:, ::-1].tolist()
     data = {"geometry": {"type": "LineString", "coordinates": reversed_points}}
-    response = requests.post(url, headers=headers, data={"json": json.dumps(data)}, timeout=60)
+    response = requests.post(
+        url, headers=headers, data={"json": json.dumps(data)}, timeout=60
+    )
     if response.ok:
         try:
             new_data = np.array(response.json()["result"])[:, 2]
@@ -274,10 +290,14 @@ class Course:
     :param str route_name: The name of the route in the map.
     """
 
-    def __init__(self, caltopo_map, aid_stations: list, route_name: str, route_distance: float):
+    def __init__(
+        self, caltopo_map, aid_stations: list, route_name: str, route_distance: float
+    ):
 
         self.route = self.extract_route(route_name, caltopo_map)
-        aid_stations = self.get_aid_station_coordinates(aid_stations, caltopo_map, route_distance)
+        aid_stations = self.get_aid_station_coordinates(
+            aid_stations, caltopo_map, route_distance
+        )
         # Stretch or squeeze the route so it lines up with the official mile marks.
         self.route._race_distances = align_known_mile_marks(
             self.route.distances, self.route.points, aid_stations
@@ -366,7 +386,9 @@ class Course:
 
         # Map marker titles to aid stations and assign Google Maps URLs
         for aso in aid_station_objects[1:-1]:
-            aso.gmaps_url = lookup_marker_by_name(aso.name, caltopo_map.markers).gmaps_url
+            aso.gmaps_url = lookup_marker_by_name(
+                aso.name, caltopo_map.markers
+            ).gmaps_url
 
         # Assign Google Maps URLs for Start and Finish separately
         aid_station_objects[0].gmaps_url = get_gmaps_url(self.route.points[0])
@@ -408,7 +430,9 @@ class Course:
         for i, elem in enumerate(course_elements):
             if isinstance(elem, AidStation):
                 elem.previous_leg = course_elements[i - 1] if i > 0 else None
-                elem.next_leg = course_elements[i + 1] if i < len(course_elements) - 1 else None
+                elem.next_leg = (
+                    course_elements[i + 1] if i < len(course_elements) - 1 else None
+                )
             elif isinstance(elem, Leg):
                 elem.previous_aid = course_elements[i - 1]
                 elem.next_aid = course_elements[i + 1]
@@ -424,8 +448,12 @@ class Course:
         """
         for shape in caltopo_map.shapes:
             if shape.title == route_name:
-                return Route(shape._feature_dict, caltopo_map.map_id, caltopo_map.session)
-        raise LookupError(f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}")
+                return Route(
+                    shape._feature_dict, caltopo_map.map_id, caltopo_map.session
+                )
+        raise LookupError(
+            f"no shape called '{route_name}' found in shapes: {caltopo_map.shapes}"
+        )
 
     def update_course_elements(self, runner) -> None:
         """
@@ -449,7 +477,9 @@ class Course:
                     moving_minutes_to_start = datetime.timedelta(
                         minutes=miles_to_start * runner.average_moving_pace
                     )
-                    stopping_minutes_to_start = preceding_aids * runner.average_stoppage_time
+                    stopping_minutes_to_start = (
+                        preceding_aids * runner.average_stoppage_time
+                    )
                     ce.estimated_arrival_time = (
                         runner.last_ping.timestamp
                         + moving_minutes_to_start
@@ -913,7 +943,11 @@ class Route(CaltopoShape):
 
     @property
     def distances(self) -> np.array:
-        return self._race_distances if self._race_distances.size > 0 else self._map_distances
+        return (
+            self._race_distances
+            if self._race_distances.size > 0
+            else self._map_distances
+        )
 
     @property
     def gain(self) -> float:
@@ -952,7 +986,9 @@ class Route(CaltopoShape):
         return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
     @cache
-    def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
+    def get_indices_within_radius(
+        self, center_lat: float, center_lon: float, radius: int
+    ) -> tuple:
         """
         Given a center point and radius in feet, finds the indices of the route points inside said
         radius.
@@ -966,7 +1002,10 @@ class Route(CaltopoShape):
         """
         # Calculate distances from the center point for all points.
         distances = np.array(
-            [haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points]
+            [
+                haversine_distance([center_lat, center_lon], [lat, lon])
+                for lat, lon in self.points
+            ]
         )
         # Get indices of points within the radius.
         indices_within_radius = np.where(distances <= radius)[0]

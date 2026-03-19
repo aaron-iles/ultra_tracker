@@ -50,7 +50,7 @@ services:
     image: grafana/grafana:latest
     container_name: ultra-tracker-grafana
     ports:
-      - 3001:3000
+      - 3000:3000
     volumes:
       - ./grafana:/etc/grafana/provisioning/
     user: '1000'
