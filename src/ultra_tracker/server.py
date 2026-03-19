@@ -91,8 +91,8 @@ def remove_session(exception=None) -> None:
     """
     Overrides the remove_session method to ensure the database session is removed.
     """
-    database.cursor.close()
-    database.conn.close()
+    #database.cursor.close()
+    #database.conn.close()
     return
 
 
