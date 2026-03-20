@@ -321,7 +321,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
       },
-      "description": "Date and time of last ping received with valid data",
+      "description": "Date and time of last ping received with valid data and the average period of time between updates",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -336,11 +336,11 @@
                 "value": 0
               },
               {
-                "color": "#EAB839",
-                "value": 0
+                "color": "green",
+                "value": 5
               },
               {
-                "color": "#6ED0E0",
+                "color": "yellow",
                 "value": 10
               },
               {
@@ -388,6 +388,22 @@
                 "value": "Last Update"
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "average_difference_seconds"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. Update Interval"
+              },
+              {
+                "id": "unit",
+                "value": "dthms"
+              }
+            ]
           }
         ]
       },
@@ -400,7 +416,7 @@
       "id": 10,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -412,7 +428,7 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "value",
+        "textMode": "value_and_name",
         "wideLayout": true
       },
       "pluginVersion": "12.4.1",
@@ -480,9 +496,38 @@
             ],
             "limit": 50
           }
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH lagged AS (\n    SELECT\n        last_update,\n        LAG(last_update) OVER (ORDER BY last_update) AS prev\n    FROM runner\n    WHERE mile_mark <> 0\n)\nSELECT\n    AVG(EXTRACT(EPOCH FROM (last_update - prev))) AS average_difference_seconds\nFROM lagged\nWHERE prev IS NOT NULL;",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
         }
       ],
-      "title": "Last Update",
+      "title": "",
       "transparent": true,
       "type": "stat"
     },
@@ -2237,6 +2282,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 19,
+  "version": 21,
   "weekStart": ""
 }
