@@ -11,9 +11,9 @@ from .models.tracker import Ping
 
 logger = logging.getLogger(__name__)
 
-runners_table_create_sql = """
-    CREATE TABLE IF NOT EXISTS runners (
-        name TEXT PRIMARY KEY,
+runner_table_create_sql = """
+    CREATE TABLE IF NOT EXISTS runner (
+        name TEXT,
         mile_mark DOUBLE PRECISION,
         altitude DOUBLE PRECISION,
         average_overall_pace DOUBLE PRECISION,
@@ -21,7 +21,7 @@ runners_table_create_sql = """
         elapsed_time DOUBLE PRECISION,
         stoppage_time DOUBLE PRECISION,
         moving_time DOUBLE PRECISION,
-        last_update TIMESTAMPTZ,
+        last_update TIMESTAMPTZ PRIMARY KEY,
         est_finish_date TIMESTAMPTZ,
         est_finish_time DOUBLE PRECISION,
         course_deviation DOUBLE PRECISION
@@ -73,7 +73,7 @@ race_upsert_sql = """
     """
 
 runner_upsert_sql = """
-    INSERT INTO runners (
+    INSERT INTO runner (
         name,
         mile_mark,
         altitude,
@@ -100,7 +100,7 @@ runner_upsert_sql = """
         %(est_finish_time)s,
         %(course_deviation)s
     )
-    ON CONFLICT (name) DO UPDATE SET
+    ON CONFLICT (last_update) DO UPDATE SET
         mile_mark = EXCLUDED.mile_mark,
         altitude = EXCLUDED.altitude,
         average_overall_pace = EXCLUDED.average_overall_pace,
@@ -310,7 +310,7 @@ class Database:
         )
         self.cursor = self.conn.cursor()
         self.cursor.execute(race_table_create_sql)
-        self.cursor.execute(runners_table_create_sql)
+        self.cursor.execute(runner_table_create_sql)
         self.cursor.execute(pings_table_create_sql)
         self.cursor.execute(aid_stations_table_create_sql)
         self.cursor.execute(legs_table_create_sql)

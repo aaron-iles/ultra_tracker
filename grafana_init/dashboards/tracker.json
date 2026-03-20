@@ -17,7 +17,7 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 2,
   "links": [],
   "panels": [
     {
@@ -27,7 +27,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 6,
+        "w": 9,
         "x": 0,
         "y": 0
       },
@@ -58,8 +58,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 18,
-        "x": 6,
+        "w": 15,
+        "x": 9,
         "y": 0
       },
       "id": 19,
@@ -292,7 +292,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  (\n    SELECT to_char(\n      est_finish_date AT TIME ZONE '$timezone',\n      'FMMM/FMDD FMHH12:MI AM'\n    )\n    FROM runners\n    LIMIT 1\n  ) AS est_finish_date,\n  COALESCE(\n    (SELECT est_finish_time FROM runners LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
+          "rawSql": "SELECT\n  (\n    SELECT to_char(\n      est_finish_date AT TIME ZONE '$timezone',\n      'FMMM/FMDD FMHH12:MI AM'\n    )\n    FROM runner\n    LIMIT 1\n  ) AS est_finish_date,\n  COALESCE(\n    (SELECT est_finish_time FROM runner LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -426,7 +426,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n    CASE \n        WHEN last_update = '1970-01-01 00:00:00' THEN '--/-- --:--'\n        ELSE to_char(last_update AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n    END AS last_update_display\nFROM runners\nLIMIT 1;",
+          "rawSql": "SELECT \n    CASE \n        WHEN last_update = '1970-01-01 00:00:00' THEN '--/-- --:--'\n        ELSE to_char(last_update AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n    END AS last_update_display\nFROM runner ORDER BY last_update;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -461,7 +461,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT NULLIF(last_update, '1970-01-01 00:00:00') AS from_now\nFROM runners\nLIMIT 1;",
+          "rawSql": "SELECT NULLIF(last_update, '1970-01-01 00:00:00') AS from_now\nFROM runner\nORDER BY last_update;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -605,7 +605,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(\n  (SELECT elapsed_time FROM runners LIMIT 1),\n  0.0 \n) AS elapsed_time;",
+          "rawSql": "SELECT COALESCE(\n  (SELECT elapsed_time FROM runner ORDER BY last_update DESC LIMIT 1),\n  0.0 \n) AS elapsed_time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -640,7 +640,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(\n  (SELECT moving_time FROM runners LIMIT 1),\n  0.0 \n) AS moving_time;",
+          "rawSql": "SELECT COALESCE(\n  (SELECT moving_time FROM runner ORDER BY last_update DESC LIMIT 1),\n  0.0 \n) AS moving_time;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -669,7 +669,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(\n  (SELECT stoppage_time FROM runners LIMIT 1),\n  0.0 \n) AS stoppage_time;",
+          "rawSql": "SELECT COALESCE(\n  (SELECT stoppage_time FROM runner ORDER BY last_update DESC LIMIT 1),\n  0.0 \n) AS stoppage_time;",
           "refId": "C",
           "sql": {
             "columns": [
@@ -706,6 +706,7 @@
             "fixedColor": "blue",
             "mode": "fixed"
           },
+          "fieldMinMax": false,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -721,7 +722,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "moving_pace_formatted"
+              "options": "average_moving_pace"
             },
             "properties": [
               {
@@ -730,13 +731,17 @@
               },
               {
                 "id": "color"
+              },
+              {
+                "id": "unit",
+                "value": "dthms"
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "overall_pace_formatted"
+              "options": "average_overall_pace"
             },
             "properties": [
               {
@@ -749,6 +754,10 @@
                   "fixedColor": "semi-dark-orange",
                   "mode": "fixed"
                 }
+              },
+              {
+                "id": "unit",
+                "value": "dthms"
               }
             ]
           }
@@ -763,7 +772,7 @@
       "id": 11,
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "vertical",
         "percentChangeColorMode": "standard",
@@ -772,6 +781,7 @@
             "lastNotNull"
           ],
           "fields": "/.*/",
+          "limit": 2,
           "values": false
         },
         "showPercentChange": false,
@@ -789,7 +799,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n    (total_seconds / 60) || '''' ||\n    LPAD((total_seconds % 60)::text, 2, '0') || '\"' AS moving_pace_formatted\nFROM (\n    SELECT ROUND(average_moving_pace * 60)::int AS total_seconds\n    FROM runners\n) t\nLIMIT 1;",
+          "rawSql": "SELECT (average_moving_pace * 60)::int AS average_moving_pace FROM runner ORDER BY last_update;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -824,7 +834,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n    (total_seconds / 60) || '''' ||\n    LPAD((total_seconds % 60)::text, 2, '0') || '\"' AS overall_pace_formatted\nFROM (\n    SELECT ROUND(average_overall_pace * 60)::int AS total_seconds\n    FROM runners\n) t\nLIMIT 1;",
+          "rawSql": "SELECT (average_overall_pace * 60)::int AS average_overall_pace FROM runner ORDER BY last_update;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -962,7 +972,7 @@
       "id": 3,
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -988,7 +998,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT mile_mark FROM runners LIMIT 1;",
+          "rawSql": "SELECT mile_mark FROM runner ORDER BY last_update;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1023,7 +1033,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT altitude FROM runners LIMIT 1;",
+          "rawSql": "SELECT altitude FROM runner ORDER BY last_update;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -1051,7 +1061,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT course_deviation FROM runners LIMIT 1;",
+          "rawSql": "SELECT course_deviation FROM runner ORDER BY last_update;",
           "refId": "C",
           "sql": {
             "columns": [
@@ -2096,7 +2106,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n    name,\n    mile_mark AS distance,\n    altitude AS elevation\nFROM runners\nLIMIT 1;",
+          "rawSql": "SELECT\n    name,\n    mile_mark AS distance,\n    altitude AS elevation\nFROM runner\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -2227,6 +2237,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 13,
+  "version": 19,
   "weekStart": ""
 }
