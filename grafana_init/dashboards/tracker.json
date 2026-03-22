@@ -1417,7 +1417,7 @@
                         "index": 1
                       },
                       "true": {
-                        "color": "#585858",
+                        "color": "#393939",
                         "index": 0
                       }
                     },
@@ -1492,6 +1492,10 @@
               {
                 "id": "custom.width",
                 "value": 107
+              },
+              {
+                "id": "unit",
+                "value": "string"
               }
             ]
           },
@@ -1695,7 +1699,7 @@
                         "index": 1
                       },
                       "true": {
-                        "color": "#585858",
+                        "color": "#393939",
                         "index": 0
                       }
                     },
@@ -1738,6 +1742,10 @@
               {
                 "id": "custom.width",
                 "value": 107
+              },
+              {
+                "id": "unit",
+                "value": "string"
               }
             ]
           },
@@ -1754,6 +1762,10 @@
               {
                 "id": "custom.width",
                 "value": 90
+              },
+              {
+                "id": "unit",
+                "value": ""
               }
             ]
           },
@@ -2609,6 +2621,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 20,
+  "version": 22,
   "weekStart": ""
 }
