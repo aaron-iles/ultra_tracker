@@ -1887,6 +1887,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
       },
+      "description": "Tracker pings received",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2506,6 +2507,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 13,
+  "version": 15,
   "weekStart": ""
 }
