@@ -1,3 +1,42 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "tests",
+]
+
+# Enable a solid default rule set
+lint.select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "SIM", # flake8-simplify
+]
+
+# Ignore a few overly strict or noisy rules
+lint.ignore = [
+    "E501",  # line length handled by formatter
+]
+
+# Allow auto-fix for most things
+fix = true
+
+[tool.ruff.format]
+# Use Ruff's built-in formatter (PEP8-ish, like Black but configurable)
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"

@@ -6,5 +6,7 @@ data/
 .data_store.json
 .post_log.txt
 .tox
+.env
 build/
 dist/
+pgdata

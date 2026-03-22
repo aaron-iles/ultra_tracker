@@ -9,7 +9,7 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
-from ultra_tracker import application, database, ut_socket
+from ultra_tracker import application,  ut_socket
 from ultra_tracker.models import caltopo, course, race
 
 
@@ -71,7 +71,7 @@ def runner_03(caltopo_map_03, race_03_path, requests_mock):
 
 
 @pytest.fixture
-def race_03(race_03_path, caltopo_map_03, course_03, runner_03):
+def race_03(race_03_path, caltopo_map_03, course_03, runner_03, database):
     race_config_file = os.path.join(race_03_path, "race_config.yml")
     with open(race_config_file, "r") as file:
         config_data = yaml.safe_load(file)
@@ -88,6 +88,7 @@ def race_03(race_03_path, caltopo_map_03, course_03, runner_03):
         "/tmp/data_store.json",
         course_03,
         runner_03,
+        database,
     )
 
 
@@ -110,7 +111,6 @@ def race_03_expected_mile_marks(race_03_path):
 def test_race_03_full(race_03, race_03_post_log, race_03_expected_mile_marks):
     mile_mark_progression = []
     race_03.runner.race = race_03
-    database.connect("sqlite:////tmp/ut_datastore.db")
     socketio = ut_socket.socketio
     app = application.create_app()
     for ping_data in race_03_post_log:

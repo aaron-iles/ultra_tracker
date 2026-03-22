@@ -60,7 +60,9 @@ class CaltopoSession:
         :param str url_endpoint: The URL endpoint to which to issue the GET.
         :return requests.Response: The raw response object from the GET.
         """
-        expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
+        expires = (
+            int(time.time() * 1000) + 120000
+        )  # 2 minutes from current time, in milliseconds
         data = f"GET {url_endpoint}\n{expires}\n"
         params = {
             "id": self.credential_id,
@@ -82,7 +84,9 @@ class CaltopoSession:
         :param dict payload: The payload data to send.
         :return requests.Response: The raw response object from the POST.
         """
-        expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
+        expires = (
+            int(time.time() * 1000) + 120000
+        )  # 2 minutes from current time, in milliseconds
         data = f"POST {url_endpoint}\n{expires}\n{json.dumps(payload)}"
         params = {
             "id": self.credential_id,
@@ -104,7 +108,9 @@ class CaltopoSession:
         :param str url_endpoint: The URL endpoint to which to issue the DELETE.
         :return requests.Response: The raw response object from the DELETE.
         """
-        expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
+        expires = (
+            int(time.time() * 1000) + 120000
+        )  # 2 minutes from current time, in milliseconds
         data = f"DELETE {url_endpoint}\n{expires}\n"
         params = {}
         params["id"] = self.credential_id
@@ -154,8 +160,8 @@ class CaltopoMap:
         map_data = self.get(f"/api/v1/map/{self.map_id}/since/0")
         try:
             features = map_data["result"]["state"]["features"]
-        except KeyError:
-            raise LookupError(f"unable to find features in {map_data}")
+        except KeyError as err:
+            raise LookupError(f"unable to find features in {map_data}") from err
         for feature in features:
             feature_class = feature.get("properties", {}).get("class")
             if feature_class == "Folder":
@@ -213,13 +219,17 @@ class CaltopoMap:
         :return CaltopoFolder: The folder object.
         """
         folder_feature_dict = {
-            "properties": {"title": title, "visible": True, "labelVisible": show_labels},
+            "properties": {
+                "title": title,
+                "visible": True,
+                "labelVisible": show_labels,
+            },
             "id": None,
         }
         new_folder = CaltopoFolder(folder_feature_dict, self.map_id, self.session)
         if new_folder in self.folders:
             logger.info(f"folder '{title}' already exists")
-            return next((obj for obj in self.folders if obj.title == title))
+            return next(obj for obj in self.folders if obj.title == title)
         logger.info(f"folder '{title}' not found; creating folder")
         url = f"/api/v1/map/{self.map_id}/Folder"
         response = self.session.post(url, new_folder.as_json)
@@ -275,7 +285,7 @@ class CaltopoMap:
         new_marker = CaltopoMarker(marker_feature_dict, self.map_id, self.session)
         if new_marker in self.markers:
             logger.info(f"marker '{title}' already exists")
-            return next((obj for obj in self.markers if obj.title == title))
+            return next(obj for obj in self.markers if obj.title == title)
         logger.info(f"marker '{title}' not found; creating marker")
         url = f"/api/v1/map/{self.map_id}/Marker"
         response = self.session.post(url, new_marker.as_json)
