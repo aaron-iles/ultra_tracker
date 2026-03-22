@@ -337,19 +337,19 @@
               },
               {
                 "color": "green",
-                "value": 5
+                "value": 300
               },
               {
                 "color": "yellow",
-                "value": 10
+                "value": 600
               },
               {
                 "color": "#EF843C",
-                "value": 20
+                "value": 1200
               },
               {
                 "color": "#E24D42",
-                "value": 30
+                "value": 1800
               }
             ]
           }
@@ -1929,7 +1929,7 @@
         },
         "controls": {
           "mouseWheelZoom": true,
-          "showAttribution": true,
+          "showAttribution": false,
           "showDebug": false,
           "showMeasure": true,
           "showScale": true,
@@ -2010,6 +2010,11 @@
                   "horizontal": "center",
                   "vertical": "center"
                 },
+                "text": {
+                  "field": "",
+                  "fixed": "",
+                  "mode": "field"
+                },
                 "textConfig": {
                   "fontSize": 12,
                   "offsetX": 0,
@@ -2019,6 +2024,7 @@
                 }
               }
             },
+            "layer-tooltip": true,
             "location": {
               "mode": "auto"
             },
@@ -2031,12 +2037,16 @@
           "mode": "details"
         },
         "view": {
-          "allLayers": true,
+          "allLayers": false,
           "id": "fit",
+          "lastOnly": false,
           "lat": 0,
+          "layer": "Runner",
           "lon": 0,
           "noRepeat": false,
-          "zoom": 15
+          "padding": 100,
+          "shared": true,
+          "zoom": 11
         }
       },
       "pluginVersion": "12.4.1",
@@ -2376,7 +2386,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n    name,\n    mile_mark AS distance,\n    altitude AS elevation\nFROM runner\nLIMIT 1;",
+          "rawSql": "SELECT\n    name,\n    mile_mark AS distance,\n    altitude AS elevation\nFROM runner ORDER BY last_update DESC\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -2494,6 +2504,98 @@
         "regex": "",
         "regexApplyTo": "value",
         "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": "41.133477657214954",
+          "value": "41.133477657214954"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P44368ADAD746BC27"
+        },
+        "definition": "SELECT\n  coordinates[0] AS start_latitude,\nFROM aidstations ORDER BY mile_mark LIMIT 1; ",
+        "hide": 2,
+        "label": "Start Latitude",
+        "name": "start_latitude",
+        "options": [],
+        "query": {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT\n  coordinates[0] AS start_latitude,\nFROM aidstations ORDER BY mile_mark LIMIT 1; ",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  coordinates[0] AS start_latitude,\nFROM aidstations ORDER BY mile_mark LIMIT 1; ",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": "41.133477657214954",
+          "value": "41.133477657214954"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P44368ADAD746BC27"
+        },
+        "definition": "SELECT\n  coordinates[1] AS start_longitude,\nFROM aidstations ORDER BY mile_mark LIMIT 1; ",
+        "hide": 2,
+        "label": "Start Longitude",
+        "name": "start_longitude",
+        "options": [],
+        "query": {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT\n  coordinates[1] AS start_longitude,\nFROM aidstations ORDER BY mile_mark LIMIT 1; ",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  coordinates[1] AS start_longitude,\nFROM aidstations ORDER BY mile_mark LIMIT 1; ",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
       }
     ]
   },
@@ -2507,6 +2609,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 15,
+  "version": 20,
   "weekStart": ""
 }
