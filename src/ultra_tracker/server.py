@@ -53,9 +53,7 @@ def parse_args() -> argparse.Namespace:
         dest="disable_marker_updates",
         help="Disables updating the marker location in Caltopo. Primarily used for testing.",
     )
-    p.add_argument(
-        "-v", required=False, action="store_true", dest="verbose", help="Run verbosely."
-    )
+    p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()
 
 
@@ -91,8 +89,8 @@ def remove_session(exception=None) -> None:
     """
     Overrides the remove_session method to ensure the database session is removed.
     """
-    #database.cursor.close()
-    #database.conn.close()
+    # database.cursor.close()
+    # database.conn.close()
     return
 
 

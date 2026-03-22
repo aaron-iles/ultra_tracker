@@ -64,9 +64,7 @@ class Ping:
 
     def __init__(self, ping_data: dict):
         self._event = ping_data.get("Events", [{}])[0]
-        self.altitude = meters_to_feet(
-            self._event.get("point", {}).get("altitude", 0.0)
-        )
+        self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
         self.gps_fix = GPS_FIX_LOOKUP.get(self._event.get("point", {}).get("gpsFix"))
         self.heading = self._event.get("point", {}).get("course", 0)
         self.imei = self._event.get("imei")

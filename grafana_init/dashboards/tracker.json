@@ -292,7 +292,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  (\n    SELECT to_char(\n      est_finish_date AT TIME ZONE '$timezone',\n      'FMMM/FMDD FMHH12:MI AM'\n    )\n    FROM runner\n    LIMIT 1\n  ) AS est_finish_date,\n  COALESCE(\n    (SELECT est_finish_time FROM runner LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
+          "rawSql": "SELECT\n  (\n    SELECT to_char(\n      est_finish_date AT TIME ZONE '$timezone',\n      'FMMM/FMDD FMHH12:MI AM'\n    )\n    FROM runner ORDER BY last_update DESC\n    LIMIT 1\n  ) AS est_finish_date,\n  COALESCE(\n    (SELECT est_finish_time FROM runner ORDER BY last_update DESC LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -941,6 +941,13 @@
               {
                 "id": "displayName",
                 "value": "Mile Mark"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
               }
             ]
           },
@@ -1521,7 +1528,7 @@
                 "value": [
                   {
                     "options": {
-                      "pattern": "^[0-9/ ]+ (5|6|7|8|9|10|11|12):[0-5][0-9]\\s?AM|[0-9/ ]+ (12|1|2|3|4|5|6|7):[0-5][0-9]\\s?PM",
+                      "pattern": "^[0-9/ ]+ (5|6|7|8|9|10|11):[0-5][0-9]\\s?AM|[0-9/ ]+ (12|1|2|3|4|5|6|7):[0-5][0-9]\\s?PM",
                       "result": {
                         "color": "super-light-yellow",
                         "index": 0
@@ -1856,7 +1863,7 @@
       },
       "gridPos": {
         "h": 16,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 32
       },
@@ -1874,6 +1881,223 @@
       "title": "",
       "transparent": true,
       "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "P44368ADAD746BC27"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 21,
+      "options": {
+        "basemap": {
+          "config": {},
+          "name": "Layer 0",
+          "noRepeat": false,
+          "type": "osm-standard"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": true,
+          "showScale": true,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "showLegend": false,
+              "style": {
+                "color": {
+                  "fixed": "dark-green"
+                },
+                "opacity": 1,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 15,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/x-mark.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "B"
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "Runner",
+            "tooltip": true,
+            "type": "markers"
+          },
+          {
+            "config": {
+              "showLegend": false,
+              "style": {
+                "color": {
+                  "fixed": "dark-red"
+                },
+                "opacity": 1,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 3,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "Pings",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "fit",
+          "lat": 0,
+          "lon": 0,
+          "noRepeat": false,
+          "zoom": 15
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  timestamp,\n  latlon[0] AS latitude,\n  latlon[1] AS longitude\nFROM pings WHERE gps_fix = '3D Fix';",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  latlon[0] AS latitude,\n  latlon[1] AS longitude\nFROM pings WHERE gps_fix = '3D Fix' ORDER BY timestamp DESC LIMIT 1;",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "",
+      "transparent": true,
+      "type": "geomap"
     },
     {
       "datasource": {
@@ -2185,8 +2409,8 @@
     "list": [
       {
         "current": {
-          "text": "https://caltopo.com/m/P1CVRV6",
-          "value": "https://caltopo.com/m/P1CVRV6"
+          "text": "https://caltopo.com/m/126JQ",
+          "value": "https://caltopo.com/m/126JQ"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2226,8 +2450,8 @@
       },
       {
         "current": {
-          "text": "World's End 100k",
-          "value": "World's End 100k"
+          "text": "Dark Sky 220",
+          "value": "Dark Sky 220"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2273,8 +2497,8 @@
     ]
   },
   "time": {
-    "from": "now/y",
-    "to": "now/y"
+    "from": "2025-07-02T17:00:00.000Z",
+    "to": "2027-07-02T16:59:59.998Z"
   },
   "timepicker": {
     "hidden": true
@@ -2282,6 +2506,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 21,
+  "version": 13,
   "weekStart": ""
 }

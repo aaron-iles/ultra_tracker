@@ -10,7 +10,7 @@ Environment="COMPOSE_FILE=/ultra-tracker/ultra_tracker/docker-compose.yml"
 ExecStartPre=python3 -m pip install --upgrade build 
 ExecStartPre=python3 -m build --wheel /ultra-tracker/ultra_tracker
 ExecStart=/usr/bin/docker compose up
-ExecStop=/usr/bin/docker compose down -t 2
+ExecStop=/usr/bin/docker compose down -t 5
 Restart=always
 
 [Install]

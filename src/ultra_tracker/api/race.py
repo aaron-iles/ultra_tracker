@@ -21,10 +21,7 @@ def post_data():
 
     :return tuple: The HTTP response.
     """
-    if (
-        request.headers.get("x-outbound-auth-token")
-        != current_app.config["UT_GARMIN_API_TOKEN"]
-    ):
+    if request.headers.get("x-outbound-auth-token") != current_app.config["UT_GARMIN_API_TOKEN"]:
         logger.error("Invalid or missing auth token in {request.headers}")
         return "Invalid or missing auth token", 401
     content_length = request.headers.get("Content-Length", 0)
@@ -32,9 +29,7 @@ def post_data():
         logger.error("Content-Length header is missing or zero")
         return "Content-Length header is missing or zero", 411
     payload = request.get_data(as_text=True)
-    with open(
-        f"{current_app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii"
-    ) as file:
+    with open(f"{current_app.config['UT_DATA_DIR']}/post_log.txt", "a", encoding="ascii") as file:
         file.write(f"{payload}\n")
     current_app.config["UT_RACE"].ingest_ping(json.loads(payload))
     return "OK", 200

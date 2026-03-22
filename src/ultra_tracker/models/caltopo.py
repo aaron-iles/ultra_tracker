@@ -60,9 +60,7 @@ class CaltopoSession:
         :param str url_endpoint: The URL endpoint to which to issue the GET.
         :return requests.Response: The raw response object from the GET.
         """
-        expires = (
-            int(time.time() * 1000) + 120000
-        )  # 2 minutes from current time, in milliseconds
+        expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"GET {url_endpoint}\n{expires}\n"
         params = {
             "id": self.credential_id,
@@ -84,9 +82,7 @@ class CaltopoSession:
         :param dict payload: The payload data to send.
         :return requests.Response: The raw response object from the POST.
         """
-        expires = (
-            int(time.time() * 1000) + 120000
-        )  # 2 minutes from current time, in milliseconds
+        expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"POST {url_endpoint}\n{expires}\n{json.dumps(payload)}"
         params = {
             "id": self.credential_id,
@@ -108,9 +104,7 @@ class CaltopoSession:
         :param str url_endpoint: The URL endpoint to which to issue the DELETE.
         :return requests.Response: The raw response object from the DELETE.
         """
-        expires = (
-            int(time.time() * 1000) + 120000
-        )  # 2 minutes from current time, in milliseconds
+        expires = int(time.time() * 1000) + 120000  # 2 minutes from current time, in milliseconds
         data = f"DELETE {url_endpoint}\n{expires}\n"
         params = {}
         params["id"] = self.credential_id
