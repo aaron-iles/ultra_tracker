@@ -36,7 +36,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ultra-tracker-postgres-data:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql
       - ./postgres_init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -51,7 +51,7 @@ services:
       - 3000:3000
     volumes:
       - ./grafana_init:/etc/grafana/provisioning/
-      - ultra-tracker-grafana-data:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
     user: '1000'
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -70,5 +70,5 @@ services:
       GF_DASHBOARDS_JSON_ENABLED: true
 
 volumes:
-  ultra-tracker-postgres-data:
-  ultra-tracker-grafana-data:
+  postgres-data:
+  grafana-data:
