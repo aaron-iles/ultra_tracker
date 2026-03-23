@@ -744,7 +744,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
       },
-      "description": "Average pace outside of aid stations; average pace  including stoppage time",
+      "description": "Average pace outside of aid stations, average pace  including stoppage time, current pace",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -803,6 +803,22 @@
               {
                 "id": "unit",
                 "value": "dthms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "current_pace"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dthms"
+              },
+              {
+                "id": "displayName",
+                "value": "Current Pace"
               }
             ]
           }
@@ -881,6 +897,35 @@
           "rawQuery": true,
           "rawSql": "SELECT (average_overall_pace * 60)::int AS average_overall_pace FROM runner ORDER BY last_update;",
           "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  speed,\n  CASE\n    WHEN speed > 0 THEN (5793.624 / speed)\n    ELSE NULL\n  END AS current_pace\nFROM pings\nWHERE message_code = 'Position Report'\n  AND gps_fix = '3D Fix'\nORDER BY timestamp;",
+          "refId": "C",
           "sql": {
             "columns": [
               {
@@ -2525,6 +2570,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 36,
+  "version": 38,
   "weekStart": ""
 }
