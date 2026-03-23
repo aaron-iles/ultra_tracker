@@ -744,7 +744,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
       },
-      "description": "Average pace outside of aid stations; average pace  including stoppage time",
+      "description": "Average pace outside of aid stations, average pace  including stoppage time, current pace",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2525,6 +2525,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 36,
+  "version": 40,
   "weekStart": ""
 }
