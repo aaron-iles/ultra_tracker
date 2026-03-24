@@ -178,67 +178,6 @@ class Race:
         self.restore()
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
-    @property
-    def html_stats(self) -> dict:
-        """
-        Returns generic runner and race stats to be used for a webpage.
-
-        :return dict: Runner and race stats.
-        """
-        return {
-            "distances": json.dumps(self.course.route.distances.tolist()),
-            "total_distance": self.course.route.distances[-1],
-            "elevations": json.dumps(self.course.route.elevations.tolist()),
-            "runner_x": self.runner.mile_mark,
-            "runner_y": self.runner.elevation,
-            "runner_name": self.runner.marker.title,
-            "average_overall_pace": convert_decimal_pace_to_pretty_format(
-                self.runner.average_overall_pace
-            ),
-            "average_moving_pace": convert_decimal_pace_to_pretty_format(
-                self.runner.average_moving_pace
-            ),
-            "altitude": format_distance(self.runner.last_ping.altitude, True),
-            "mile_mark": round(self.runner.mile_mark, 2),
-            "elapsed_time": format_duration(self.runner.elapsed_time),
-            "stoppage_time": format_duration(self.runner.stoppage_time),
-            "moving_time": format_duration(self.runner.moving_time),
-            "last_update": self.runner.last_ping.timestamp,
-            "est_finish_date": self.runner.estimated_finish_date,
-            "est_finish_time": format_duration(self.runner.estimated_finish_time),
-            "start_time": self.start_time,
-            "map_url": self.map_url,
-            "course_elements": self.course.course_elements,
-            "aid_station_annotations": self.course.aid_stations_annotations,
-            "course_deviation": format_distance(self.runner.course_deviation),
-            "deviation_background_color": (
-                "#61a161"
-                if self.runner.course_deviation < 100
-                else (
-                    "#6f6f3d"
-                    if 100 <= self.runner.course_deviation <= 150
-                    else "#a9653c"
-                    if 151 <= self.runner.course_deviation <= 200
-                    else "#792f3c"
-                )
-            ),
-            "debug_data": {
-                "course_deviation": format_distance(self.runner.course_deviation),
-                "last_ping": self.runner.last_ping.as_json,
-                "estimated_course_location": self.runner.estimate_marker.coordinates[::-1],
-                "pings": self.runner.pings,
-                "track_interval": self.runner.track_interval,
-                "low_battery": self.runner.low_battery,
-                "course": {
-                    "distance": self.course.route.length,
-                    "gain": self.course.route.gain,
-                    "loss": self.course.route.loss,
-                    "course_elements": len(self.course.course_elements),
-                    "timezone": str(self.course.timezone),
-                    "points": len(self.course.route.points),
-                },
-            },
-        }
 
     def save(self) -> None:
         """
@@ -248,7 +187,6 @@ class Race:
         """
         stats = {
             "mile_mark": self.runner.mile_mark,
-            "pings": self.runner.pings,
             "last_ping": self.last_ping_raw,
             "aid_stations": [
                 {
@@ -278,24 +216,14 @@ class Race:
                 data = json.load(f)
                 self.runner.race = self
                 self.runner.mile_mark = data.get("mile_mark", 0)
-                # Subtract 1 because we are about to check in with this same ping below.
-                self.runner.pings = data.get("pings", 1) - 1
                 ping = Ping(data.get("last_ping", {}))
                 self.runner.last_ping = ping
-                # TODO leg estimated duration is not set.
-                for idx, aid_station in enumerate(data.get("aid_stations", [])):
-                    arrival_time = datetime.datetime.fromisoformat(aid_station["arrival_time"])
-                    departure_time = datetime.datetime.fromisoformat(aid_station["departure_time"])
-                    self.course.aid_stations[idx].arrival_time = arrival_time
-                    self.course.aid_stations[idx].estimated_arrival_time = arrival_time
-                    self.course.aid_stations[idx].departure_time = departure_time
-                    self.course.aid_stations[idx].estimated_departure_time = departure_time
-
-                self.runner.check_in(ping)
                 logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
             self.runner.elevation = self.course.route.elevations[0]
+            # This is the first time the application has started so we save it.
+            self.save()
 
     def ingest_ping(self, ping_data: dict) -> None:
         """
@@ -310,7 +238,6 @@ class Race:
         logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
             logger.info("ping does not contain GPS coordinates, skipping")
-            self.runner.pings += 1
             self.save()
             return
         # Don't do anything if the race hasn't started yet.
@@ -318,7 +245,6 @@ class Race:
             logger.info(
                 f"incoming timestamp {ping.timestamp} before race start time {self.start_time}"
             )
-            self.runner.pings += 1
             self.save()
             return
         # Don't do anything if the runner has already finished.
@@ -376,7 +302,6 @@ class Runner:
         )
         self.marker_updating = marker_updating
         self.mile_mark = 0
-        self.pings = 0
         self.race = race
         self.track_interval = 300
 
@@ -409,14 +334,17 @@ class Runner:
 
         :return datetime.timedelta: The runner's stoppage time.
         """
-        return sum(
-            [
-                ce.stoppage_time
-                for ce in self.race.course.course_elements
-                if isinstance(ce, AidStation)
-            ],
-            datetime.timedelta(0),
-        )
+        if self.race:
+            return sum(
+                [
+                    ce.stoppage_time
+                    for ce in self.race.course.course_elements
+                    if isinstance(ce, AidStation)
+                ],
+                datetime.timedelta(0),
+            )
+        else:
+            return datetime.timedelta(0)
 
     @property
     def average_stoppage_time(self) -> datetime.timedelta:
@@ -425,10 +353,13 @@ class Runner:
 
         :return datetime.timedelta: The runner's stoppage time.
         """
-        num_stops = sum(1 for station in self.race.course.aid_stations if station.is_passed)
-        if num_stops == 0:
-            return datetime.timedelta(0)
-        return self.stoppage_time / num_stops
+        if self.race:
+            num_stops = sum(1 for station in self.race.course.aid_stations if station.is_passed)
+            if num_stops == 0:
+                return datetime.timedelta(0)
+            return self.stoppage_time / num_stops
+        else:
+           return datetime.timedelta(0)
 
     @property
     def elapsed_time(self) -> datetime.timedelta:
@@ -523,7 +454,6 @@ class Runner:
         :return None:
         """
         last_timestamp = self.last_ping.timestamp
-        self.pings += 1
         self.low_battery = ping.low_battery == 1
         if ping.interval_change:
             self.track_interval = ping.interval_change

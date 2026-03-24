@@ -118,6 +118,7 @@ pings_table_create_sql = """
     CREATE TABLE IF NOT EXISTS pings (
         timestamp TIMESTAMPTZ,
         timestamp_raw BIGINT PRIMARY KEY,
+        imei TEXT,
         status JSONB,
         heading DOUBLE PRECISION,
         latlon JSONB,
@@ -132,6 +133,7 @@ ping_upsert_sql = """
     INSERT INTO pings (
         timestamp,
         timestamp_raw,
+        imei,
         status,
         heading,
         latlon,
@@ -142,6 +144,7 @@ ping_upsert_sql = """
     ) VALUES (
         %(timestamp)s,
         %(timestamp_raw)s,
+        %(imei)s,
         %(status)s,
         %(heading)s,
         %(latlon)s::jsonb,
@@ -152,6 +155,7 @@ ping_upsert_sql = """
     )
     ON CONFLICT (timestamp_raw) DO UPDATE SET
         timestamp = EXCLUDED.timestamp,
+        imei = EXCLUDED.imei,
         status = EXCLUDED.status,
         heading = EXCLUDED.heading,
         latlon = EXCLUDED.latlon,

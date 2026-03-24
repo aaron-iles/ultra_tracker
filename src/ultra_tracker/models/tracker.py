@@ -153,6 +153,7 @@ class Ping:
         """
         return {
             "status": Json(self._event.get("status", {})),
+            "imei": self.imei,
             "timestamp": self.timestamp,
             "timestamp_raw": self._event.get("timeStamp", 0),
             "heading": self.heading,

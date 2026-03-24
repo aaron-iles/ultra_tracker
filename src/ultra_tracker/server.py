@@ -29,7 +29,7 @@ def parse_args() -> argparse.Namespace:
     """
     p = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="This is a description of my module.",
+        description="This package runs the ultra tracking server.",
     )
     p.add_argument(
         "-c",
@@ -94,30 +94,6 @@ def remove_session(exception=None) -> None:
     return
 
 
-@app.template_filter("format_duration")
-def format_duration_filter(duration: datetime.timedelta) -> str:
-    """
-    Formats a datetime.timedelta object to a human-friendly format.
-
-    :param datetime.timedelta duration: The timedelta object to be formatted.
-    :return str: The timedelta object as a presentable string.
-    """
-    return format_duration(duration)
-
-
-@app.template_filter("format_time")
-def format_time_filter(time_obj: datetime.datetime) -> str:
-    """
-    Formats a datetime.datetime object to a human-friendly format.
-
-    :param datetime.datetime time_obj: The datetime object to be formatted.
-    :return str: The human-friendly formatted time object.
-    """
-    if time_obj.astimezone(datetime.UTC) == datetime.datetime.fromtimestamp(0, datetime.UTC):
-        return "--/-- --:--"
-    return time_obj.strftime("%-m/%-d %-I:%M %p")
-
-
 def start_application():
     config_data = get_config_data(args.config)
     setup_logging(args.verbose)
@@ -160,11 +136,11 @@ def start_application():
         database,
     )
     runner.race = race
-    race.save()
     logger.info("created race object...")
     app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
     app.config["UT_RACE"] = race
     app.config["UT_DATA_DIR"] = args.data_dir
     app.secret_key = random.randbytes(64).hex()
+    logger.info("application started, waiting for pings")
     ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=args.verbose)
     return

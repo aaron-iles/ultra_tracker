@@ -1365,6 +1365,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
       },
+      "description": "Arrival/departure times are estimates, grey rows indicate the runner has passed the aid stations",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1647,6 +1648,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "P44368ADAD746BC27"
       },
+      "description": "Duration is an estimate, grey rows indicate the runner has finished these legs",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2525,6 +2527,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 40,
+  "version": 2,
   "weekStart": ""
 }
