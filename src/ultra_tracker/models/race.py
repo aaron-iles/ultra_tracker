@@ -178,7 +178,6 @@ class Race:
         self.restore()
         logger.info(f"race at {self.start_time} of {self.course.route.length} mi")
 
-
     def save(self) -> None:
         """
         Saves the race stats to a file.
@@ -211,14 +210,19 @@ class Race:
 
         :return None:
         """
-        if os.path.exists(self.data_store):
-            with open(self.data_store) as f:
-                data = json.load(f)
-                self.runner.race = self
-                self.runner.mile_mark = data.get("mile_mark", 0)
-                ping = Ping(data.get("last_ping", {}))
-                self.runner.last_ping = ping
-                logger.info(f"restore success: {self.runner.last_ping}")
+        if self.database.contains_data:
+            for ce in self.course.aid_stations:
+                self.database.restore(ce)
+            self.runner.race = self
+            self.database.restore(self.runner)
+        # if os.path.exists(self.data_store):
+        #    with open(self.data_store) as f:
+        #        data = json.load(f)
+        #        self.runner.race = self
+        #        self.runner.mile_mark = data.get("mile_mark", 0)
+        #        ping = Ping(data.get("last_ping", {}))
+        #        self.runner.last_ping = ping
+        #        logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
             self.runner.elevation = self.course.route.elevations[0]
@@ -354,12 +358,16 @@ class Runner:
         :return datetime.timedelta: The runner's stoppage time.
         """
         if self.race:
-            num_stops = sum(1 for station in self.race.course.aid_stations if station.is_passed)
+            num_stops = sum(
+                1
+                for station in self.race.course.aid_stations
+                if station.is_passed and station.name != "Start"
+            )
             if num_stops == 0:
                 return datetime.timedelta(0)
             return self.stoppage_time / num_stops
         else:
-           return datetime.timedelta(0)
+            return datetime.timedelta(0)
 
     @property
     def elapsed_time(self) -> datetime.timedelta:

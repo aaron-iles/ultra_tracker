@@ -59,8 +59,8 @@ race_upsert_sql = """
         %(started)s,
         %(map_url)s,
         %(distance)s,
-        %(distances)s::jsonb,
-        %(elevations)s::jsonb
+        %(distances)s,
+        %(elevations)s
     )
     ON CONFLICT (name) DO UPDATE SET
         start_time = EXCLUDED.start_time,
@@ -125,7 +125,8 @@ pings_table_create_sql = """
         altitude DOUBLE PRECISION,
         gps_fix TEXT,
         message_code TEXT,
-        speed DOUBLE PRECISION
+        speed DOUBLE PRECISION,
+        raw JSONB
     );
     """
 
@@ -140,18 +141,20 @@ ping_upsert_sql = """
         altitude,
         gps_fix,
         message_code,
-        speed
+        speed,
+        raw
     ) VALUES (
         %(timestamp)s,
         %(timestamp_raw)s,
         %(imei)s,
         %(status)s,
         %(heading)s,
-        %(latlon)s::jsonb,
+        %(latlon)s,
         %(altitude)s,
         %(gps_fix)s,
         %(message_code)s,
-        %(speed)s
+        %(speed)s,
+        %(raw)s
     )
     ON CONFLICT (timestamp_raw) DO UPDATE SET
         timestamp = EXCLUDED.timestamp,
@@ -162,7 +165,8 @@ ping_upsert_sql = """
         altitude = EXCLUDED.altitude,
         gps_fix = EXCLUDED.gps_fix,
         message_code = EXCLUDED.message_code,
-        speed = EXCLUDED.speed;
+        speed = EXCLUDED.speed,
+        raw = EXCLUDED.raw;
     """
 
 
@@ -275,7 +279,7 @@ aid_station_upsert_sql = """
         %(altitude)s,
         %(gmaps_url)s,
         %(comments)s,
-        %(coordinates)s::jsonb,
+        %(coordinates)s,
         %(estimated_duration)s,
         %(arrival_time)s,
         %(departure_time)s,
@@ -320,6 +324,18 @@ class Database:
         self.cursor.execute(legs_table_create_sql)
         self.conn.commit()
 
+    @property
+    def contains_data(self) -> bool:
+        """
+        Returns True if at least one runner exists in the database.
+        """
+        self.cursor.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM runner LIMIT 1
+            )
+        """)
+        return self.cursor.fetchone()[0]
+
     def save(self, object_):
         """ """
         if isinstance(object_, AidStation):
@@ -334,3 +350,65 @@ class Database:
             upsert_sql = race_upsert_sql
         self.cursor.execute(upsert_sql, object_.database_record)
         self.conn.commit()
+
+    def restore(self, object_):
+        if isinstance(object_, AidStation):
+            self._restore_aidstation(object_)
+        elif isinstance(object_, Runner):
+            self._restore_runner(object_)
+
+    def _restore_aidstation(self, object_):
+        """
+        Restore a single AidStation from the database using its name.
+        """
+        self.cursor.execute(
+            """
+            SELECT
+                arrival_time,
+                departure_time
+            FROM aidstations
+            WHERE name = %s
+        """,
+            (object_.name,),
+        )
+
+        row = self.cursor.fetchone()
+
+        if row is None:
+            # Nothing to restore (not in DB)
+            return
+
+        # Restore actual values
+        object_.arrival_time = row[0]
+        object_.departure_time = row[1]
+
+    def _restore_runner(self, object_):
+        """
+        Restore a single AidStation from the database using its name.
+        """
+        self.cursor.execute(
+            """
+            SELECT
+              mile_mark
+            FROM runner
+            WHERE name = %s
+            ORDER BY last_update DESC LIMIT 1
+        """,
+            (object_.name,),
+        )
+
+        row = self.cursor.fetchone()
+
+        # Restore actual values
+        object_.mile_mark = row[0]
+
+        self.cursor.execute("""
+            SELECT
+              raw
+            FROM pings ORDER BY timestamp DESC LIMIT 1
+        """)
+
+        row = self.cursor.fetchone()
+
+        ping = Ping(row[0])
+        object_.last_ping = ping

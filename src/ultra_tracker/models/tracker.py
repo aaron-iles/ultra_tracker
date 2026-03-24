@@ -47,6 +47,7 @@ class Ping:
     """
 
     __slots__ = {
+        "_raw",
         "_event",
         "altitude",
         "gps_fix",
@@ -63,6 +64,7 @@ class Ping:
     }
 
     def __init__(self, ping_data: dict):
+        self._raw = ping_data
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
         self.gps_fix = GPS_FIX_LOOKUP.get(self._event.get("point", {}).get("gpsFix"))
@@ -162,4 +164,5 @@ class Ping:
             "gps_fix": self.gps_fix,
             "message_code": self.message_code,
             "speed": self.speed,
+            "raw": Json(self._raw),
         }
