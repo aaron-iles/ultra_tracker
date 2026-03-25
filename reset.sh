@@ -11,7 +11,7 @@ else
 fi
 
 docker rmi ultra_tracker:latest || true
-docker volume rm ultra-tracker_postgres-data
+docker volume prune --force --all
 rm -rf dist
 rm -f data/post_log.txt data/data_store.json
 python3 -m build --wheel
