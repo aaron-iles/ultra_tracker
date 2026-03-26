@@ -442,7 +442,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n    CASE \n        WHEN last_update = '1970-01-01 00:00:00' THEN '--/-- --:--'\n        ELSE to_char(last_update AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n    END AS last_update_display\nFROM runner ORDER BY last_update;",
+          "rawSql": "SELECT \n    CASE \n        WHEN last_update = '1970-01-01 00:00:00' THEN '—/— —:—'\n        ELSE to_char(last_update AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n    END AS last_update_display\nFROM runner ORDER BY last_update;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1618,7 +1618,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  name, \n  mile_mark, \n  gmaps_url, \nCASE\n    WHEN COALESCE(\n        NULLIF(arrival_time, '1970-01-01 00:00:00+00'::timestamptz),\n        NULLIF(estimated_arrival_time, '1970-01-01 00:00:00+00'::timestamptz)\n    ) IS NULL\n    THEN '--/-- --:--'\n    \n    ELSE to_char(\n        COALESCE(\n            NULLIF(arrival_time, '1970-01-01 00:00:00+00'::timestamptz),\n            NULLIF(estimated_arrival_time, '1970-01-01 00:00:00+00'::timestamptz)\n        ) AT TIME ZONE '$timezone',\n        'FMMM/FMDD FMHH12:MI AM'\n    )\nEND AS arrival_time,\n  CASE \n    WHEN departure_time = '1970-01-01 00:00:00' THEN '--/-- --:--'\n    ELSE to_char(departure_time AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n  END AS departure_time,\n  stoppage_time,\n  is_passed, \n  comments \nFROM aidstations ORDER BY mile_mark;",
+          "rawSql": "SELECT \n  name, \n  mile_mark, \n  gmaps_url, \nCASE\n    WHEN COALESCE(\n        NULLIF(arrival_time, '1970-01-01 00:00:00+00'::timestamptz),\n        NULLIF(estimated_arrival_time, '1970-01-01 00:00:00+00'::timestamptz)\n    ) IS NULL\n    THEN '—/— —:—'\n    \n    ELSE to_char(\n        COALESCE(\n            NULLIF(arrival_time, '1970-01-01 00:00:00+00'::timestamptz),\n            NULLIF(estimated_arrival_time, '1970-01-01 00:00:00+00'::timestamptz)\n        ) AT TIME ZONE '$timezone',\n        'FMMM/FMDD FMHH12:MI AM'\n    )\nEND AS arrival_time,\n  CASE \n    WHEN departure_time = '1970-01-01 00:00:00' THEN '—/— —:—'\n    ELSE to_char(departure_time AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n  END AS departure_time,\n  stoppage_time,\n  is_passed, \n  comments \nFROM aidstations ORDER BY mile_mark;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -2430,8 +2430,8 @@
     "list": [
       {
         "current": {
-          "text": "https://caltopo.com/m/126JQ",
-          "value": "https://caltopo.com/m/126JQ"
+          "text": "https://caltopo.com/m/P1CVRV6",
+          "value": "https://caltopo.com/m/P1CVRV6"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2471,8 +2471,8 @@
       },
       {
         "current": {
-          "text": "Dark Sky 220",
-          "value": "Dark Sky 220"
+          "text": "World's End 100k",
+          "value": "World's End 100k"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2518,8 +2518,8 @@
     ]
   },
   "time": {
-    "from": "2025-07-02T17:00:00.000Z",
-    "to": "2027-07-02T16:59:59.998Z"
+    "from": "now/y",
+    "to": "now/y"
   },
   "timepicker": {
     "hidden": true
