@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     image: ultra_tracker:latest
     logging:
-      driver: none
+      driver: journald
     container_name: ultra-tracker
     ports:
       - '8080:8080'
@@ -25,6 +25,8 @@ services:
 
   postgres:
     image: docker.io/library/postgres:18
+    logging:
+      driver: journald
     container_name: ultra-tracker-postgres
     restart: unless-stopped
     environment:
@@ -44,6 +46,8 @@ services:
 
   grafana:
     image: docker.io/grafana/grafana:latest
+    logging:
+      driver: journald
     container_name: ultra-tracker-grafana
     ports:
       - 3000:3000
