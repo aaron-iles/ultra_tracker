@@ -6,9 +6,9 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=~/ultra-tracker
-ExecStart=~/.local/bin/podman-compose up -d
-ExecStop=~/.local/bin/podman-compose stop
+WorkingDirectory=/home/${USER}/ultra-tracker
+ExecStart=/home/${USER}/.local/bin/podman-compose up -d
+ExecStop=/home/${USER}/.local/bin/podman-compose stop
 TimeoutStopSec=10
 
 [Install]
