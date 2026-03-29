@@ -6,4 +6,4 @@ __pycache__
 .env
 build/
 dist/
-./race_config.yml
+race_config.yml
