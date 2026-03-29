@@ -3,6 +3,8 @@
 
 import datetime
 
+from psycopg2.extras import Json
+
 from ..utils import get_timezone, meters_to_feet
 
 GPS_FIX_LOOKUP = {0: "No Fix", 1: "2D Fix", 2: "3D Fix", 3: "3D Fix+", None: "unknown"}
@@ -45,6 +47,7 @@ class Ping:
     """
 
     __slots__ = {
+        "_raw",
         "_event",
         "altitude",
         "gps_fix",
@@ -61,6 +64,7 @@ class Ping:
     }
 
     def __init__(self, ping_data: dict):
+        self._raw = ping_data
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
         self.gps_fix = GPS_FIX_LOOKUP.get(self._event.get("point", {}).get("gpsFix"))
@@ -74,7 +78,8 @@ class Ping:
         self.low_battery = self._event.get("status", {}).get("lowBattery", 0)
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(
-            self._event.get("timeStamp", 0), get_timezone([self.latitude, self.longitude])
+            self._event.get("timeStamp", 0),
+            get_timezone([self.latitude, self.longitude]),
         )
 
     @property
@@ -142,20 +147,22 @@ class Ping:
         }
 
     @property
-    def for_database(self) -> dict:
+    def database_record(self) -> dict:
         """
         A json representation of the ping object.
 
         :return dict: The dict of the ping object.
         """
         return {
-            "status": self._event.get("status", {}),
-            "timestamp": str(self.timestamp),
+            "status": Json(self._event.get("status", {})),
+            "imei": self.imei,
+            "timestamp": self.timestamp,
             "timestamp_raw": self._event.get("timeStamp", 0),
             "heading": self.heading,
-            "latlon": self.latlon,
+            "latlon": Json(self.latlon),
             "altitude": self.altitude,
             "gps_fix": self.gps_fix,
             "message_code": self.message_code,
             "speed": self.speed,
+            "raw": Json(self._raw),
         }

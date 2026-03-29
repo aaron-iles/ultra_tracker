@@ -1,29 +1,415 @@
 #!/usr/bin/env python3
 
 
-import datetime
-import json
-import os
+import logging
 
-from . import database
-from .models import tracker
-from .ut_socket import socketio
+import psycopg2
 
-# TODO move these to the database.py file ??
+from .models.course import AidStation, Leg
+from .models.race import Race, Runner
+from .models.tracker import Ping
+
+logger = logging.getLogger(__name__)
+
+runner_table_create_sql = """
+    CREATE TABLE IF NOT EXISTS runner (
+        name TEXT,
+        mile_mark DOUBLE PRECISION,
+        altitude DOUBLE PRECISION,
+        average_overall_pace DOUBLE PRECISION,
+        average_moving_pace DOUBLE PRECISION,
+        elapsed_time DOUBLE PRECISION,
+        stoppage_time DOUBLE PRECISION,
+        moving_time DOUBLE PRECISION,
+        last_update TIMESTAMPTZ PRIMARY KEY,
+        est_finish_date TIMESTAMPTZ,
+        est_finish_time DOUBLE PRECISION,
+        course_deviation DOUBLE PRECISION
+    );
+    """
 
 
-def get_all_pings() -> list:
-    """ """
-    pings = database.session.query(database.Ping).order_by(database.Ping.timestamp.asc()).all()
-    result = [ping.raw_data for ping in pings]
-    database.session.close()
-    return result
+race_table_create_sql = """
+    CREATE TABLE IF NOT EXISTS race (
+        name TEXT PRIMARY KEY,
+        start_time TIMESTAMPTZ,
+        timezone TEXT,
+        started BOOLEAN,
+        map_url TEXT,
+        distance DOUBLE PRECISION,
+        distances JSONB,
+        elevations JSONB
+    );
+    """
+
+race_upsert_sql = """
+    INSERT INTO race (
+        name,
+        start_time,
+        timezone,
+        started,
+        map_url,
+        distance,
+        distances,
+        elevations
+    ) VALUES (
+        %(name)s,
+        %(start_time)s,
+        %(timezone)s,
+        %(started)s,
+        %(map_url)s,
+        %(distance)s,
+        %(distances)s,
+        %(elevations)s
+    )
+    ON CONFLICT (name) DO UPDATE SET
+        start_time = EXCLUDED.start_time,
+        timezone = EXCLUDED.timezone,
+        started = EXCLUDED.started,
+        map_url = EXCLUDED.map_url,
+        distance = EXCLUDED.distance,
+        distances = EXCLUDED.distances,
+        elevations = EXCLUDED.elevations;
+    """
+
+runner_upsert_sql = """
+    INSERT INTO runner (
+        name,
+        mile_mark,
+        altitude,
+        average_overall_pace,
+        average_moving_pace,
+        elapsed_time,
+        stoppage_time,
+        moving_time,
+        last_update,
+        est_finish_date,
+        est_finish_time,
+        course_deviation
+    ) VALUES (
+        %(name)s,
+        %(mile_mark)s,
+        %(altitude)s,
+        %(average_overall_pace)s,
+        %(average_moving_pace)s,
+        %(elapsed_time)s,
+        %(stoppage_time)s,
+        %(moving_time)s,
+        %(last_update)s,
+        %(est_finish_date)s,
+        %(est_finish_time)s,
+        %(course_deviation)s
+    )
+    ON CONFLICT (last_update) DO UPDATE SET
+        mile_mark = EXCLUDED.mile_mark,
+        altitude = EXCLUDED.altitude,
+        average_overall_pace = EXCLUDED.average_overall_pace,
+        average_moving_pace = EXCLUDED.average_moving_pace,
+        elapsed_time = EXCLUDED.elapsed_time,
+        stoppage_time = EXCLUDED.stoppage_time,
+        moving_time = EXCLUDED.moving_time,
+        last_update = EXCLUDED.last_update,
+        est_finish_date = EXCLUDED.est_finish_date,
+        est_finish_time = EXCLUDED.est_finish_time,
+        course_deviation = EXCLUDED.course_deviation;
+"""
+
+pings_table_create_sql = """
+    CREATE TABLE IF NOT EXISTS pings (
+        created_at TIMESTAMP DEFAULT NOW(),
+        timestamp TIMESTAMPTZ,
+        timestamp_raw BIGINT PRIMARY KEY,
+        imei TEXT,
+        status JSONB,
+        heading DOUBLE PRECISION,
+        latlon JSONB,
+        altitude DOUBLE PRECISION,
+        gps_fix TEXT,
+        message_code TEXT,
+        speed DOUBLE PRECISION,
+        raw JSONB
+    );
+    """
+
+ping_upsert_sql = """
+    INSERT INTO pings (
+        timestamp,
+        timestamp_raw,
+        imei,
+        status,
+        heading,
+        latlon,
+        altitude,
+        gps_fix,
+        message_code,
+        speed,
+        raw
+    ) VALUES (
+        %(timestamp)s,
+        %(timestamp_raw)s,
+        %(imei)s,
+        %(status)s,
+        %(heading)s,
+        %(latlon)s,
+        %(altitude)s,
+        %(gps_fix)s,
+        %(message_code)s,
+        %(speed)s,
+        %(raw)s
+    )
+    ON CONFLICT (timestamp_raw) DO UPDATE SET
+        timestamp = EXCLUDED.timestamp,
+        imei = EXCLUDED.imei,
+        status = EXCLUDED.status,
+        heading = EXCLUDED.heading,
+        latlon = EXCLUDED.latlon,
+        altitude = EXCLUDED.altitude,
+        gps_fix = EXCLUDED.gps_fix,
+        message_code = EXCLUDED.message_code,
+        speed = EXCLUDED.speed,
+        raw = EXCLUDED.raw;
+    """
 
 
-def save_ping(ping) -> None:
-    """ """
-    db_ping = database.Ping(raw_data=ping.for_database, timestamp=ping.timestamp)
-    database.session.add(db_ping)
-    database.session.commit()
-    database.session.close()
-    return
+legs_table_create_sql = """
+    CREATE TABLE IF NOT EXISTS legs (
+        name TEXT PRIMARY KEY,
+        display_name TEXT,
+        mile_mark DOUBLE PRECISION,
+        end_mile_mark DOUBLE PRECISION,
+        distance DOUBLE PRECISION,
+        gain DOUBLE PRECISION,
+        loss DOUBLE PRECISION,
+        estimated_duration DOUBLE PRECISION,
+        arrival_time TIMESTAMPTZ,
+        departure_time TIMESTAMPTZ,
+        estimated_arrival_time TIMESTAMPTZ,
+        estimated_departure_time TIMESTAMPTZ,
+        is_passed BOOLEAN
+    );
+    """
+
+leg_upsert_sql = """
+    INSERT INTO legs (
+        name,
+        display_name,
+        mile_mark,
+        end_mile_mark,
+        distance,
+        gain,
+        loss,
+        estimated_duration,
+        arrival_time,
+        departure_time,
+        estimated_arrival_time,
+        estimated_departure_time,
+        is_passed
+    ) VALUES (
+        %(name)s,
+        %(display_name)s,
+        %(mile_mark)s,
+        %(end_mile_mark)s,
+        %(distance)s,
+        %(gain)s,
+        %(loss)s,
+        %(estimated_duration)s,
+        %(arrival_time)s,
+        %(departure_time)s,
+        %(estimated_arrival_time)s,
+        %(estimated_departure_time)s,
+        %(is_passed)s
+    )
+    ON CONFLICT (name) DO UPDATE SET
+        display_name = EXCLUDED.display_name,
+        mile_mark = EXCLUDED.mile_mark,
+        end_mile_mark = EXCLUDED.end_mile_mark,
+        distance = EXCLUDED.distance,
+        gain = EXCLUDED.gain,
+        loss = EXCLUDED.loss,
+        estimated_duration = EXCLUDED.estimated_duration,
+        arrival_time = EXCLUDED.arrival_time,
+        departure_time = EXCLUDED.departure_time,
+        estimated_arrival_time = EXCLUDED.estimated_arrival_time,
+        estimated_departure_time = EXCLUDED.estimated_departure_time,
+        is_passed = EXCLUDED.is_passed;
+    """
+
+aid_stations_table_create_sql = """
+    CREATE TABLE IF NOT EXISTS aidstations (
+        name TEXT PRIMARY KEY,
+        display_name TEXT,
+        mile_mark DOUBLE PRECISION,
+        end_mile_mark DOUBLE PRECISION,
+        altitude DOUBLE PRECISION,
+        gmaps_url TEXT,
+        comments TEXT,
+        coordinates JSONB,
+        estimated_duration DOUBLE PRECISION,
+        arrival_time TIMESTAMPTZ,
+        departure_time TIMESTAMPTZ,
+        estimated_arrival_time TIMESTAMPTZ,
+        estimated_departure_time TIMESTAMPTZ,
+        is_passed BOOLEAN,
+        stoppage_time DOUBLE PRECISION
+    );
+    """
+
+
+aid_station_upsert_sql = """
+    INSERT INTO aidstations (
+        name,
+        display_name,
+        mile_mark,
+        end_mile_mark,
+        altitude,
+        gmaps_url,
+        comments,
+        coordinates,
+        estimated_duration,
+        arrival_time,
+        departure_time,
+        estimated_arrival_time,
+        estimated_departure_time,
+        is_passed,
+        stoppage_time
+    ) VALUES (
+        %(name)s,
+        %(display_name)s,
+        %(mile_mark)s,
+        %(end_mile_mark)s,
+        %(altitude)s,
+        %(gmaps_url)s,
+        %(comments)s,
+        %(coordinates)s,
+        %(estimated_duration)s,
+        %(arrival_time)s,
+        %(departure_time)s,
+        %(estimated_arrival_time)s,
+        %(estimated_departure_time)s,
+        %(is_passed)s,
+        %(stoppage_time)s
+    )
+    ON CONFLICT (name) DO UPDATE SET
+        display_name = EXCLUDED.display_name,
+        mile_mark = EXCLUDED.mile_mark,
+        end_mile_mark = EXCLUDED.end_mile_mark,
+        altitude = EXCLUDED.altitude,
+        gmaps_url = EXCLUDED.gmaps_url,
+        comments = EXCLUDED.comments,
+        coordinates = EXCLUDED.coordinates,
+        estimated_duration = EXCLUDED.estimated_duration,
+        arrival_time = EXCLUDED.arrival_time,
+        departure_time = EXCLUDED.departure_time,
+        estimated_arrival_time = EXCLUDED.estimated_arrival_time,
+        estimated_departure_time = EXCLUDED.estimated_departure_time,
+        is_passed = EXCLUDED.is_passed,
+        stoppage_time = EXCLUDED.stoppage_time;
+    """
+
+
+class Database:
+    def __init__(self, host, port, dbname, user, password):
+        """
+        Initialize a Database connection.
+
+        :param str dsn: PostgreSQL DSN string
+        """
+        self.conn = psycopg2.connect(
+            host=host, port=port, dbname=dbname, user=user, password=password
+        )
+        self.cursor = self.conn.cursor()
+        self.cursor.execute(race_table_create_sql)
+        self.cursor.execute(runner_table_create_sql)
+        self.cursor.execute(pings_table_create_sql)
+        self.cursor.execute(aid_stations_table_create_sql)
+        self.cursor.execute(legs_table_create_sql)
+        self.conn.commit()
+
+    @property
+    def contains_data(self) -> bool:
+        """
+        Returns True if at least one runner exists in the database.
+        """
+        self.cursor.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM runner LIMIT 1
+            )
+        """)
+        return self.cursor.fetchone()[0]
+
+    def save(self, object_):
+        """ """
+        if isinstance(object_, AidStation):
+            upsert_sql = aid_station_upsert_sql
+        elif isinstance(object_, Leg):
+            upsert_sql = leg_upsert_sql
+        elif isinstance(object_, Runner):
+            upsert_sql = runner_upsert_sql
+        elif isinstance(object_, Ping):
+            upsert_sql = ping_upsert_sql
+        elif isinstance(object_, Race):
+            upsert_sql = race_upsert_sql
+        self.cursor.execute(upsert_sql, object_.database_record)
+        self.conn.commit()
+
+    def restore(self, object_):
+        if isinstance(object_, AidStation):
+            self._restore_aidstation(object_)
+        elif isinstance(object_, Runner):
+            self._restore_runner(object_)
+
+    def _restore_aidstation(self, object_):
+        """
+        Restore a single AidStation from the database using its name.
+        """
+        self.cursor.execute(
+            """
+            SELECT
+                arrival_time,
+                departure_time
+            FROM aidstations
+            WHERE name = %s
+        """,
+            (object_.name,),
+        )
+
+        row = self.cursor.fetchone()
+
+        if row is None:
+            # Nothing to restore (not in DB)
+            return
+
+        # Restore actual values
+        object_.arrival_time = row[0]
+        object_.departure_time = row[1]
+
+    def _restore_runner(self, runner):
+        """
+        Restore a single AidStation from the database using its name.
+        """
+        self.cursor.execute(
+            """
+            SELECT
+              mile_mark
+            FROM runner
+            WHERE name = %s
+            ORDER BY last_update DESC LIMIT 1
+        """,
+            (runner.name,),
+        )
+
+        row = self.cursor.fetchone()
+
+        # Restore actual values
+        runner.mile_mark = row[0]
+
+        self.cursor.execute("""
+            SELECT
+              raw
+            FROM pings ORDER BY timestamp DESC LIMIT 1
+        """)
+
+        row = self.cursor.fetchone()
+
+        ping = Ping(row[0])
+        runner.last_ping = ping

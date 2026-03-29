@@ -10,6 +10,7 @@ from functools import cache
 import numpy as np
 import requests
 from geopy.distance import geodesic
+from psycopg2.extras import Json
 from scipy.spatial import KDTree
 
 from ..utils import (
@@ -69,7 +70,10 @@ def interpolate_and_filter_points(
             # Generate interpolated points
             intermediate_array = np.array(
                 [
-                    [point1["latitude"] + j * lat_step, point1["longitude"] + j * lon_step]
+                    [
+                        point1["latitude"] + j * lat_step,
+                        point1["longitude"] + j * lon_step,
+                    ]
                     for j in range(1, num_intervals + 1)  # Include the last point
                 ]
             )
@@ -110,7 +114,11 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     for i, point in enumerate(interpolated_path_data):
         if prev_point is not None:
             geo = geodesic(
-                (prev_point[0], prev_point[1], prev_point[2] if len(prev_point) == 3 else 0),
+                (
+                    prev_point[0],
+                    prev_point[1],
+                    prev_point[2] if len(prev_point) == 3 else 0,
+                ),
                 (point[0], point[1], point[2] if len(point) == 3 else 0),
             )
             distance = geo.miles
@@ -188,7 +196,10 @@ def align_known_mile_marks(
         logger.debug(f"aligning from {current_kmm['name']} to {next_kmm['name']}")
         # Find the closest point by both mileage and lat/lon to current kmm.
         start_idx = find_closest_index(
-            current_kmm["mile_mark"], current_kmm["coordinates"], modified_distances, points
+            current_kmm["mile_mark"],
+            current_kmm["coordinates"],
+            modified_distances,
+            points,
         )
         # Find the closest point by both mileage and lat/lon to next kmm.
         end_idx = find_closest_index(
@@ -733,6 +744,35 @@ class AidStation(CourseElement):
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
 
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the aid station object.
+
+        :return dict: The dict of the aid station object.
+        """
+        return {
+            "altitude": float(self.altitude),
+            "arrival_time": self.arrival_time,
+            "comments": self.comments,
+            "coordinates": Json(
+                self.coordinates
+                if isinstance(self.coordinates, list)
+                else self.coordinates.tolist()
+            ),
+            "departure_time": self.departure_time,
+            "display_name": self.display_name,
+            "end_mile_mark": float(self.end_mile_mark),
+            "estimated_arrival_time": self.estimated_arrival_time,
+            "estimated_departure_time": self.estimated_departure_time,
+            "estimated_duration": self.estimated_duration.total_seconds(),
+            "gmaps_url": self.gmaps_url,
+            "is_passed": bool(self.is_passed),
+            "mile_mark": float(self.mile_mark),
+            "name": self.name,
+            "stoppage_time": self.stoppage_time.total_seconds(),
+        }
+
 
 class Leg(CourseElement):
     """
@@ -829,6 +869,29 @@ class Leg(CourseElement):
         :return datetime.timedelta: The estimated amount of time it will take to transit the leg.
         """
         return datetime.timedelta(minutes=self.distance * runner.average_moving_pace)
+
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the leg object.
+
+        :return dict: The dict of the leg object.
+        """
+        return {
+            "arrival_time": self.arrival_time,
+            "departure_time": self.departure_time,
+            "display_name": self.display_name,
+            "distance": float(self.distance),
+            "end_mile_mark": float(self.end_mile_mark),
+            "estimated_arrival_time": self.estimated_arrival_time,
+            "estimated_departure_time": self.estimated_departure_time,
+            "estimated_duration": self.estimated_duration.total_seconds(),
+            "gain": float(self.gain),
+            "is_passed": bool(self.is_passed),
+            "loss": float(self.loss),
+            "mile_mark": float(self.mile_mark),
+            "name": self.name,
+        }
 
     def __len__(self) -> float:
         return self.distance

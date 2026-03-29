@@ -197,10 +197,9 @@ def get_config_data(file_path: str) -> dict:
     :return dict: The parsed dict from the config file.
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             yaml_content = yaml.safe_load(file)
         mandatory_keys = {
-            "admin_password_hash",
             "aid_stations",
             "caltopo_credential_id",
             "caltopo_key",
@@ -213,7 +212,7 @@ def get_config_data(file_path: str) -> dict:
             "start_time",
         }
         for key in mandatory_keys:
-            assert key in yaml_content.keys(), f"Missing {key} in config file!"
+            assert key in yaml_content, f"Missing {key} in config file!"
         return yaml_content
     except FileNotFoundError:
         logger.info(f"Error: File '{file_path}' not found.")
