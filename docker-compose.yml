@@ -21,7 +21,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./race_config.yml:/app/race_config.yml:ro
+      - ./race_config.yml:/app/race_config.yml:ro,z
 
   postgres:
     image: docker.io/library/postgres:18
