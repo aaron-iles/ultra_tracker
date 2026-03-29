@@ -67,16 +67,12 @@ def runner_01(caltopo_map_01, race_01_path, requests_mock):
 @pytest.fixture
 def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config, database):
 
-    if os.path.exists("/tmp/data_store.json"):
-        os.remove("/tmp/data_store.json")
-
     return race.Race(
         race_01_config["race_name"],
         caltopo_map_01,
         course_01.timezone.localize(
             datetime.datetime.strptime(race_01_config["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        "/tmp/data_store.json",
         course_01,
         runner_01,
         database,

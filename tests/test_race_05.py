@@ -73,16 +73,12 @@ def race_05(race_05_path, caltopo_map_05, course_05, runner_05, database):
     with open(race_config_file, "r") as file:
         config_data = yaml.safe_load(file)
 
-    if os.path.exists("/tmp/data_store.json"):
-        os.remove("/tmp/data_store.json")
-
     return race.Race(
         config_data["race_name"],
         caltopo_map_05,
         course_05.timezone.localize(
             datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        "/tmp/data_store.json",
         course_05,
         runner_05,
         database,
