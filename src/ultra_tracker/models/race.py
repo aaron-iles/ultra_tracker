@@ -206,7 +206,7 @@ class Race:
 
     def restore(self) -> None:
         """
-        Restores the race state from a file.
+        Restores the race state from the database.
 
         :return None:
         """
@@ -215,14 +215,6 @@ class Race:
                 self.database.restore(ce)
             self.runner.race = self
             self.database.restore(self.runner)
-        # if os.path.exists(self.data_store):
-        #    with open(self.data_store) as f:
-        #        data = json.load(f)
-        #        self.runner.race = self
-        #        self.runner.mile_mark = data.get("mile_mark", 0)
-        #        ping = Ping(data.get("last_ping", {}))
-        #        self.runner.last_ping = ping
-        #        logger.info(f"restore success: {self.runner.last_ping}")
         else:
             self.runner.mile_mark = 0
             self.runner.elevation = self.course.route.elevations[0]
