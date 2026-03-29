@@ -410,6 +410,6 @@ class Database:
         """)
 
         row = self.cursor.fetchone()
-
-        ping = Ping(row[0])
-        runner.last_ping = ping
+        if row:
+            ping = Ping(row[0])
+            runner.last_ping = ping
