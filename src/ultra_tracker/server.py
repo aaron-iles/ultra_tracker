@@ -11,7 +11,7 @@ from . import application, database_utils, ut_socket
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
-from .utils import format_duration, get_config_data
+from .utils import get_config_data
 
 # DB connection
 PGHOST = os.getenv("POSTGRES_HOST", "localhost")
@@ -37,14 +37,6 @@ def parse_args() -> argparse.Namespace:
         type=str,
         dest="config",
         help="The config file for the event.",
-    )
-    p.add_argument(
-        "-d",
-        required=False,
-        default="/app/data",
-        type=str,
-        dest="data_dir",
-        help="The directory in which to store data.",
     )
     p.add_argument(
         "--disable-marker-updates",
@@ -130,7 +122,6 @@ def start_application():
         course.timezone.localize(
             datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        f"{args.data_dir}/data_store.json",
         course,
         runner,
         database,
@@ -139,7 +130,6 @@ def start_application():
     logger.info("created race object...")
     app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
     app.config["UT_RACE"] = race
-    app.config["UT_DATA_DIR"] = args.data_dir
     app.secret_key = random.randbytes(64).hex()
     logger.info("application started, waiting for pings")
     ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=args.verbose)

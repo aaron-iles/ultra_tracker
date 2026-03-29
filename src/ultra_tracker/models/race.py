@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
-import json
 import logging
-import os
 
 import numpy as np
 from psycopg2.extras import Json
@@ -11,7 +9,6 @@ from scipy.stats import norm
 
 from ..utils import (
     convert_decimal_pace_to_pretty_format,
-    format_distance,
     format_duration,
     haversine_distance,
     kph_to_min_per_mi,
@@ -151,7 +148,6 @@ class Race:
     :param str name: The name of the race. This is to be used in the web application.
     :param CaltopoMap caltopo_map: The Caltopo map object that is associated with the course.
     :param datetime.datetime start_time: The start time of the race.
-    :param str data_store: The filepath in which to store data.
     :param Course course: A course object representing the race.
     :param Runner runner: The runner in the race.
     """
@@ -161,7 +157,6 @@ class Race:
         name,
         caltopo_map,
         start_time,
-        data_store,
         course,
         runner,
         database,
@@ -170,7 +165,6 @@ class Race:
         self.runner = runner
         self.name = name
         self.database = database
-        self.data_store = data_store
         self.start_time = start_time
         self.started = False
         self.last_ping_raw = {}
@@ -184,21 +178,6 @@ class Race:
 
         :return None:
         """
-        stats = {
-            "mile_mark": self.runner.mile_mark,
-            "last_ping": self.last_ping_raw,
-            "aid_stations": [
-                {
-                    "name": ce.name,
-                    "arrival_time": ce.arrival_time.isoformat(),
-                    "departure_time": ce.departure_time.isoformat(),
-                }
-                for ce in self.course.aid_stations
-            ],
-        }
-
-        with open(self.data_store, "w") as f:
-            f.write(json.dumps(stats, indent=4))
         for ce in self.course.course_elements:
             self.database.save(ce)
         self.database.save(self.runner)

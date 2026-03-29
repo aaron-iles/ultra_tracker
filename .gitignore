@@ -1,12 +1,9 @@
 __pycache__
-data/
 *.egg-info
 .coverage
 *venv*
-.data_store.json
-.post_log.txt
 .tox
 .env
 build/
 dist/
-pgdata
+./race_config.yml

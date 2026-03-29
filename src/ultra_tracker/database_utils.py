@@ -116,6 +116,7 @@ runner_upsert_sql = """
 
 pings_table_create_sql = """
     CREATE TABLE IF NOT EXISTS pings (
+        created_at TIMESTAMP DEFAULT NOW(),
         timestamp TIMESTAMPTZ,
         timestamp_raw BIGINT PRIMARY KEY,
         imei TEXT,
@@ -382,7 +383,7 @@ class Database:
         object_.arrival_time = row[0]
         object_.departure_time = row[1]
 
-    def _restore_runner(self, object_):
+    def _restore_runner(self, runner):
         """
         Restore a single AidStation from the database using its name.
         """
@@ -394,13 +395,13 @@ class Database:
             WHERE name = %s
             ORDER BY last_update DESC LIMIT 1
         """,
-            (object_.name,),
+            (runner.name,),
         )
 
         row = self.cursor.fetchone()
 
         # Restore actual values
-        object_.mile_mark = row[0]
+        runner.mile_mark = row[0]
 
         self.cursor.execute("""
             SELECT
@@ -411,4 +412,4 @@ class Database:
         row = self.cursor.fetchone()
 
         ping = Ping(row[0])
-        object_.last_ping = ping
+        runner.last_ping = ping

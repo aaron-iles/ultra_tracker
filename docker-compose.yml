@@ -21,10 +21,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./data:/app/data
+      - ./race_config.yml:/app/race_config.yml:ro
 
   postgres:
-    image: postgres:18
+    image: docker.io/library/postgres:18
     container_name: ultra-tracker-postgres
     restart: unless-stopped
     environment:
@@ -35,7 +35,7 @@ services:
       POSTGRES_RO_PASSWORD: ${POSTGRES_RO_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql
-      - ./postgres_init:/docker-entrypoint-initdb.d
+      - ./postgres_init:/docker-entrypoint-initdb.d:ro,z
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -43,12 +43,12 @@ services:
       retries: 10
 
   grafana:
-    image: grafana/grafana:latest
+    image: docker.io/grafana/grafana:latest
     container_name: ultra-tracker-grafana
     ports:
       - 3000:3000
     volumes:
-      - ./grafana_init:/etc/grafana/provisioning/
+      - ./grafana_init:/etc/grafana/provisioning/:ro,z
       - grafana-data:/var/lib/grafana
     user: '1000'
     environment:
