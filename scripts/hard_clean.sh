@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 if systemctl --user list-unit-files --type=service | grep -q "^ultra-tracker.service"; then
     systemctl --user stop ultra-tracker
 else
