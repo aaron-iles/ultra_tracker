@@ -472,10 +472,6 @@ class Runner:
             # Ensure that the estimate marker doesn't get moved.
             new_coords = self.race.course.route.get_point_at_mile_mark(last_mile_mark)
 
-        if not self.in_progress:
-            logger.info(f"race not in progress; started: {self.started} finished: {self.finished}")
-            return
-
         if self.marker_updating:
             # Now update the marker attributes.
             self.marker.coordinates = ping.lonlat
