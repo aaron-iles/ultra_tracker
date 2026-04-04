@@ -476,13 +476,13 @@ class Runner:
             # Ensure that the estimate marker doesn't get moved.
             new_coords = self.race.course.route.get_point_at_mile_mark(last_mile_mark)
 
+        # Now update the marker attributes.
+        self.marker.coordinates = ping.lonlat
+        self.marker.rotation = round(ping.heading)
+        # Update the estimate marker coordinates.
+        self.estimate_marker.coordinates = new_coords[::-1]
+        self.estimate_marker.rotation = round(ping.heading)
         if self.marker_updating:
-            # Now update the marker attributes.
-            self.marker.coordinates = ping.lonlat
-            self.marker.rotation = round(ping.heading)
-            # Update the estimate marker coordinates.
-            self.estimate_marker.coordinates = new_coords[::-1]
-            self.estimate_marker.rotation = round(ping.heading)
             CaltopoMarker.update(self.estimate_marker)
             CaltopoMarker.update(self.marker)
         logger.info(self)

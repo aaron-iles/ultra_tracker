@@ -366,7 +366,9 @@ class Database:
             """
             SELECT
                 arrival_time,
-                departure_time
+                estimated_arrival_time,
+                departure_time,
+                estimated_departure_time
             FROM aidstations
             WHERE name = %s
         """,
@@ -381,7 +383,9 @@ class Database:
 
         # Restore actual values
         object_.arrival_time = row[0]
-        object_.departure_time = row[1]
+        object_.estimated_arrival_time = row[1]
+        object_.departure_time = row[2]
+        object_.estimated_departure_time = row[3]
 
     def _restore_runner(self, runner):
         """
