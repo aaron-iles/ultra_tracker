@@ -46,6 +46,7 @@ def sanity_check_mile_mark(
         return True
     # Case 2: The runner moved backward significantly regardless of the time elapsed.
     if miles_between_pings <= -0.1:
+        logger.warning(f"runner moved backward {miles_between_pings} mi; unreasonable")
         return False
 
     # If we have arrived at this point, the runner has made noticeable forward progress.
@@ -53,7 +54,10 @@ def sanity_check_mile_mark(
     traversal_pace = (time_between_pings / 60) / miles_between_pings
     logger.debug(f"sanity check traversal pace: {traversal_pace}")
     # Case 3: The runner moved forward at a rate much too fast to be reasonable.
-    return not traversal_pace < 4
+    if traversal_pace < 4:
+        logger.warning(f"runner traversal pace {traversal_pace} too fast; unreasonable")
+        return False
+    return True
 
 
 def calculate_mile_mark(
