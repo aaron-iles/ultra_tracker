@@ -63,7 +63,7 @@ class Ping:
         "interval_change",
     }
 
-    def __init__(self, ping_data: dict):
+    def __init__(self, ping_data: dict, race_timezone):
         self._raw = ping_data
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
@@ -79,7 +79,7 @@ class Ping:
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(
             self._event.get("timeStamp", 0),
-            get_timezone([self.latitude, self.longitude]),
+            race_timezone or get_timezone([self.latitude, self.longitude]),
         )
 
     @property

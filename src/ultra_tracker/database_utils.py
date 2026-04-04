@@ -411,5 +411,5 @@ class Database:
 
         row = self.cursor.fetchone()
         if row:
-            ping = Ping(row[0])
+            ping = Ping(row[0], runner.race.course.timezone)
             runner.last_ping = ping

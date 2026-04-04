@@ -104,7 +104,7 @@ def calculate_mile_mark(
     # Case 2: When there are course points close to the ping and they are not consecutive, then
     # the runner must be either on an out and back, loop, or intersection. This is trickier.
     if len(indices_within_radius) > 0 and not are_consecutive:
-        mile_marks = [route.distances[i] for i in indices_within_radius]
+        mile_marks = route.distances[indices_within_radius]
         mile_mark = calculate_most_probable_mile_mark(
             mile_marks, elapsed_time_min, average_overall_pace
         )
@@ -212,7 +212,7 @@ class Race:
         :return None:
         """
         self.last_ping_raw = ping_data
-        ping = Ping(ping_data)
+        ping = Ping(ping_data, self.course.timezone)
         self.database.save(ping)
         logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
@@ -273,7 +273,7 @@ class Runner:
     ):
         self.current_pace = 10
         self.elevation = 0
-        self.last_ping = Ping({})
+        self.last_ping = Ping({}, None)
         self.name = marker_name
         self.low_battery = False
         self.marker, self.estimate_marker = self.extract_marker(
