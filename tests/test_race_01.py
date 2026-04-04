@@ -61,7 +61,7 @@ def runner_01(caltopo_map_01, race_01_path, requests_mock):
             f"https://caltopo.com/api/v1/map/01/Marker/{marker_id}",
             json={"result": {}, "status": "ok"},
         )
-    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, True)
+    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, False)
 
 
 @pytest.fixture

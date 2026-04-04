@@ -3,6 +3,8 @@
 
 import datetime
 
+
+from psycopg2.extras import Json
 import pytest
 import pytz
 
@@ -113,16 +115,24 @@ def test_extract_timestamp():
     ) == datetime.datetime.fromtimestamp(1721571300, pytz.timezone("America/New_York"))
 
 
-def test_ping_as_json(basic_ping):
-    assert basic_ping.as_json == {
-        "altitude": 9472.626640382057,
-        "gps_fix": "3D Fix",
-        "heading": 225.0,
-        "latlon": [38.04270386695862, -107.66809701919556],
-        "lonlat": [-107.66809701919556, 38.04270386695862],
-        "message_code": "Position Report",
-        "speed": 3.003,
-        "status": {"autonomous": 0, "intervalChange": 0, "lowBattery": 0, "resetDetected": 0},
+def test_ping_database_record(basic_ping, raw_ping_data):
+    assert basic_ping.database_record == {
+        "status": Json(
+            {
+                "autonomous": 0,
+                "lowBattery": 0,
+                "intervalChange": 0,
+                "resetDetected": 0,
+            }
+        ),
+        "imei": "123456789012345",
         "timestamp": datetime.datetime.fromtimestamp(1721571300, pytz.timezone("America/Denver")),
         "timestamp_raw": 1721571300000,
+        "heading": 225.0,
+        "latlon": Json([38.04270386695862, -107.66809701919556]),
+        "altitude": 9472.626640382057,
+        "gps_fix": "3D Fix",
+        "message_code": "Position Report",
+        "speed": 3.003,
+        "raw": Json(raw_ping_data),
     }
