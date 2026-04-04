@@ -960,68 +960,67 @@ class Route(CaltopoShape):
         """
         return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
-
-    def get_indices_within_radius(self, center_lat, center_lon, radius):
-        # Convert feet → degrees
-        radius_deg = radius / 364000
-
-        # KDTree radius query (FAST)
-        indices = self.kdtree.query_ball_point([center_lat, center_lon], r=radius_deg)
-
-        if len(indices) == 0:
-            return np.array([]), False
-
-        indices = np.array(indices)
-
-        # Compute precise distances ONLY for candidates
-        candidate_points = self.points[indices]
-        distances = np.array([
-            haversine_distance([center_lat, center_lon], pt)
-            for pt in candidate_points
-        ])
-
-        # Filter exact radius
-        mask = distances <= radius
-        indices = indices[mask]
-        distances = distances[mask]
-
-        if len(indices) == 0:
-            return np.array([]), False
-
-        # Sort by distance
-        order = np.argsort(distances)
-        sorted_indices = indices[order]
-
-        # Fast consecutiveness check
-        are_consecutive = np.all(np.diff(sorted_indices) == 1)
-
-        return sorted_indices, are_consecutive
-
-
-
-#    @cache
-#    def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
-#        """
-#        Given a center point and radius in feet, finds the indices of the route points inside said
-#        radius.
+# NOTE: new one
+#    def get_indices_within_radius(self, center_lat, center_lon, radius):
+#        # Convert feet → degrees
+#        radius_deg = radius / 364000
 #
-#        :param float center_lat: The latitude of the center point.
-#        :param float center_lon: The longitude of the center point.
-#        :param int radius: The radius in feet to search from the center point for points in the
-#        route.
-#        :return tuple: An array of indices of the route ordered from closest to furthest as well as
-#        a bool indicating whether or not the indices are consecutive.
-#        """
-#        # Calculate distances from the center point for all points.
-#        distances = np.array(
-#            [haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points]
-#        )
-#        # Get indices of points within the radius.
-#        indices_within_radius = np.where(distances <= radius)[0]
-#        # Now get all of the segments of the route. This is used to detect loops, out-n-backs, and
-#        # intersections.
-#        route_segments = detect_consecutive_sequences(indices_within_radius)
-#        # Sort local indices by distance from center point.
-#        sorted_local_indices = np.argsort(distances[indices_within_radius])
-#        sorted_indices = indices_within_radius[sorted_local_indices]
-#        return sorted_indices, len(route_segments) == 1
+#        # KDTree radius query (FAST)
+#        indices = self.kdtree.query_ball_point([center_lat, center_lon], r=radius_deg)
+#
+#        if len(indices) == 0:
+#            return np.array([]), False
+#
+#        indices = np.array(indices)
+#
+#        # Compute precise distances ONLY for candidates
+#        candidate_points = self.points[indices]
+#        distances = np.array([
+#            haversine_distance([center_lat, center_lon], pt)
+#            for pt in candidate_points
+#        ])
+#
+#        # Filter exact radius
+#        mask = distances <= radius
+#        indices = indices[mask]
+#        distances = distances[mask]
+#
+#        if len(indices) == 0:
+#            return np.array([]), False
+#
+#        # Sort by distance
+#        order = np.argsort(distances)
+#        sorted_indices = indices[order]
+#
+#        # Fast consecutiveness check
+#        are_consecutive = np.all(np.diff(sorted_indices) == 1)
+#
+#        return sorted_indices, are_consecutive
+
+
+
+    def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
+        """
+        Given a center point and radius in feet, finds the indices of the route points inside said
+        radius.
+
+        :param float center_lat: The latitude of the center point.
+        :param float center_lon: The longitude of the center point.
+        :param int radius: The radius in feet to search from the center point for points in the
+        route.
+        :return tuple: An array of indices of the route ordered from closest to furthest as well as
+        a bool indicating whether or not the indices are consecutive.
+        """
+        # Calculate distances from the center point for all points.
+        distances = np.array(
+            [haversine_distance([center_lat, center_lon], [lat, lon]) for lat, lon in self.points]
+        )
+        # Get indices of points within the radius.
+        indices_within_radius = np.where(distances <= radius)[0]
+        # Now get all of the segments of the route. This is used to detect loops, out-n-backs, and
+        # intersections.
+        route_segments = detect_consecutive_sequences(indices_within_radius)
+        # Sort local indices by distance from center point.
+        sorted_local_indices = np.argsort(distances[indices_within_radius])
+        sorted_indices = indices_within_radius[sorted_local_indices]
+        return sorted_indices, len(route_segments) == 1
