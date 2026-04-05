@@ -10,7 +10,7 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
-from ultra_tracker import application, database, ut_socket
+from ultra_tracker import application, ut_socket
 from ultra_tracker.models import caltopo, course, race
 
 
@@ -61,14 +61,11 @@ def runner_01(caltopo_map_01, race_01_path, requests_mock):
             f"https://caltopo.com/api/v1/map/01/Marker/{marker_id}",
             json={"result": {}, "status": "ok"},
         )
-    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, True)
+    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, False)
 
 
 @pytest.fixture
-def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config):
-
-    if os.path.exists("/tmp/data_store.json"):
-        os.remove("/tmp/data_store.json")
+def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config, database):
 
     return race.Race(
         race_01_config["race_name"],
@@ -76,9 +73,9 @@ def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config):
         course_01.timezone.localize(
             datetime.datetime.strptime(race_01_config["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        "/tmp/data_store.json",
         course_01,
         runner_01,
+        database,
     )
 
 
@@ -102,13 +99,10 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks):
     mile_mark_progression = []
     race_01.runner.race = race_01
 
-    database.connect("sqlite:////tmp/ut_datastore.db")
     socketio = ut_socket.socketio
     app = application.create_app()
 
     for ping_data in race_01_post_log:
         race_01.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_01.runner.mile_mark, 2)))
-    # with open('/tmp/mi', 'w') as f:
-    #    f.write(json.dumps(mile_mark_progression))
     assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)

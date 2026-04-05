@@ -3,6 +3,46 @@
 import pytest
 
 from ultra_tracker.models import caltopo
+from ultra_tracker.database_utils import Database
+from testcontainers.postgres import PostgresContainer
+import psycopg2
+
+
+@pytest.fixture(scope="session")
+def postgres():
+    with PostgresContainer(
+        "postgres:15",
+        username="test",
+        password="test",
+        dbname="testdb"
+    ) as pg:
+        yield pg
+
+
+
+@pytest.fixture()
+def database(postgres):
+    db = Database(
+        host=postgres.get_container_host_ip(),
+        port=postgres.get_exposed_port(5432),
+        dbname=postgres.dbname,
+        user=postgres.username,
+        password=postgres.password,
+    )
+
+    # clean schema per test
+    db.cursor.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    db.conn.commit()
+    db = Database(
+        host=postgres.get_container_host_ip(),
+        port=postgres.get_exposed_port(5432),
+        dbname=postgres.dbname,
+        user=postgres.username,
+        password=postgres.password,
+    )
+
+    return db
+
 
 
 def assert_lists_equal_with_percentage(list1, list2):

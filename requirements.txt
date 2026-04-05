@@ -1,4 +1,3 @@
-eventlet
 flask
 flask-socketio
 build
@@ -8,8 +7,8 @@ jinja2
 lxml
 numpy
 pytz
-sqlalchemy
 pyyaml
 requests
 scipy
 timezonefinder
+psycopg2-binary
