@@ -355,8 +355,14 @@ class Database:
     def restore(self, object_):
         if isinstance(object_, AidStation):
             self._restore_aidstation(object_)
+        elif isinstance(object_, Leg):
+            self._restore_leg(object_)
         elif isinstance(object_, Runner):
             self._restore_runner(object_)
+
+
+    # TODO the arrival time and departure time are not being set for the aid station that the runner is approaching and about to pass. once he passes it (after restart) these things dont get set
+
 
     def _restore_aidstation(self, object_):
         """
@@ -366,7 +372,10 @@ class Database:
             """
             SELECT
                 arrival_time,
-                departure_time
+                estimated_arrival_time,
+                departure_time,
+                estimated_departure_time,
+                is_passed
             FROM aidstations
             WHERE name = %s
         """,
@@ -381,7 +390,10 @@ class Database:
 
         # Restore actual values
         object_.arrival_time = row[0]
-        object_.departure_time = row[1]
+        object_.estimated_arrival_time = row[1]
+        object_.departure_time = row[2]
+        object_.estimated_departure_time = row[3]
+        object_.is_passed = row[4]
 
     def _restore_runner(self, runner):
         """
@@ -406,10 +418,10 @@ class Database:
         self.cursor.execute("""
             SELECT
               raw
-            FROM pings ORDER BY timestamp DESC LIMIT 1
+            FROM pings WHERE message_code = 'Position Report' ORDER BY timestamp DESC LIMIT 1
         """)
 
         row = self.cursor.fetchone()
         if row:
-            ping = Ping(row[0])
+            ping = Ping(row[0], runner.race.course.timezone)
             runner.last_ping = ping

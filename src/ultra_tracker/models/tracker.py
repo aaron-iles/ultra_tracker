@@ -63,7 +63,7 @@ class Ping:
         "interval_change",
     }
 
-    def __init__(self, ping_data: dict):
+    def __init__(self, ping_data: dict, race_timezone):
         self._raw = ping_data
         self._event = ping_data.get("Events", [{}])[0]
         self.altitude = meters_to_feet(self._event.get("point", {}).get("altitude", 0.0))
@@ -79,7 +79,7 @@ class Ping:
         self.interval_change = self._event.get("status", {}).get("intervalChange", 0)
         self.timestamp = self.extract_timestamp(
             self._event.get("timeStamp", 0),
-            get_timezone([self.latitude, self.longitude]),
+            race_timezone or get_timezone([self.latitude, self.longitude]),
         )
 
     @property
@@ -125,26 +125,6 @@ class Ping:
 
     def __str__(self):
         return f"PING {self.timestamp} | {self.heading}° | {self.latlon}"
-
-    @property
-    def as_json(self) -> dict:
-        """
-        A json representation of the ping object.
-
-        :return dict: The dict of the ping object.
-        """
-        return {
-            "status": self._event.get("status", {}),
-            "timestamp": self.timestamp,
-            "timestamp_raw": self._event.get("timeStamp", 0),
-            "heading": self.heading,
-            "latlon": self.latlon,
-            "lonlat": self.lonlat,
-            "altitude": self.altitude,
-            "gps_fix": self.gps_fix,
-            "message_code": self.message_code,
-            "speed": self.speed,
-        }
 
     @property
     def database_record(self) -> dict:

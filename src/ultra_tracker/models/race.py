@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import pytz
 
 import numpy as np
 from psycopg2.extras import Json
@@ -46,6 +47,7 @@ def sanity_check_mile_mark(
         return True
     # Case 2: The runner moved backward significantly regardless of the time elapsed.
     if miles_between_pings <= -0.1:
+        logger.warning(f"runner moved backward {miles_between_pings} mi; unreasonable")
         return False
 
     # If we have arrived at this point, the runner has made noticeable forward progress.
@@ -53,7 +55,10 @@ def sanity_check_mile_mark(
     traversal_pace = (time_between_pings / 60) / miles_between_pings
     logger.debug(f"sanity check traversal pace: {traversal_pace}")
     # Case 3: The runner moved forward at a rate much too fast to be reasonable.
-    return not traversal_pace < 4
+    if traversal_pace < 4:
+        logger.warning(f"runner traversal pace {traversal_pace} too fast; unreasonable")
+        return False
+    return True
 
 
 def calculate_mile_mark(
@@ -100,7 +105,7 @@ def calculate_mile_mark(
     # Case 2: When there are course points close to the ping and they are not consecutive, then
     # the runner must be either on an out and back, loop, or intersection. This is trickier.
     if len(indices_within_radius) > 0 and not are_consecutive:
-        mile_marks = [route.distances[i] for i in indices_within_radius]
+        mile_marks = route.distances[indices_within_radius]
         mile_mark = calculate_most_probable_mile_mark(
             mile_marks, elapsed_time_min, average_overall_pace
         )
@@ -190,10 +195,11 @@ class Race:
         :return None:
         """
         if self.database.contains_data:
-            for ce in self.course.aid_stations:
-                self.database.restore(ce)
             self.runner.race = self
             self.database.restore(self.runner)
+            for ce in self.course.aid_stations:
+                self.database.restore(ce)
+            self.course.update_course_elements(self.runner)
         else:
             self.runner.mile_mark = 0
             self.runner.elevation = self.course.route.elevations[0]
@@ -208,7 +214,7 @@ class Race:
         :return None:
         """
         self.last_ping_raw = ping_data
-        ping = Ping(ping_data)
+        ping = Ping(ping_data, self.course.timezone)
         self.database.save(ping)
         logger.debug(ping)
         if ping.gps_fix == 0 or ping.latlon == [0.0, 0.0]:
@@ -269,7 +275,7 @@ class Runner:
     ):
         self.current_pace = 10
         self.elevation = 0
-        self.last_ping = Ping({})
+        self.last_ping = Ping({}, None)
         self.name = marker_name
         self.low_battery = False
         self.marker, self.estimate_marker = self.extract_marker(
@@ -410,7 +416,7 @@ class Runner:
         :return datetime.datetime: The date/time of the estimated finish.
         """
         if not self.started:
-            return datetime.datetime.fromtimestamp(0)
+            return datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
         return self.race.start_time + self.estimated_finish_time
 
     @property
@@ -472,13 +478,13 @@ class Runner:
             # Ensure that the estimate marker doesn't get moved.
             new_coords = self.race.course.route.get_point_at_mile_mark(last_mile_mark)
 
+        # Now update the marker attributes.
+        self.marker.coordinates = ping.lonlat
+        self.marker.rotation = round(ping.heading)
+        # Update the estimate marker coordinates.
+        self.estimate_marker.coordinates = new_coords[::-1]
+        self.estimate_marker.rotation = round(ping.heading)
         if self.marker_updating:
-            # Now update the marker attributes.
-            self.marker.coordinates = ping.lonlat
-            self.marker.rotation = round(ping.heading)
-            # Update the estimate marker coordinates.
-            self.estimate_marker.coordinates = new_coords[::-1]
-            self.estimate_marker.rotation = round(ping.heading)
             CaltopoMarker.update(self.estimate_marker)
             CaltopoMarker.update(self.marker)
         logger.info(self)

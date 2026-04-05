@@ -3,9 +3,9 @@
 
 import copy
 import datetime
+import pytz
 import json
 import logging
-from functools import cache
 
 import numpy as np
 import requests
@@ -499,8 +499,8 @@ class CourseElement:
 
         :return datetime.timedelta: The timedelta spent in transit.
         """
-        if (self.departure_time != datetime.datetime.fromtimestamp(0)) and (
-            self.arrival_time != datetime.datetime.fromtimestamp(0)
+        if (self.departure_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))) and (
+            self.arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
         ):
             return self.departure_time - self.arrival_time
         return datetime.timedelta(0)
@@ -575,10 +575,10 @@ class AidStation(CourseElement):
         self.estimated_duration = datetime.timedelta(0)
         self.previous_leg = prev_leg
         self.next_leg = next_leg
-        self._arrival_time = datetime.datetime.fromtimestamp(0)
-        self._departure_time = datetime.datetime.fromtimestamp(0)
-        self._estimated_arrival_time = datetime.datetime.fromtimestamp(0)
-        self._estimated_departure_time = datetime.datetime.fromtimestamp(0)
+        self._arrival_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+        self._departure_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+        self._estimated_arrival_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+        self._estimated_departure_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
 
     @property
     def arrival_time(self) -> datetime.datetime:
@@ -702,14 +702,14 @@ class AidStation(CourseElement):
         :return None:
         """
         # The arrival time was already detected and set by an earlier ping. Stop here.
-        if self.arrival_time != datetime.datetime.fromtimestamp(0):
+        if self.arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC')):
             return
         # If the arrival time was never set and the runner is transiting or if the runner passed
         # the course element without ever pinging inside it, set the arrival time as the ETA.
         if self.is_transiting(runner) or (
             self.runner_has_arrived(runner) and self.runner_has_departed(runner)
         ):
-            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(0):
+            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC')):
                 self.arrival_time = self.estimated_arrival_time
             # This is an edge case. If an aid is so close to the start that it never gets an ETA, we
             # have to set something other than time 0.
@@ -728,7 +728,7 @@ class AidStation(CourseElement):
         :return None:
         """
         # The exit time was already detected and set by an earlier ping.
-        if self.departure_time != datetime.datetime.fromtimestamp(0):
+        if self.departure_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC')):
             return
         if not self.is_transiting(runner) and self.runner_has_departed(runner):
             dist_traveled = runner.mile_mark - self.mile_mark
@@ -961,7 +961,45 @@ class Route(CaltopoShape):
         """
         return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
-    @cache
+# NOTE: new one
+#    def get_indices_within_radius(self, center_lat, center_lon, radius):
+#        # Convert feet → degrees
+#        radius_deg = radius / 364000
+#
+#        # KDTree radius query (FAST)
+#        indices = self.kdtree.query_ball_point([center_lat, center_lon], r=radius_deg)
+#
+#        if len(indices) == 0:
+#            return np.array([]), False
+#
+#        indices = np.array(indices)
+#
+#        # Compute precise distances ONLY for candidates
+#        candidate_points = self.points[indices]
+#        distances = np.array([
+#            haversine_distance([center_lat, center_lon], pt)
+#            for pt in candidate_points
+#        ])
+#
+#        # Filter exact radius
+#        mask = distances <= radius
+#        indices = indices[mask]
+#        distances = distances[mask]
+#
+#        if len(indices) == 0:
+#            return np.array([]), False
+#
+#        # Sort by distance
+#        order = np.argsort(distances)
+#        sorted_indices = indices[order]
+#
+#        # Fast consecutiveness check
+#        are_consecutive = np.all(np.diff(sorted_indices) == 1)
+#
+#        return sorted_indices, are_consecutive
+
+
+
     def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
         """
         Given a center point and radius in feet, finds the indices of the route points inside said
