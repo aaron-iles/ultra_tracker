@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import pytz
 
 import numpy as np
 from psycopg2.extras import Json
@@ -194,10 +195,11 @@ class Race:
         :return None:
         """
         if self.database.contains_data:
-            for ce in self.course.aid_stations:
-                self.database.restore(ce)
             self.runner.race = self
             self.database.restore(self.runner)
+            for ce in self.course.aid_stations:
+                self.database.restore(ce)
+            self.course.update_course_elements(self.runner)
         else:
             self.runner.mile_mark = 0
             self.runner.elevation = self.course.route.elevations[0]
@@ -414,7 +416,7 @@ class Runner:
         :return datetime.datetime: The date/time of the estimated finish.
         """
         if not self.started:
-            return datetime.datetime.fromtimestamp(0)
+            return datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
         return self.race.start_time + self.estimated_finish_time
 
     @property

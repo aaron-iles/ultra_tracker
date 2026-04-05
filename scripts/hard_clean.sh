@@ -3,7 +3,7 @@
 if systemctl --user list-unit-files --type=service | grep -q "^ultra-tracker.service"; then
     systemctl --user stop ultra-tracker
 else
-    podman compose down
+    podman-compose down
 fi
 
 podman rmi ultra_tracker:latest || true

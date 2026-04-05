@@ -3,6 +3,7 @@
 
 import copy
 import datetime
+import pytz
 import json
 import logging
 
@@ -498,8 +499,8 @@ class CourseElement:
 
         :return datetime.timedelta: The timedelta spent in transit.
         """
-        if (self.departure_time != datetime.datetime.fromtimestamp(0)) and (
-            self.arrival_time != datetime.datetime.fromtimestamp(0)
+        if (self.departure_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))) and (
+            self.arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
         ):
             return self.departure_time - self.arrival_time
         return datetime.timedelta(0)
@@ -574,10 +575,10 @@ class AidStation(CourseElement):
         self.estimated_duration = datetime.timedelta(0)
         self.previous_leg = prev_leg
         self.next_leg = next_leg
-        self._arrival_time = datetime.datetime.fromtimestamp(0)
-        self._departure_time = datetime.datetime.fromtimestamp(0)
-        self._estimated_arrival_time = datetime.datetime.fromtimestamp(0)
-        self._estimated_departure_time = datetime.datetime.fromtimestamp(0)
+        self._arrival_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+        self._departure_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+        self._estimated_arrival_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+        self._estimated_departure_time = datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
 
     @property
     def arrival_time(self) -> datetime.datetime:
@@ -701,14 +702,14 @@ class AidStation(CourseElement):
         :return None:
         """
         # The arrival time was already detected and set by an earlier ping. Stop here.
-        if self.arrival_time != datetime.datetime.fromtimestamp(0):
+        if self.arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC')):
             return
         # If the arrival time was never set and the runner is transiting or if the runner passed
         # the course element without ever pinging inside it, set the arrival time as the ETA.
         if self.is_transiting(runner) or (
             self.runner_has_arrived(runner) and self.runner_has_departed(runner)
         ):
-            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(0):
+            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC')):
                 self.arrival_time = self.estimated_arrival_time
             # This is an edge case. If an aid is so close to the start that it never gets an ETA, we
             # have to set something other than time 0.
@@ -727,7 +728,7 @@ class AidStation(CourseElement):
         :return None:
         """
         # The exit time was already detected and set by an earlier ping.
-        if self.departure_time != datetime.datetime.fromtimestamp(0):
+        if self.departure_time != datetime.datetime.fromtimestamp(0, pytz.timezone('UTC')):
             return
         if not self.is_transiting(runner) and self.runner_has_departed(runner):
             dist_traveled = runner.mile_mark - self.mile_mark
