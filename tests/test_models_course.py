@@ -161,6 +161,11 @@ def test_course_creation_route_not_found(caltopo_map_01, race_01_config):
 def test_route_gain(course_01):
     assert course_01.route.gain == np.float64(1274.3555896371147)
 
+def test_route_cumulative_gain_start(course_01):
+    assert course_01.route.get_cumulative_gain_at_mile_mark(0) == np.float64(0)
+
+def test_route_cumulative_gain_finish(course_01):
+    assert course_01.route.get_cumulative_gain_at_mile_mark(course_01.route.distances[-1]) == np.float64(1274.3555896371147)
 
 def test_route_loss(course_01):
     assert course_01.route.loss == np.float64(1328.6249467975144)

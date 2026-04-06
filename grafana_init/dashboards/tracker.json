@@ -38,10 +38,10 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "# ${race_name}",
+        "content": "# ${race_name} (${race_distance} mi / ${race_gain} ft)",
         "mode": "markdown"
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "title": "",
       "transparent": true,
       "type": "text"
@@ -256,7 +256,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "ultra-tracker",
@@ -431,7 +431,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "running-log",
@@ -639,7 +639,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "running-log",
@@ -833,7 +833,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "running-log",
@@ -1040,7 +1040,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "running-log",
@@ -1248,7 +1248,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "running-log",
@@ -1612,7 +1612,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "editorMode": "code",
@@ -1828,7 +1828,7 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 24,
+        "w": 15,
         "x": 0,
         "y": 23
       },
@@ -1840,7 +1840,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "editorMode": "code",
@@ -1872,6 +1872,88 @@
       "type": "table"
     },
     {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "P44368ADAD746BC27"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "super-light-red",
+            "mode": "fixed"
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "lengthft"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 15,
+        "y": 23
+      },
+      "id": 22,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Cumulative Gain$/",
+          "values": false
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": false,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "12.4.2",
+      "targets": [
+        {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  r.cumulative_gain AS \"Cumulative Gain\",\n  race.gain\nFROM \n  (SELECT mile_mark, cumulative_gain FROM runner ORDER BY mile_mark DESC LIMIT 1) r,\n  race;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Cumulative Gain",
+      "transparent": true,
+      "type": "gauge"
+    },
+    {
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -1892,7 +1974,7 @@
         "content": "<iframe\n  src=\"${map_url}\"\n  width=\"100%\"\n  height=\"99%\"\n  frameborder=\"0\">\n</iframe>",
         "mode": "html"
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "title": "",
       "transparent": true,
       "type": "text"
@@ -2059,7 +2141,7 @@
           "zoom": 11
         }
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "ultra-tracker",
@@ -2327,7 +2409,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.4.1",
+      "pluginVersion": "12.4.2",
       "targets": [
         {
           "dataset": "ultra-tracker",
@@ -2415,9 +2497,56 @@
             ],
             "limit": 50
           }
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT distance FROM race LIMIT 1;",
+          "refId": "D",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
         }
       ],
       "title": "Profile",
+      "transformations": [
+        {
+          "id": "configFromData",
+          "options": {
+            "applyTo": {
+              "id": "byName",
+              "options": "distance"
+            },
+            "configRefId": "D",
+            "mappings": [
+              {
+                "fieldName": "distance",
+                "handlerKey": "max"
+              }
+            ]
+          }
+        }
+      ],
       "transparent": true,
       "type": "xychart"
     }
@@ -2430,8 +2559,8 @@
     "list": [
       {
         "current": {
-          "text": "https://caltopo.com/m/P1CVRV6",
-          "value": "https://caltopo.com/m/P1CVRV6"
+          "text": "https://caltopo.com/m/CPP7SGP",
+          "value": "https://caltopo.com/m/CPP7SGP"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2451,8 +2580,8 @@
       },
       {
         "current": {
-          "text": "America/New_York",
-          "value": "America/New_York"
+          "text": "America/Denver",
+          "value": "America/Denver"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2471,8 +2600,8 @@
       },
       {
         "current": {
-          "text": "World's End 100k",
-          "value": "World's End 100k"
+          "text": "Ouray 100",
+          "value": "Ouray 100"
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2491,6 +2620,98 @@
           "query": "SELECT name FROM race LIMIT 1;",
           "rawQuery": true,
           "rawSql": "SELECT name FROM race LIMIT 1;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "102.1",
+          "value": "102.1"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P44368ADAD746BC27"
+        },
+        "definition": "SELECT distance FROM race LIMIT 1;",
+        "description": "",
+        "hide": 2,
+        "label": "Race Distance",
+        "name": "race_distance",
+        "options": [],
+        "query": {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT distance FROM race LIMIT 1;",
+          "rawQuery": true,
+          "rawSql": "SELECT distance FROM race LIMIT 1;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "45163",
+          "value": "45163"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "P44368ADAD746BC27"
+        },
+        "definition": "SELECT gain FROM race LIMIT 1;",
+        "description": "",
+        "hide": 2,
+        "label": "Race Gain",
+        "name": "race_gain",
+        "options": [],
+        "query": {
+          "dataset": "ultra-tracker",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT gain FROM race LIMIT 1;",
+          "rawQuery": true,
+          "rawSql": "SELECT gain FROM race LIMIT 1;",
           "refId": "SQLVariableQueryEditor-VariableQuery",
           "sql": {
             "columns": [

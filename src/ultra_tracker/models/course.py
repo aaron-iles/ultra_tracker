@@ -961,44 +961,14 @@ class Route(CaltopoShape):
         """
         return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
-# NOTE: new one
-#    def get_indices_within_radius(self, center_lat, center_lon, radius):
-#        # Convert feet → degrees
-#        radius_deg = radius / 364000
-#
-#        # KDTree radius query (FAST)
-#        indices = self.kdtree.query_ball_point([center_lat, center_lon], r=radius_deg)
-#
-#        if len(indices) == 0:
-#            return np.array([]), False
-#
-#        indices = np.array(indices)
-#
-#        # Compute precise distances ONLY for candidates
-#        candidate_points = self.points[indices]
-#        distances = np.array([
-#            haversine_distance([center_lat, center_lon], pt)
-#            for pt in candidate_points
-#        ])
-#
-#        # Filter exact radius
-#        mask = distances <= radius
-#        indices = indices[mask]
-#        distances = distances[mask]
-#
-#        if len(indices) == 0:
-#            return np.array([]), False
-#
-#        # Sort by distance
-#        order = np.argsort(distances)
-#        sorted_indices = indices[order]
-#
-#        # Fast consecutiveness check
-#        are_consecutive = np.all(np.diff(sorted_indices) == 1)
-#
-#        return sorted_indices, are_consecutive
+    def get_cumulative_gain_at_mile_mark(self, mile_mark: float) -> np.array:
+        """
+        Given a mile mark this will return the cumulative gain of the route..
 
-
+        :param float mile_mark: A mile mark along the course.
+        :return float: The cumulative gain in the race.
+        """
+        return self.gains[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
     def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
         """

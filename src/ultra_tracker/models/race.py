@@ -248,7 +248,9 @@ class Race:
             "timezone": str(self.course.timezone),
             "started": bool(self.started),
             "map_url": self.map_url,
-            "distance": float(self.course.route.distances[-1]),
+            "distance": float(self.course.route.length),
+            "gain": round(self.course.route.gain),
+            "loss": round(self.course.route.loss),
             "distances": Json(self.course.route.distances.tolist()),
             "elevations": Json(self.course.route.elevations.tolist()),
         }
@@ -296,6 +298,17 @@ class Runner:
         if not self.started:
             return 10.0
         return (self.moving_time.total_seconds() / 60.0) / self.mile_mark
+
+    @property
+    def cumulative_gain(self) -> float:
+        """
+        Calculates the cumulative gain of the runner.
+
+        :return float: The cumulative gain the runner has climbed to this point.
+        """
+        if self.race:
+            return self.race.course.route.get_cumulative_gain_at_mile_mark(self.mile_mark)
+        return 0
 
     @property
     def average_overall_pace(self) -> float:
@@ -536,6 +549,7 @@ class Runner:
             "est_finish_date": self.estimated_finish_date,
             "est_finish_time": self.estimated_finish_time.total_seconds(),
             "course_deviation": round(float(self.course_deviation)),
+            "cumulative_gain": round(float(self.cumulative_gain)),
         }
 
     def __str__(self):

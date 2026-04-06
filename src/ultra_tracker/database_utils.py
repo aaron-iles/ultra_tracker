@@ -24,7 +24,8 @@ runner_table_create_sql = """
         last_update TIMESTAMPTZ PRIMARY KEY,
         est_finish_date TIMESTAMPTZ,
         est_finish_time DOUBLE PRECISION,
-        course_deviation DOUBLE PRECISION
+        course_deviation DOUBLE PRECISION,
+        cumulative_gain DOUBLE PRECISION
     );
     """
 
@@ -37,6 +38,8 @@ race_table_create_sql = """
         started BOOLEAN,
         map_url TEXT,
         distance DOUBLE PRECISION,
+        gain BIGINT,
+        loss BIGINT,
         distances JSONB,
         elevations JSONB
     );
@@ -50,6 +53,8 @@ race_upsert_sql = """
         started,
         map_url,
         distance,
+        gain,
+        loss,
         distances,
         elevations
     ) VALUES (
@@ -59,6 +64,8 @@ race_upsert_sql = """
         %(started)s,
         %(map_url)s,
         %(distance)s,
+        %(gain)s,
+        %(loss)s,
         %(distances)s,
         %(elevations)s
     )
@@ -68,6 +75,8 @@ race_upsert_sql = """
         started = EXCLUDED.started,
         map_url = EXCLUDED.map_url,
         distance = EXCLUDED.distance,
+        gain = EXCLUDED.gain,
+        loss = EXCLUDED.loss,
         distances = EXCLUDED.distances,
         elevations = EXCLUDED.elevations;
     """
@@ -85,7 +94,8 @@ runner_upsert_sql = """
         last_update,
         est_finish_date,
         est_finish_time,
-        course_deviation
+        course_deviation,
+        cumulative_gain
     ) VALUES (
         %(name)s,
         %(mile_mark)s,
@@ -98,7 +108,8 @@ runner_upsert_sql = """
         %(last_update)s,
         %(est_finish_date)s,
         %(est_finish_time)s,
-        %(course_deviation)s
+        %(course_deviation)s,
+        %(cumulative_gain)s
     )
     ON CONFLICT (last_update) DO UPDATE SET
         mile_mark = EXCLUDED.mile_mark,
@@ -111,7 +122,8 @@ runner_upsert_sql = """
         last_update = EXCLUDED.last_update,
         est_finish_date = EXCLUDED.est_finish_date,
         est_finish_time = EXCLUDED.est_finish_time,
-        course_deviation = EXCLUDED.course_deviation;
+        course_deviation = EXCLUDED.course_deviation,
+        cumulative_gain = EXCLUDED.cumulative_gain;
 """
 
 pings_table_create_sql = """
