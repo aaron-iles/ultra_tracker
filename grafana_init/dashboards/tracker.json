@@ -292,8 +292,37 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  (\n    SELECT to_char(\n      est_finish_date AT TIME ZONE '$timezone',\n      'FMMM/FMDD FMHH12:MI AM'\n    )\n    FROM runner ORDER BY last_update DESC\n    LIMIT 1\n  ) AS est_finish_date,\n  COALESCE(\n    (SELECT est_finish_time FROM runner ORDER BY last_update DESC LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
+          "rawSql": "SELECT \n  CASE \n    WHEN est_finish_date = '1970-01-01 00:00:00' THEN '—/— —:—'\n    ELSE to_char(est_finish_date AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM')\n    END AS est_finish_date\nFROM runner ORDER BY last_update DESC LIMIT 1;",
           "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "ultra-tracker",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "P44368ADAD746BC27"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COALESCE(\n    (SELECT est_finish_time FROM runner ORDER BY last_update DESC LIMIT 1),\n    0.0\n  ) AS est_finish_time;",
+          "refId": "C",
           "sql": {
             "columns": [
               {
@@ -2748,6 +2777,6 @@
   "timezone": "browser",
   "title": "Ultra Tracker",
   "uid": "utdb",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }
