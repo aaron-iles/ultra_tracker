@@ -8,8 +8,8 @@ Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=%h/ultra-tracker
 ExecStart=%h/.local/bin/podman-compose up -d
-ExecStop=%h/.local/bin/podman-compose down
-TimeoutStopSec=5
+ExecStop=%h/.local/bin/podman-compose stop
+TimeoutStopSec=20
 
 [Install]
 WantedBy=default.target
