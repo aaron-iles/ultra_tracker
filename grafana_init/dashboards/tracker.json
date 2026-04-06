@@ -267,7 +267,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT to_char(start_time AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM') as start_time FROM race;",
+          "rawSql": "SELECT to_char(start_time AT TIME ZONE '$timezone', 'FMMM/FMDD FMHH12:MI AM') AS start_time FROM race;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -477,7 +477,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT NULLIF(last_update, '1970-01-01 00:00:00') AS from_now\nFROM runner\nORDER BY last_update;",
+          "rawSql": "SELECT NULLIF(last_update, '1970-01-01 00:00:00') AS from_now FROM runner ORDER BY last_update;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -2559,8 +2559,8 @@
     "list": [
       {
         "current": {
-          "text": "https://caltopo.com/m/CPP7SGP",
-          "value": "https://caltopo.com/m/CPP7SGP"
+          "text": "",
+          "value": ""
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2580,8 +2580,8 @@
       },
       {
         "current": {
-          "text": "America/Denver",
-          "value": "America/Denver"
+          "text": "",
+          "value": ""
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2600,8 +2600,8 @@
       },
       {
         "current": {
-          "text": "Ouray 100",
-          "value": "Ouray 100"
+          "text": "",
+          "value": ""
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2646,8 +2646,8 @@
       },
       {
         "current": {
-          "text": "102.1",
-          "value": "102.1"
+          "text": "",
+          "value": ""
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -2692,8 +2692,8 @@
       },
       {
         "current": {
-          "text": "45163",
-          "value": "45163"
+          "text": "",
+          "value": ""
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",

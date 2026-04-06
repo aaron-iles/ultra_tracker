@@ -429,7 +429,7 @@ class Runner:
         :return datetime.datetime: The date/time of the estimated finish.
         """
         if not self.started:
-            return datetime.datetime.fromtimestamp(0, pytz.timezone('UTC'))
+            return datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))
         return self.race.start_time + self.estimated_finish_time
 
     @property

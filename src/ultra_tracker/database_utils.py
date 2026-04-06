@@ -367,14 +367,8 @@ class Database:
     def restore(self, object_):
         if isinstance(object_, AidStation):
             self._restore_aidstation(object_)
-        elif isinstance(object_, Leg):
-            self._restore_leg(object_)
         elif isinstance(object_, Runner):
             self._restore_runner(object_)
-
-
-    # TODO the arrival time and departure time are not being set for the aid station that the runner is approaching and about to pass. once he passes it (after restart) these things dont get set
-
 
     def _restore_aidstation(self, object_):
         """
@@ -423,8 +417,6 @@ class Database:
         )
 
         row = self.cursor.fetchone()
-
-        # Restore actual values
         runner.mile_mark = row[0]
 
         self.cursor.execute("""
