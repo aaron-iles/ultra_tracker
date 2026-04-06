@@ -183,10 +183,18 @@ class Race:
 
         :return None:
         """
-        for ce in self.course.course_elements:
-            self.database.save(ce)
-        self.database.save(self.runner)
-        self.database.save(self)
+        conn = self.database.pool.getconn()
+        try:
+            for ce in self.course.course_elements:
+                self.database.save(ce, conn=conn)
+            self.database.save(self.runner, conn=conn)
+            self.database.save(self, conn=conn)
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            self.database.pool.putconn(conn)
 
     def restore(self) -> None:
         """

@@ -31,8 +31,7 @@ def database(postgres):
     )
 
     # clean schema per test
-    db.cursor.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
-    db.conn.commit()
+    db.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
     db = Database(
         host=postgres.get_container_host_ip(),
         port=postgres.get_exposed_port(5432),
@@ -40,7 +39,6 @@ def database(postgres):
         user=postgres.username,
         password=postgres.password,
     )
-
     return db
 
 

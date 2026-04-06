@@ -5,6 +5,8 @@ import logging
 
 import psycopg2
 
+from psycopg2.pool import SimpleConnectionPool
+
 from .models.course import AidStation, Leg
 from .models.race import Race, Runner
 from .models.tracker import Ping
@@ -329,52 +331,100 @@ class Database:
         self.conn = psycopg2.connect(
             host=host, port=port, dbname=dbname, user=user, password=password
         )
-        self.cursor = self.conn.cursor()
-        self.cursor.execute(race_table_create_sql)
-        self.cursor.execute(runner_table_create_sql)
-        self.cursor.execute(pings_table_create_sql)
-        self.cursor.execute(aid_stations_table_create_sql)
-        self.cursor.execute(legs_table_create_sql)
-        self.conn.commit()
+        self.pool = SimpleConnectionPool(
+            minconn=1,
+            maxconn=300,
+            host=host,
+            port=port,
+            dbname=dbname,
+            user=user,
+            password=password,
+        )
+        # Instantiate the database
+        conn = self.pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(race_table_create_sql)
+                cur.execute(runner_table_create_sql)
+                cur.execute(pings_table_create_sql)
+                cur.execute(aid_stations_table_create_sql)
+                cur.execute(legs_table_create_sql)
+            conn.commit()
+        finally:
+            self.pool.putconn(conn)
 
     @property
     def contains_data(self) -> bool:
         """
         Returns True if at least one runner exists in the database.
         """
-        self.cursor.execute("""
+        row = self.fetch_one("""
             SELECT EXISTS (
                 SELECT 1 FROM runner LIMIT 1
             )
         """)
-        return self.cursor.fetchone()[0]
+        return row[0]
 
-    def save(self, object_):
+    def execute(self, query, params=None, conn=None):
         """ """
-        if isinstance(object_, AidStation):
-            upsert_sql = aid_station_upsert_sql
-        elif isinstance(object_, Leg):
-            upsert_sql = leg_upsert_sql
-        elif isinstance(object_, Runner):
-            upsert_sql = runner_upsert_sql
-        elif isinstance(object_, Ping):
-            upsert_sql = ping_upsert_sql
-        elif isinstance(object_, Race):
-            upsert_sql = race_upsert_sql
-        self.cursor.execute(upsert_sql, object_.database_record)
-        self.conn.commit()
+        owns_conn = conn is None
+        if owns_conn:
+            conn = self.pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+            if owns_conn:
+                conn.commit()
+        except Exception:
+            if owns_conn:
+                conn.rollback()
+            raise
+        finally:
+            if owns_conn:
+                self.pool.putconn(conn)
 
-    def restore(self, object_):
+    def fetch_one(self, query, params=None, conn=None):
+        owns_conn = conn is None
+        if owns_conn:
+            conn = self.pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                result = cur.fetchone()
+            return result
+        finally:
+            if owns_conn:
+                self.pool.putconn(conn)
+
+    def save(self, object_, conn=None):
+        """ """
+        upsert_map = {
+            AidStation: aid_station_upsert_sql,
+            Leg: leg_upsert_sql,
+            Runner: runner_upsert_sql,
+            Ping: ping_upsert_sql,
+            Race: race_upsert_sql,
+        }
+        try:
+            upsert_sql = upsert_map[type(object_)]
+        except KeyError:
+            raise ValueError(f"unsupported object type: {type(object_)}")
+        self.execute(upsert_sql, object_.database_record, conn=conn)
+
+    def restore(self, object_) -> None:
+        """ """
         if isinstance(object_, AidStation):
             self._restore_aidstation(object_)
         elif isinstance(object_, Runner):
             self._restore_runner(object_)
+        else:
+            raise ValueError(f"unsupported object type: {type(object_)}")
 
     def _restore_aidstation(self, object_):
         """
         Restore a single AidStation from the database using its name.
         """
-        self.cursor.execute(
+        row = self.fetch_one(
             """
             SELECT
                 arrival_time,
@@ -384,17 +434,13 @@ class Database:
                 is_passed
             FROM aidstations
             WHERE name = %s
-        """,
+            """,
             (object_.name,),
         )
 
-        row = self.cursor.fetchone()
-
         if row is None:
-            # Nothing to restore (not in DB)
             return
 
-        # Restore actual values
         object_.arrival_time = row[0]
         object_.estimated_arrival_time = row[1]
         object_.departure_time = row[2]
@@ -405,27 +451,27 @@ class Database:
         """
         Restore a single AidStation from the database using its name.
         """
-        self.cursor.execute(
+        row = self.fetch_one(
             """
-            SELECT
-              mile_mark
+            SELECT mile_mark
             FROM runner
             WHERE name = %s
-            ORDER BY last_update DESC LIMIT 1
-        """,
+            ORDER BY last_update DESC
+            LIMIT 1
+            """,
             (runner.name,),
         )
-
-        row = self.cursor.fetchone()
-        runner.mile_mark = row[0]
-
-        self.cursor.execute("""
-            SELECT
-              raw
-            FROM pings WHERE message_code = 'Position Report' ORDER BY timestamp DESC LIMIT 1
-        """)
-
-        row = self.cursor.fetchone()
+        if row:
+            runner.mile_mark = row[0]
+        row = self.fetch_one(
+            """
+            SELECT raw
+            FROM pings
+            WHERE message_code = 'Position Report'
+            ORDER BY timestamp DESC
+            LIMIT 1
+            """
+        )
         if row:
             ping = Ping(row[0], runner.race.course.timezone)
             runner.last_ping = ping

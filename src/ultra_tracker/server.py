@@ -76,16 +76,6 @@ database = database_utils.Database(PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWOR
 app = application.create_app()
 
 
-@app.teardown_request
-def remove_session(exception=None) -> None:
-    """
-    Overrides the remove_session method to ensure the database session is removed.
-    """
-    # database.cursor.close()
-    # database.conn.close()
-    return
-
-
 def start_application():
     config_data = get_config_data(args.config)
     setup_logging(args.verbose)
