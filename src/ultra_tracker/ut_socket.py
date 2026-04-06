@@ -9,4 +9,4 @@ __all__ = ["socketio"]
 
 logger = logging.getLogger(__name__)
 
-socketio = SocketIO()
+socketio = SocketIO(async_mode="gevent")
