@@ -3,11 +3,11 @@
 
 import copy
 import datetime
-import pytz
 import json
 import logging
 
 import numpy as np
+import pytz
 import requests
 from geopy.distance import geodesic
 from psycopg2.extras import Json

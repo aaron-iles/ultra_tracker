@@ -2,9 +2,9 @@
 
 import datetime
 import logging
-import pytz
 
 import numpy as np
+import pytz
 from psycopg2.extras import Json
 from scipy.stats import norm
 
@@ -345,8 +345,7 @@ class Runner:
                 ],
                 datetime.timedelta(0),
             )
-        else:
-            return datetime.timedelta(0)
+        return datetime.timedelta(0)
 
     @property
     def average_stoppage_time(self) -> datetime.timedelta:
@@ -364,8 +363,7 @@ class Runner:
             if num_stops == 0:
                 return datetime.timedelta(0)
             return self.stoppage_time / num_stops
-        else:
-            return datetime.timedelta(0)
+        return datetime.timedelta(0)
 
     @property
     def elapsed_time(self) -> datetime.timedelta:

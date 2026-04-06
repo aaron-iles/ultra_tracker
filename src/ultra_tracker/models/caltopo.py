@@ -381,7 +381,6 @@ class CaltopoMarker(CaltopoFeature):
         response = self.session.post(url, self.as_json)
         if not response.ok:
             logger.info(f"WARNING: unable to update marker: {response.text}")
-        return
 
 
 class CaltopoShape(CaltopoFeature):

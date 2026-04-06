@@ -4,7 +4,6 @@
 import logging
 
 import psycopg2
-
 from psycopg2.pool import SimpleConnectionPool
 
 from .models.course import AidStation, Leg
@@ -13,7 +12,7 @@ from .models.tracker import Ping
 
 logger = logging.getLogger(__name__)
 
-runner_table_create_sql = """
+RUNNER_TABLE_CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS runner (
         name TEXT,
         mile_mark DOUBLE PRECISION,
@@ -32,7 +31,7 @@ runner_table_create_sql = """
     """
 
 
-race_table_create_sql = """
+RACE_TABLE_CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS race (
         name TEXT PRIMARY KEY,
         start_time TIMESTAMPTZ,
@@ -47,7 +46,7 @@ race_table_create_sql = """
     );
     """
 
-race_upsert_sql = """
+RACE_UPSERT_SQL = """
     INSERT INTO race (
         name,
         start_time,
@@ -83,7 +82,7 @@ race_upsert_sql = """
         elevations = EXCLUDED.elevations;
     """
 
-runner_upsert_sql = """
+RUNNER_UPSERT_SQL = """
     INSERT INTO runner (
         name,
         mile_mark,
@@ -128,7 +127,7 @@ runner_upsert_sql = """
         cumulative_gain = EXCLUDED.cumulative_gain;
 """
 
-pings_table_create_sql = """
+PINGS_TABLE_CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS pings (
         created_at TIMESTAMP DEFAULT NOW(),
         timestamp TIMESTAMPTZ,
@@ -145,7 +144,7 @@ pings_table_create_sql = """
     );
     """
 
-ping_upsert_sql = """
+PING_UPSERT_SQL = """
     INSERT INTO pings (
         timestamp,
         timestamp_raw,
@@ -185,7 +184,7 @@ ping_upsert_sql = """
     """
 
 
-legs_table_create_sql = """
+LEGS_TABLE_CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS legs (
         name TEXT PRIMARY KEY,
         display_name TEXT,
@@ -203,7 +202,7 @@ legs_table_create_sql = """
     );
     """
 
-leg_upsert_sql = """
+LEG_UPSERT_SQL = """
     INSERT INTO legs (
         name,
         display_name,
@@ -248,7 +247,7 @@ leg_upsert_sql = """
         is_passed = EXCLUDED.is_passed;
     """
 
-aid_stations_table_create_sql = """
+AID_STATIONS_TABLE_CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS aidstations (
         name TEXT PRIMARY KEY,
         display_name TEXT,
@@ -269,7 +268,7 @@ aid_stations_table_create_sql = """
     """
 
 
-aid_station_upsert_sql = """
+AID_STATION_UPSERT_SQL = """
     INSERT INTO aidstations (
         name,
         display_name,
@@ -344,11 +343,11 @@ class Database:
         conn = self.pool.getconn()
         try:
             with conn.cursor() as cur:
-                cur.execute(race_table_create_sql)
-                cur.execute(runner_table_create_sql)
-                cur.execute(pings_table_create_sql)
-                cur.execute(aid_stations_table_create_sql)
-                cur.execute(legs_table_create_sql)
+                cur.execute(RACE_TABLE_CREATE_SQL)
+                cur.execute(RUNNER_TABLE_CREATE_SQL)
+                cur.execute(PINGS_TABLE_CREATE_SQL)
+                cur.execute(AID_STATIONS_TABLE_CREATE_SQL)
+                cur.execute(LEGS_TABLE_CREATE_SQL)
             conn.commit()
         finally:
             self.pool.putconn(conn)
@@ -358,11 +357,13 @@ class Database:
         """
         Returns True if at least one runner exists in the database.
         """
-        row = self.fetch_one("""
+        row = self.fetch_one(
+            """
             SELECT EXISTS (
                 SELECT 1 FROM runner LIMIT 1
             )
-        """)
+        """
+        )
         return row[0]
 
     def execute(self, query, params=None, conn=None):
@@ -399,16 +400,16 @@ class Database:
     def save(self, object_, conn=None):
         """ """
         upsert_map = {
-            AidStation: aid_station_upsert_sql,
-            Leg: leg_upsert_sql,
-            Runner: runner_upsert_sql,
-            Ping: ping_upsert_sql,
-            Race: race_upsert_sql,
+            AidStation: AID_STATION_UPSERT_SQL,
+            Leg: LEG_UPSERT_SQL,
+            Runner: RUNNER_UPSERT_SQL,
+            Ping: PING_UPSERT_SQL,
+            Race: RACE_UPSERT_SQL,
         }
         try:
             upsert_sql = upsert_map[type(object_)]
-        except KeyError:
-            raise ValueError(f"unsupported object type: {type(object_)}")
+        except KeyError as err:
+            raise ValueError(f"unsupported object type: {type(object_)}") from err
         self.execute(upsert_sql, object_.database_record, conn=conn)
 
     def restore(self, object_) -> None:
