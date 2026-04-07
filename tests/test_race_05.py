@@ -101,7 +101,7 @@ def race_05_expected_mile_marks(race_05_path):
     return expected_mile_marks
 
 
-def test_race_05_full(race_05, race_05_post_log, race_05_expected_mile_marks):
+def test_race_05_full(race_05, race_05_post_log, race_05_expected_mile_marks, subtests):
     mile_mark_progression = []
     race_05.runner.race = race_05
     socketio = ut_socket.socketio
@@ -109,4 +109,22 @@ def test_race_05_full(race_05, race_05_post_log, race_05_expected_mile_marks):
     for ping_data in race_05_post_log:
         race_05.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_05.runner.mile_mark, 2)))
-    assert_lists_equal_with_percentage(mile_mark_progression, race_05_expected_mile_marks)
+    with subtests.test(name="test_mile_marks"):
+        assert_lists_equal_with_percentage(mile_mark_progression, race_05_expected_mile_marks)
+    with subtests.test(name="test_total_ping_count"):
+        database_ping_count = race_05.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
+        count = len({item["Events"][0]["timeStamp"] for item in race_05_post_log})
+        assert database_ping_count == count
+
+    with subtests.test(name="test_position_report_ping_count"):
+        database_ping_count = race_05.database.fetch_one(
+            "SELECT COUNT(*) FROM pings WHERE message_code = 'Position Report'"
+        )[0]
+        count = len(
+            {
+                item["Events"][0]["timeStamp"]
+                for item in race_05_post_log
+                if item["Events"][0]["messageCode"] == 0
+            }
+        )
+        assert database_ping_count == count

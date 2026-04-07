@@ -103,15 +103,25 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks, su
 
     with subtests.test(name="test_mile_marks"):
         assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
+
     with subtests.test(name="test_total_ping_count"):
         database_ping_count = race_01.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
-        assert database_ping_count == len(race_01_post_log)
+        count = len({item["Events"][0]["timeStamp"] for item in race_01_post_log})
+        assert database_ping_count == count
+
     with subtests.test(name="test_position_report_ping_count"):
         database_ping_count = race_01.database.fetch_one(
             "SELECT COUNT(*) FROM pings WHERE message_code = 'Position Report'"
         )[0]
-        count = sum(1 for item in race_01_post_log if item["Events"][0]["messageCode"] == 0)
+        count = len(
+            {
+                item["Events"][0]["timeStamp"]
+                for item in race_01_post_log
+                if item["Events"][0]["messageCode"] == 0
+            }
+        )
         assert database_ping_count == count
+
     with subtests.test(name="test_aid_station_stoppage_time"):
         stoppage_times = race_01.database.fetch_all(
             "SELECT stoppage_time FROM aidstations ORDER BY mile_mark"
@@ -125,6 +135,7 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks, su
             (0.0,),
             (0.0,),
         ]
+
     with subtests.test(name="test_aid_station_arrival_time"):
         arrival_times = race_01.database.fetch_all(
             "SELECT arrival_time FROM aidstations ORDER BY mile_mark"
