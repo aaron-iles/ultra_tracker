@@ -9,7 +9,7 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
-from ultra_tracker import application,  ut_socket
+from ultra_tracker import application, ut_socket
 from ultra_tracker.models import caltopo, course, race
 
 

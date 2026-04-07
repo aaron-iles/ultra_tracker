@@ -397,6 +397,20 @@ class Database:
             if owns_conn:
                 self.pool.putconn(conn)
 
+    def fetch_all(self, query, params=None, conn=None):
+        owns_conn = conn is None
+        if owns_conn:
+            conn = self.pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                results = cur.fetchall()
+            return results
+        finally:
+            if owns_conn:
+                self.pool.putconn(conn)
+
+
     def save(self, object_, conn=None):
         """ """
         upsert_map = {

@@ -109,4 +109,14 @@ def test_race_02_full(race_02, race_02_post_log, race_02_expected_mile_marks):
     for ping_data in race_02_post_log:
         race_02.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_02.runner.mile_mark, 2)))
-    assert_lists_equal_with_percentage(mile_mark_progression, race_02_expected_mile_marks)
+    with subtests.test(name="test_mile_marks"):
+        assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
+    with subtests.test(name="test_total_ping_count"):
+        database_ping_count = race_01.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
+        assert database_ping_count == len(race_01_post_log)
+    with subtests.test(name="test_position_report_ping_count"):
+        database_ping_count = race_01.database.fetch_one(
+            "SELECT COUNT(*) FROM pings WHERE message_code = 'Position Report'"
+        )[0]
+        count = sum(1 for item in race_01_post_log if item["Events"][0]["messageCode"] == 0)
+        assert database_ping_count == count

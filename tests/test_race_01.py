@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 
-import pytest_check as check
 import datetime
 import json
 import os
@@ -37,11 +36,6 @@ def caltopo_map_01(caltopo_session, requests_mock, race_01_path):
     requests_mock.get(f"https://caltopo.com/api/v1/map/{map_id}/since/0", json=map_mock_response)
 
     requests_mock.real_http = True
-    # elevation_data_file = os.path.join(race_01_path, "elevation_data.json")
-    # with open(elevation_data_file, "r") as f:
-    #    elev_mock_response = json.loads(f.read())
-
-    # requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
     return caltopo.CaltopoMap(map_id, caltopo_session)
 
 
@@ -107,15 +101,48 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks, su
         race_01.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_01.runner.mile_mark, 2)))
 
-    with subtests.test(name="check_mile_marks"):
+    with subtests.test(name="test_mile_marks"):
         assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
-    with subtests.test(name="check_total_ping_count"):
-        ping_count = race_01.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
-        check.equal(ping_count, len(race_01_post_log))
-    with subtests.test(name="check_position_report_ping_count"):
-        ping_count = race_01.database.fetch_one("SELECT COUNT(*) as position_report_pings FROM pings WHERE message_code = 'Position Report'")[0]
-        count = sum(
-            1 for item in race_01_post_log
-            if item['Events'][0]['point']['gpsFix'] == 2
+    with subtests.test(name="test_total_ping_count"):
+        database_ping_count = race_01.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
+        assert database_ping_count == len(race_01_post_log)
+    with subtests.test(name="test_position_report_ping_count"):
+        database_ping_count = race_01.database.fetch_one(
+            "SELECT COUNT(*) FROM pings WHERE message_code = 'Position Report'"
+        )[0]
+        count = sum(1 for item in race_01_post_log if item["Events"][0]["messageCode"] == 0)
+        assert database_ping_count == count
+    with subtests.test(name="test_aid_station_stoppage_time"):
+        stoppage_times = race_01.database.fetch_all(
+            "SELECT stoppage_time FROM aidstations ORDER BY mile_mark"
         )
-        check.equal(ping_count, count)
+        assert stoppage_times == [
+            (0.0,),
+            (258.884758,),
+            (441.718517,),
+            (276.376519,),
+            (0.0,),
+            (0.0,),
+            (0.0,),
+        ]
+    with subtests.test(name="test_aid_station_arrival_time"):
+        arrival_times = race_01.database.fetch_all(
+            "SELECT arrival_time FROM aidstations ORDER BY mile_mark"
+        )
+        assert arrival_times == [
+            (datetime.datetime(2024, 12, 30, 20, 30, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(2024, 12, 30, 20, 35, 30, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(2024, 12, 30, 21, 3, 51, 560408, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(2024, 12, 30, 22, 37, 30, 27904, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),),
+        ]
+
+    # leg duration
+    # leg pace
+    # aid station departure time
+    # overall pace
+    # avg pace
+    # avg update interval
+    # finish time == elapsed time
