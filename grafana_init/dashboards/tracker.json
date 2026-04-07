@@ -38,7 +38,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "# ${race_name} (${race_distance} mi / ${race_gain} ft)",
+        "content": "# ${race_name}",
         "mode": "markdown"
       },
       "pluginVersion": "12.4.2",
