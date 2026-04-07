@@ -9,7 +9,7 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
-from ultra_tracker import application, database, ut_socket
+from ultra_tracker import application, ut_socket
 from ultra_tracker.models import caltopo, course, race
 
 
@@ -68,13 +68,10 @@ def runner_04(caltopo_map_04, race_04_path, requests_mock):
 
 
 @pytest.fixture
-def race_04(race_04_path, caltopo_map_04, course_04, runner_04):
+def race_04(race_04_path, caltopo_map_04, course_04, runner_04, database):
     race_config_file = os.path.join(race_04_path, "race_config.yml")
     with open(race_config_file, "r") as file:
         config_data = yaml.safe_load(file)
-
-    if os.path.exists("/tmp/data_store.json"):
-        os.remove("/tmp/data_store.json")
 
     return race.Race(
         config_data["race_name"],
@@ -82,9 +79,9 @@ def race_04(race_04_path, caltopo_map_04, course_04, runner_04):
         course_04.timezone.localize(
             datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        "/tmp/data_store.json",
         course_04,
         runner_04,
+        database,
     )
 
 
@@ -104,13 +101,30 @@ def race_04_expected_mile_marks(race_04_path):
     return expected_mile_marks
 
 
-def test_race_04_full(race_04, race_04_post_log, race_04_expected_mile_marks):
+def test_race_04_full(race_04, race_04_post_log, race_04_expected_mile_marks, subtests):
     mile_mark_progression = []
     race_04.runner.race = race_04
-    database.connect("sqlite:////tmp/ut_datastore.db")
     socketio = ut_socket.socketio
     app = application.create_app()
     for ping_data in race_04_post_log:
         race_04.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_04.runner.mile_mark, 2)))
-    assert_lists_equal_with_percentage(mile_mark_progression, race_04_expected_mile_marks)
+    with subtests.test(name="test_mile_marks"):
+        assert_lists_equal_with_percentage(mile_mark_progression, race_04_expected_mile_marks)
+    with subtests.test(name="test_total_ping_count"):
+        database_ping_count = race_04.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
+        count = len({item["Events"][0]["timeStamp"] for item in race_04_post_log})
+        assert database_ping_count == count
+
+    with subtests.test(name="test_position_report_ping_count"):
+        database_ping_count = race_04.database.fetch_one(
+            "SELECT COUNT(*) FROM pings WHERE message_code = 'Position Report'"
+        )[0]
+        count = len(
+            {
+                item["Events"][0]["timeStamp"]
+                for item in race_04_post_log
+                if item["Events"][0]["messageCode"] == 0
+            }
+        )
+        assert database_ping_count == count

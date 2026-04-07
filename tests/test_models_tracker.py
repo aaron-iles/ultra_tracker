@@ -3,6 +3,8 @@
 
 import datetime
 
+
+from psycopg2.extras import Json
 import pytest
 import pytz
 
@@ -73,12 +75,12 @@ def raw_ping_data_no_loc():
 
 @pytest.fixture
 def basic_ping(raw_ping_data):
-    return tracker.Ping(raw_ping_data)
+    return tracker.Ping(raw_ping_data, pytz.timezone("America/Denver"))
 
 
 @pytest.fixture
 def ping_without_location(raw_ping_data_no_loc):
-    return tracker.Ping(raw_ping_data_no_loc)
+    return tracker.Ping(raw_ping_data_no_loc, pytz.timezone("Etc/GMT"))
 
 
 def test_ping__str__(basic_ping):
@@ -111,18 +113,3 @@ def test_extract_timestamp():
     assert tracker.Ping.extract_timestamp(
         1721571300, pytz.timezone("America/New_York")
     ) == datetime.datetime.fromtimestamp(1721571300, pytz.timezone("America/New_York"))
-
-
-def test_ping_as_json(basic_ping):
-    assert basic_ping.as_json == {
-        "altitude": 9472.626640382057,
-        "gps_fix": "3D Fix",
-        "heading": 225.0,
-        "latlon": [38.04270386695862, -107.66809701919556],
-        "lonlat": [-107.66809701919556, 38.04270386695862],
-        "message_code": "Position Report",
-        "speed": 3.003,
-        "status": {"autonomous": 0, "intervalChange": 0, "lowBattery": 0, "resetDetected": 0},
-        "timestamp": datetime.datetime.fromtimestamp(1721571300, pytz.timezone("America/Denver")),
-        "timestamp_raw": 1721571300000,
-    }

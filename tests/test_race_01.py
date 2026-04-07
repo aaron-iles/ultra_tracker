@@ -10,7 +10,7 @@ import requests_mock
 import yaml
 from ultra_tracker_fixtures import *
 
-from ultra_tracker import application, database, ut_socket
+from ultra_tracker import application, ut_socket
 from ultra_tracker.models import caltopo, course, race
 
 
@@ -36,11 +36,6 @@ def caltopo_map_01(caltopo_session, requests_mock, race_01_path):
     requests_mock.get(f"https://caltopo.com/api/v1/map/{map_id}/since/0", json=map_mock_response)
 
     requests_mock.real_http = True
-    # elevation_data_file = os.path.join(race_01_path, "elevation_data.json")
-    # with open(elevation_data_file, "r") as f:
-    #    elev_mock_response = json.loads(f.read())
-
-    # requests_mock.post("https://caltopo.com/dem/pointstats", json=elev_mock_response)
     return caltopo.CaltopoMap(map_id, caltopo_session)
 
 
@@ -61,14 +56,11 @@ def runner_01(caltopo_map_01, race_01_path, requests_mock):
             f"https://caltopo.com/api/v1/map/01/Marker/{marker_id}",
             json={"result": {}, "status": "ok"},
         )
-    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, True)
+    return race.Runner(caltopo_map_01, "Runner", [0, 0], None, False)
 
 
 @pytest.fixture
-def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config):
-
-    if os.path.exists("/tmp/data_store.json"):
-        os.remove("/tmp/data_store.json")
+def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config, database):
 
     return race.Race(
         race_01_config["race_name"],
@@ -76,9 +68,9 @@ def race_01(race_01_path, caltopo_map_01, course_01, runner_01, race_01_config):
         course_01.timezone.localize(
             datetime.datetime.strptime(race_01_config["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        "/tmp/data_store.json",
         course_01,
         runner_01,
+        database,
     )
 
 
@@ -98,17 +90,70 @@ def race_01_expected_mile_marks(race_01_path):
     return expected_mile_marks
 
 
-def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks):
+def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks, subtests):
     mile_mark_progression = []
     race_01.runner.race = race_01
 
-    database.connect("sqlite:////tmp/ut_datastore.db")
     socketio = ut_socket.socketio
     app = application.create_app()
 
     for ping_data in race_01_post_log:
         race_01.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_01.runner.mile_mark, 2)))
-    # with open('/tmp/mi', 'w') as f:
-    #    f.write(json.dumps(mile_mark_progression))
-    assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
+
+    with subtests.test(name="test_mile_marks"):
+        assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
+
+    with subtests.test(name="test_total_ping_count"):
+        database_ping_count = race_01.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
+        count = len({item["Events"][0]["timeStamp"] for item in race_01_post_log})
+        assert database_ping_count == count
+
+    with subtests.test(name="test_position_report_ping_count"):
+        database_ping_count = race_01.database.fetch_one(
+            "SELECT COUNT(*) FROM pings WHERE message_code = 'Position Report'"
+        )[0]
+        count = len(
+            {
+                item["Events"][0]["timeStamp"]
+                for item in race_01_post_log
+                if item["Events"][0]["messageCode"] == 0
+            }
+        )
+        assert database_ping_count == count
+
+    with subtests.test(name="test_aid_station_stoppage_time"):
+        stoppage_times = race_01.database.fetch_all(
+            "SELECT stoppage_time FROM aidstations ORDER BY mile_mark"
+        )
+        assert stoppage_times == [
+            (0.0,),
+            (258.884758,),
+            (441.718517,),
+            (276.376519,),
+            (0.0,),
+            (0.0,),
+            (0.0,),
+        ]
+
+    with subtests.test(name="test_aid_station_arrival_time"):
+        arrival_times = race_01.database.fetch_all(
+            "SELECT arrival_time FROM aidstations ORDER BY mile_mark"
+        )
+        assert arrival_times == [
+            (datetime.datetime(2024, 12, 30, 20, 30, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(2024, 12, 30, 20, 35, 30, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(2024, 12, 30, 21, 3, 51, 560408, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(2024, 12, 30, 22, 37, 30, 27904, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),),
+            (datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),),
+        ]
+
+    # leg duration
+    # leg pace
+    # aid station departure time
+    # overall pace
+    # avg pace
+    # avg update interval
+    # finish time == elapsed time

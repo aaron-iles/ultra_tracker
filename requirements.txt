@@ -1,14 +1,14 @@
-eventlet
+build
 flask
 flask-socketio
-build
 geopy
+gevent
 gpxpy
 jinja2
 lxml
 numpy
+psycopg2-binary
 pytz
-sqlalchemy
 pyyaml
 requests
 scipy

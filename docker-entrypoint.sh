@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-ultra-tracker -c /app/data/race_config.yml -d /app/data/
+
+exec ultra-tracker -c /app/race_config.yml

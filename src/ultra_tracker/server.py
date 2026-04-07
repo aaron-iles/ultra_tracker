@@ -1,37 +1,24 @@
 #!/usr/bin/env python3
 
-import eventlet
-
-eventlet.monkey_patch()
 import argparse
 import datetime
-import json
 import logging
 import os
 import random
 import sys
-from collections import deque
 
-import yaml
-from flask import (
-    Flask,
-    Response,
-    abort,
-    redirect,
-    render_template,
-    render_template_string,
-    request,
-    session,
-    stream_with_context,
-    url_for,
-)
-from flask_socketio import SocketIO, send
-
-from . import application, database, ut_socket
+from . import application, database_utils, ut_socket
 from .models.caltopo import CaltopoMap, CaltopoSession
 from .models.course import Course
 from .models.race import Race, Runner
-from .utils import format_duration, get_config_data
+from .utils import get_config_data
+
+# DB connection
+PGHOST = os.getenv("POSTGRES_HOST", "localhost")
+PGPORT = int(os.getenv("POSTGRES_PORT", "5432"))
+PGDATABASE = os.getenv("POSTGRES_DB")
+PGUSER = os.getenv("POSTGRES_USER")
+PGPASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,18 +29,14 @@ def parse_args() -> argparse.Namespace:
     """
     p = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="This is a description of my module.",
+        description="This package runs the ultra tracking server.",
     )
     p.add_argument(
-        "-c", required=True, type=str, dest="config", help="The config file for the event."
-    )
-    p.add_argument(
-        "-d",
-        required=False,
-        default="/app/data",
+        "-c",
+        required=True,
         type=str,
-        dest="data_dir",
-        help="The directory in which to store data.",
+        dest="config",
+        help="The config file for the event.",
     )
     p.add_argument(
         "--disable-marker-updates",
@@ -64,22 +47,6 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("-v", required=False, action="store_true", dest="verbose", help="Run verbosely.")
     return p.parse_args()
-
-
-class InMemoryLogHandler(logging.Handler):
-    def __init__(self, max_logs=1000):
-        super().__init__(level=logging.NOTSET)
-        self.name = "InMemoryLogHandler"
-        self.logs = deque(maxlen=max_logs)
-        self.setFormatter(
-            logging.Formatter("%(asctime)s   %(levelname)s   %(message)s", "%Y-%m-%d %H:%M:%S")
-        )
-
-    def emit(self, record):
-        self.logs.append(self.format(record))
-
-    def get_logs(self):
-        return list(self.logs)
 
 
 def setup_logging(verbose: bool = False):
@@ -99,54 +66,14 @@ def setup_logging(verbose: bool = False):
     stream_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
     # Add the stream handler to the root logger
     logging.root.addHandler(stream_handler)
-    in_memory_log_handler = InMemoryLogHandler()
-    in_memory_log_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
-    logging.root.addHandler(in_memory_log_handler)
     # Set the logging level.
     logging.root.setLevel(logging.NOTSET)
 
 
 args = parse_args()
-database.connect(f"sqlite:///{os.path.join(args.data_dir, 'ut_datastore.db')}")
+database = database_utils.Database(PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD)
+
 app = application.create_app()
-
-
-#####################################
-
-
-@app.teardown_request
-def remove_session(exception=None) -> None:
-    """
-    Overrides the remove_session method to ensure the database session is removed.
-    """
-    database.session.remove()
-    return
-
-
-@app.template_filter("format_duration")
-def format_duration_filter(duration: datetime.timedelta) -> str:
-    """
-    Formats a datetime.timedelta object to a human-friendly format.
-
-    :param datetime.timedelta duration: The timedelta object to be formatted.
-    :return str: The timedelta object as a presentable string.
-    """
-    return format_duration(duration)
-
-
-@app.template_filter("format_time")
-def format_time_filter(time_obj: datetime.datetime) -> str:
-    """
-    Formats a datetime.datetime object to a human-friendly format.
-
-    :param datetime.datetime time_obj: The datetime object to be formatted.
-    :return str: The human-friendly formatted time object.
-    """
-    if time_obj.astimezone(datetime.timezone.utc) == datetime.datetime.fromtimestamp(
-        0, datetime.timezone.utc
-    ):
-        return "--/-- --:--"
-    return time_obj.strftime("%-m/%-d %-I:%M %p")
 
 
 def start_application():
@@ -185,16 +112,15 @@ def start_application():
         course.timezone.localize(
             datetime.datetime.strptime(config_data["start_time"], "%Y-%m-%dT%H:%M:%S")
         ),
-        f"{args.data_dir}/data_store.json",
         course,
         runner,
+        database,
     )
     runner.race = race
     logger.info("created race object...")
     app.config["UT_GARMIN_API_TOKEN"] = config_data["garmin_api_token"]
     app.config["UT_RACE"] = race
-    app.config["UT_DATA_DIR"] = args.data_dir
-    app.config["UT_ADMIN_PASSWORD_HASH"] = config_data["admin_password_hash"]
     app.secret_key = random.randbytes(64).hex()
+    logger.info("application started, waiting for pings")
     ut_socket.socketio.run(app, host="0.0.0.0", port=8080, debug=args.verbose)
     return

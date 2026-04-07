@@ -5,11 +5,12 @@ import copy
 import datetime
 import json
 import logging
-from functools import cache
 
 import numpy as np
+import pytz
 import requests
 from geopy.distance import geodesic
+from psycopg2.extras import Json
 from scipy.spatial import KDTree
 
 from ..utils import (
@@ -69,7 +70,10 @@ def interpolate_and_filter_points(
             # Generate interpolated points
             intermediate_array = np.array(
                 [
-                    [point1["latitude"] + j * lat_step, point1["longitude"] + j * lon_step]
+                    [
+                        point1["latitude"] + j * lat_step,
+                        point1["longitude"] + j * lon_step,
+                    ]
                     for j in range(1, num_intervals + 1)  # Include the last point
                 ]
             )
@@ -110,7 +114,11 @@ def transform_path(path_data: list, min_step_size: float, max_step_size: float) 
     for i, point in enumerate(interpolated_path_data):
         if prev_point is not None:
             geo = geodesic(
-                (prev_point[0], prev_point[1], prev_point[2] if len(prev_point) == 3 else 0),
+                (
+                    prev_point[0],
+                    prev_point[1],
+                    prev_point[2] if len(prev_point) == 3 else 0,
+                ),
                 (point[0], point[1], point[2] if len(point) == 3 else 0),
             )
             distance = geo.miles
@@ -188,7 +196,10 @@ def align_known_mile_marks(
         logger.debug(f"aligning from {current_kmm['name']} to {next_kmm['name']}")
         # Find the closest point by both mileage and lat/lon to current kmm.
         start_idx = find_closest_index(
-            current_kmm["mile_mark"], current_kmm["coordinates"], modified_distances, points
+            current_kmm["mile_mark"],
+            current_kmm["coordinates"],
+            modified_distances,
+            points,
         )
         # Find the closest point by both mileage and lat/lon to next kmm.
         end_idx = find_closest_index(
@@ -488,8 +499,8 @@ class CourseElement:
 
         :return datetime.timedelta: The timedelta spent in transit.
         """
-        if (self.departure_time != datetime.datetime.fromtimestamp(0)) and (
-            self.arrival_time != datetime.datetime.fromtimestamp(0)
+        if (self.departure_time != datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))) and (
+            self.arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))
         ):
             return self.departure_time - self.arrival_time
         return datetime.timedelta(0)
@@ -564,10 +575,10 @@ class AidStation(CourseElement):
         self.estimated_duration = datetime.timedelta(0)
         self.previous_leg = prev_leg
         self.next_leg = next_leg
-        self._arrival_time = datetime.datetime.fromtimestamp(0)
-        self._departure_time = datetime.datetime.fromtimestamp(0)
-        self._estimated_arrival_time = datetime.datetime.fromtimestamp(0)
-        self._estimated_departure_time = datetime.datetime.fromtimestamp(0)
+        self._arrival_time = datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))
+        self._departure_time = datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))
+        self._estimated_arrival_time = datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))
+        self._estimated_departure_time = datetime.datetime.fromtimestamp(0, pytz.timezone("UTC"))
 
     @property
     def arrival_time(self) -> datetime.datetime:
@@ -691,14 +702,16 @@ class AidStation(CourseElement):
         :return None:
         """
         # The arrival time was already detected and set by an earlier ping. Stop here.
-        if self.arrival_time != datetime.datetime.fromtimestamp(0):
+        if self.arrival_time != datetime.datetime.fromtimestamp(0, pytz.timezone("UTC")):
             return
         # If the arrival time was never set and the runner is transiting or if the runner passed
         # the course element without ever pinging inside it, set the arrival time as the ETA.
         if self.is_transiting(runner) or (
             self.runner_has_arrived(runner) and self.runner_has_departed(runner)
         ):
-            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(0):
+            if self.estimated_arrival_time != datetime.datetime.fromtimestamp(
+                0, pytz.timezone("UTC")
+            ):
                 self.arrival_time = self.estimated_arrival_time
             # This is an edge case. If an aid is so close to the start that it never gets an ETA, we
             # have to set something other than time 0.
@@ -717,7 +730,7 @@ class AidStation(CourseElement):
         :return None:
         """
         # The exit time was already detected and set by an earlier ping.
-        if self.departure_time != datetime.datetime.fromtimestamp(0):
+        if self.departure_time != datetime.datetime.fromtimestamp(0, pytz.timezone("UTC")):
             return
         if not self.is_transiting(runner) and self.runner_has_departed(runner):
             dist_traveled = runner.mile_mark - self.mile_mark
@@ -732,6 +745,35 @@ class AidStation(CourseElement):
                 self.departure_time = depart_time
             logger.info(f"runner departed {self.display_name} at {self.departure_time}")
             return
+
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the aid station object.
+
+        :return dict: The dict of the aid station object.
+        """
+        return {
+            "altitude": float(self.altitude),
+            "arrival_time": self.arrival_time,
+            "comments": self.comments,
+            "coordinates": Json(
+                self.coordinates
+                if isinstance(self.coordinates, list)
+                else self.coordinates.tolist()
+            ),
+            "departure_time": self.departure_time,
+            "display_name": self.display_name,
+            "end_mile_mark": float(self.end_mile_mark),
+            "estimated_arrival_time": self.estimated_arrival_time,
+            "estimated_departure_time": self.estimated_departure_time,
+            "estimated_duration": self.estimated_duration.total_seconds(),
+            "gmaps_url": self.gmaps_url,
+            "is_passed": bool(self.is_passed),
+            "mile_mark": float(self.mile_mark),
+            "name": self.name,
+            "stoppage_time": self.stoppage_time.total_seconds(),
+        }
 
 
 class Leg(CourseElement):
@@ -830,6 +872,29 @@ class Leg(CourseElement):
         """
         return datetime.timedelta(minutes=self.distance * runner.average_moving_pace)
 
+    @property
+    def database_record(self) -> dict:
+        """
+        A json representation of the leg object.
+
+        :return dict: The dict of the leg object.
+        """
+        return {
+            "arrival_time": self.arrival_time,
+            "departure_time": self.departure_time,
+            "display_name": self.display_name,
+            "distance": float(self.distance),
+            "end_mile_mark": float(self.end_mile_mark),
+            "estimated_arrival_time": self.estimated_arrival_time,
+            "estimated_departure_time": self.estimated_departure_time,
+            "estimated_duration": self.estimated_duration.total_seconds(),
+            "gain": float(self.gain),
+            "is_passed": bool(self.is_passed),
+            "loss": float(self.loss),
+            "mile_mark": float(self.mile_mark),
+            "name": self.name,
+        }
+
     def __len__(self) -> float:
         return self.distance
 
@@ -898,7 +963,15 @@ class Route(CaltopoShape):
         """
         return self.points[np.where(self.distances == mile_mark)[0]].tolist()[0]
 
-    @cache
+    def get_cumulative_gain_at_mile_mark(self, mile_mark: float) -> np.array:
+        """
+        Given a mile mark this will return the cumulative gain of the route..
+
+        :param float mile_mark: A mile mark along the course.
+        :return float: The cumulative gain in the race.
+        """
+        return self.gains[np.where(self.distances == mile_mark)[0]].tolist()[0]
+
     def get_indices_within_radius(self, center_lat: float, center_lon: float, radius: int) -> tuple:
         """
         Given a center point and radius in feet, finds the indices of the route points inside said
