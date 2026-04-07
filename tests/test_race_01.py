@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import pytest_check as check
 import datetime
 import json
 import os
@@ -95,7 +96,7 @@ def race_01_expected_mile_marks(race_01_path):
     return expected_mile_marks
 
 
-def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks):
+def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks, subtests):
     mile_mark_progression = []
     race_01.runner.race = race_01
 
@@ -105,4 +106,16 @@ def test_race_01_full(race_01, race_01_post_log, race_01_expected_mile_marks):
     for ping_data in race_01_post_log:
         race_01.ingest_ping(ping_data)
         mile_mark_progression.append(float(round(race_01.runner.mile_mark, 2)))
-    assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
+
+    with subtests.test(name="check_mile_marks"):
+        assert_lists_equal_with_percentage(mile_mark_progression, race_01_expected_mile_marks)
+    with subtests.test(name="check_total_ping_count"):
+        ping_count = race_01.database.fetch_one("SELECT COUNT(*) FROM pings")[0]
+        check.equal(ping_count, len(race_01_post_log))
+    with subtests.test(name="check_position_report_ping_count"):
+        ping_count = race_01.database.fetch_one("SELECT COUNT(*) as position_report_pings FROM pings WHERE message_code = 'Position Report'")[0]
+        count = sum(
+            1 for item in race_01_post_log
+            if item['Events'][0]['point']['gpsFix'] == 2
+        )
+        check.equal(ping_count, count)

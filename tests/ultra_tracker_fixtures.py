@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
+import pytest_check as check
 
 from ultra_tracker.models import caltopo
 from ultra_tracker.database_utils import Database
@@ -45,7 +46,8 @@ def database(postgres):
 
 def assert_lists_equal_with_percentage(list1, list2):
     if len(list1) != len(list2):
-        pytest.fail(f"Lists have different lengths: {len(list1)} != {len(list2)}")
+        check.fail(f"Lists have different lengths: {len(list1)} != {len(list2)}")
+        return
 
     unequal_indices = []
     for i, (el1, el2) in enumerate(zip(list1, list2)):
@@ -59,7 +61,7 @@ def assert_lists_equal_with_percentage(list1, list2):
         percentage_not_equal = (unequal_count / total_count) * 100
         unequal_values = [f"index {i}: {list1[i]} != {list2[i]}" for i in unequal_indices]
 
-        pytest.fail(
+        check.fail(
             f"Lists differ by {percentage_not_equal:.2f}% "
             f"({unequal_count} unequal elements out of {total_count}). "
             f"Unequal values:\n{'\n'.join(unequal_values)}"
